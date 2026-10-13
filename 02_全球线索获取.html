@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<script src="app-vals.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0B2632" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="assets/favicon.ico" />
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+<title>获客通AI · 全球线索获取</title>
+<style>
+  :root{
+    --bg:#0B2632; --bg-2:#0A2E38; --side:#0A2A33;
+    --panel:rgba(13,46,54,.72); --panel-2:rgba(16,58,68,.55);
+    --border:rgba(126,154,160,.16); --border-2:rgba(94,234,212,.14);
+    --cyan:#5EEAD4; --teal:#0E9A8E; --gold:#F5B841;
+    --ink:#E9F3F4; --muted:#8AA3A8; --muted-2:#6E878C;
+    --good:#34D399; --danger:#FF6B6B; --warn:#F5B841;
+    --radius:16px; --shadow:0 18px 48px rgba(0,0,0,.35);
+    --font:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);
+    background-image:radial-gradient(1100px 520px at 78% -8%,rgba(14,154,142,.16),transparent 60%),
+      radial-gradient(820px 460px at 8% 108%,rgba(245,184,65,.08),transparent 60%);
+    -webkit-font-smoothing:antialiased;line-height:1.5}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:.2px}
+  .app{display:flex;min-height:100vh}
+  .sidebar{width:248px;flex:0 0 248px;background:linear-gradient(180deg,var(--side),#08222A);
+    border-right:1px solid var(--border);padding:20px 16px;position:sticky;top:0;height:100vh;
+    display:flex;flex-direction:column;gap:6px}
+  .brand{display:flex;align-items:center;gap:11px;padding:6px 8px 18px}
+  .brand-mark{flex:0 0 auto}
+  .brand-txt b{font-size:17px;letter-spacing:.5px;display:block}
+  .brand-txt span{font-size:11px;color:var(--muted-2);letter-spacing:1.5px}
+  .nav-label{font-size:11px;color:var(--muted-2);letter-spacing:1.5px;padding:14px 10px 6px}
+  .nav-item{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:11px;
+    color:var(--muted);font-size:14px;cursor:pointer;transition:.18s;position:relative;text-decoration:none}
+  .nav-item .idx{width:22px;height:22px;flex:0 0 auto;border-radius:7px;display:grid;place-items:center;
+    font-size:11px;font-weight:700;background:rgba(94,234,212,.08);color:var(--cyan)}
+  .nav-item:hover{background:rgba(94,234,212,.06);color:var(--ink)}
+  .nav-item.active{background:linear-gradient(90deg,rgba(94,234,212,.16),rgba(94,234,212,.02));color:#fff}
+  .nav-item.active::before{content:"";position:absolute;left:-16px;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--cyan)}
+  .nav-item.active .idx{background:var(--cyan);color:#06262B}
+  .side-foot{margin-top:auto;border-top:1px solid var(--border);padding-top:14px;display:flex;gap:10px;align-items:center}
+  .avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--teal),var(--cyan));display:grid;place-items:center;font-weight:700;color:#06262B;flex:0 0 auto}
+  .side-foot small{display:block;color:var(--muted-2);font-size:11px}
+  .side-foot b{font-size:13px}
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{display:flex;align-items:center;gap:18px;padding:18px 28px;border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:20;background:rgba(11,38,50,.82);backdrop-filter:blur(10px)}
+  .title h1{font-size:19px;font-weight:700;letter-spacing:.4px}
+  .title p{font-size:12px;color:var(--muted-2);letter-spacing:1.4px;text-transform:uppercase}
+  .search{flex:1;max-width:420px;margin-left:8px;position:relative}
+  .search input{width:100%;padding:10px 14px 10px 38px;border-radius:11px;border:1px solid var(--border);
+    background:rgba(0,0,0,.22);color:var(--ink);font-size:13px;font-family:inherit;outline:none}
+  .search input:focus{border-color:var(--border-2);box-shadow:0 0 0 3px rgba(94,234,212,.1)}
+  .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.5}
+  .top-right{display:flex;align-items:center;gap:12px;margin-left:auto}
+  .pill{font-size:12px;padding:7px 13px;border-radius:999px;background:linear-gradient(135deg,rgba(245,184,65,.22),rgba(245,184,65,.06));
+    color:var(--gold);border:1px solid rgba(245,184,65,.3);font-weight:600}
+  .icon-btn{width:38px;height:38px;border-radius:11px;border:1px solid var(--border);background:rgba(0,0,0,.2);
+    display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+  .icon-btn:hover{color:var(--ink);border-color:var(--border-2)}
+  .content{padding:24px 28px 48px;display:flex;flex-direction:column;gap:18px}
+
+  .insight{display:flex;align-items:flex-start;gap:16px;padding:18px 22px;border-radius:var(--radius);
+    background:linear-gradient(100deg,rgba(94,234,212,.13),rgba(14,154,142,.05));
+    border:1px solid rgba(94,234,212,.3);position:relative;overflow:hidden}
+  .insight::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.06) 50%,transparent 70%);transform:translateX(-100%);animation:shimmer 5.5s infinite}
+  @keyframes shimmer{0%,60%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  .insight .ic{width:40px;height:40px;flex:0 0 auto;border-radius:12px;background:rgba(94,234,212,.18);display:grid;place-items:center;color:var(--cyan)}
+  .insight b{color:var(--cyan)}
+  .insight .t{font-size:12px;color:var(--muted-2);letter-spacing:1.5px;margin-bottom:3px}
+  .insight p{font-size:15px;line-height:1.6}
+  .insight .go{margin-left:auto;flex:0 0 auto;align-self:center;font-size:13px;color:var(--gold);cursor:pointer;font-weight:600;white-space:nowrap}
+
+  .toolbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .toolbar h2{font-size:20px;font-weight:750}
+  .toolbar .sub{font-size:12.5px;color:var(--muted-2)}
+  .spacer{flex:1}
+  .btn{padding:11px 20px;border-radius:12px;border:1px solid rgba(245,184,65,.4);cursor:pointer;font-size:14px;font-weight:700;
+    background:linear-gradient(135deg,var(--gold),#E0A02E);color:#3a2a05;font-family:inherit}
+  .btn:hover{filter:brightness(1.06)}
+  .btn.ghost{background:rgba(94,234,212,.08);color:var(--cyan);border-color:var(--border-2)}
+  .saved{font-size:12px;color:var(--good);display:flex;align-items:center;gap:6px}
+
+  .filters{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;display:flex;flex-direction:column;gap:13px}
+  .frow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .frow > .flab{font-size:12.5px;color:var(--muted);width:74px;flex:0 0 auto}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{padding:7px 12px;border-radius:999px;border:1px solid var(--border);background:rgba(0,0,0,.18);
+    color:var(--muted);font-size:12.5px;cursor:pointer;transition:.15s;user-select:none}
+  .chip:hover{border-color:var(--border-2);color:var(--ink)}
+  .chip.active{background:linear-gradient(135deg,rgba(94,234,212,.22),rgba(14,154,142,.08));border-color:var(--cyan);color:#eafff9}
+  .chip.gold.active{background:linear-gradient(135deg,rgba(245,184,65,.25),rgba(245,184,65,.06));border-color:var(--gold);color:#fff3d6}
+  .sel{padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:rgba(0,0,0,.22);color:var(--ink);font-size:13px;font-family:inherit;outline:none}
+  .rng{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted)}
+  .rng input[type=range]{accent-color:var(--cyan);width:160px}
+  .rng b{color:var(--cyan);min-width:34px;text-align:right}
+
+  .layout{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .card-h{display:flex;align-items:center;gap:10px;padding:15px 18px;border-bottom:1px solid var(--border)}
+  .card-h h3{font-size:15px;font-weight:700}
+  .card-h .tag{margin-left:auto;font-size:11px;color:var(--muted-2);letter-spacing:1px}
+  .card-b{padding:6px 18px 16px}
+
+  .lhead,.lrow{display:grid;grid-template-columns:2.85fr 1.7fr 0.9fr 0.45fr 0.75fr 1.85fr;gap:10px;align-items:center}
+  .lhead > div,.lrow > div{min-width:0}
+  .lhead{font-size:11.5px;color:var(--muted-2);letter-spacing:.6px;padding:12px 18px;border-bottom:1px solid var(--border);text-transform:uppercase}
+  .lrow{padding:11px 18px;border-bottom:1px solid var(--border);font-size:13px;transition:.15s}
+  .lrow:hover{background:rgba(94,234,212,.04)}
+  .lrow.dim{opacity:.34}
+  .co{display:flex;align-items:center;gap:10px;min-width:0}
+  .co .flag{font-size:18px;flex:0 0 auto}
+  .co .nm{font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .co .dm{font-size:11px;color:var(--muted-2)}
+  .meta{font-size:12px;color:var(--muted);line-height:1.4}
+  .meta b{color:var(--ink);font-weight:600}
+  .mbar{display:flex;align-items:center;gap:7px}
+  .mbar .bar{flex:1;height:8px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden;min-width:24px}
+  .mbar .bar > i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--teal),var(--cyan))}
+  .mbar b{font-size:12.5px;color:var(--cyan);min-width:26px;text-align:right}
+  .badge{font-size:11px;padding:4px 9px;border-radius:999px;font-weight:700;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+  .b-green{background:rgba(52,211,153,.14);color:var(--good);border:1px solid rgba(52,211,153,.3)}
+  .b-yellow{background:rgba(245,184,65,.14);color:var(--warn);border:1px solid rgba(245,184,65,.3)}
+  .b-red{background:rgba(255,107,107,.14);color:var(--danger);border:1px solid rgba(255,107,107,.3)}
+  .b-l1{background:rgba(94,234,212,.12);color:var(--cyan);border:1px solid var(--border-2)}
+  .b-l2{background:rgba(14,154,142,.16);color:#7fe3d2;border:1px solid rgba(14,154,142,.34)}
+  .b-l3{background:rgba(245,184,65,.12);color:var(--gold);border:1px solid rgba(245,184,65,.28)}
+  .b-none{background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border)}
+  .src{font-size:11.5px;color:var(--muted)}
+  .act{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+  .link-co{display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:11px;color:var(--cyan);cursor:pointer;
+    background:none;border:0;padding:0;font-family:inherit;text-decoration:none}
+  .link-co:hover{text-decoration:underline}
+  .co .nm{cursor:pointer}
+  .mini{padding:6px 9px;border-radius:9px;border:1px solid var(--border-2);background:rgba(94,234,212,.08);color:var(--cyan);font-size:11px;cursor:pointer;font-weight:600;font-family:inherit;white-space:nowrap}
+  .mini:hover{background:rgba(94,234,212,.16)}
+  .mini.added{background:rgba(52,211,153,.16);color:var(--good);border-color:rgba(52,211,153,.34);cursor:default}
+  .mini.ghost{border-color:var(--border);background:rgba(0,0,0,.18);color:var(--muted)}
+  .mini.ghost:hover{color:var(--ink)}
+  .co .dm2{font-size:11px;color:var(--muted-2);margin-top:2px}
+  .b-bt{background:rgba(94,234,212,.10);color:#9fe9dd;border:1px solid var(--border-2)}
+  .need{font-size:12.5px;color:var(--ink);font-weight:600;line-height:1.4}
+  .need small{display:block;font-weight:500;font-size:10.5px;color:var(--muted-2);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;margin-top:2px}
+  .co .btline{margin-top:4px}
+  .kwb{display:inline-block;font-size:10.5px;padding:2px 7px;border-radius:999px;margin-top:4px;
+    background:rgba(245,184,65,.14);color:var(--gold);border:1px solid rgba(245,184,65,.28);font-weight:600}
+  .needna{color:var(--muted-2);font-weight:500;font-style:italic}
+
+  .side-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:18px}
+  .side-card .card-h{border-bottom:1px solid var(--border)}
+  .side-card .sb{padding:15px 16px;display:flex;flex-direction:column;gap:13px}
+  .legend{display:flex;flex-direction:column;gap:9px;font-size:12.5px}
+  .legend .lg{display:flex;align-items:flex-start;gap:9px;line-height:1.45}
+  .legend .lg .dot{width:9px;height:9px;border-radius:50%;margin-top:5px;flex:0 0 auto}
+  .legend .lg small{color:var(--muted-2);display:block;font-size:11px}
+  .funnel{display:flex;flex-direction:column;gap:8px}
+  .fstep{display:flex;align-items:center;gap:10px}
+  .fstep .fl{font-size:12.5px;color:var(--muted);width:96px;flex:0 0 auto}
+  .fstep .ft{flex:1;height:30px;border-radius:8px;display:flex;align-items:center;padding:0 11px;font-size:12.5px;font-weight:700;color:#06262B}
+  .fstep .ft.s1{background:linear-gradient(90deg,var(--teal),var(--cyan))}
+  .fstep .ft.s2{background:linear-gradient(90deg,#2f9e7e,var(--good))}
+  .fstep .ft.s3{background:linear-gradient(90deg,#E0A02E,var(--gold))}
+  .rbar{display:grid;grid-template-columns:62px 1fr 30px;gap:9px;align-items:center;font-size:12px}
+  .rbar .bar{height:8px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden}
+  .rbar .bar > i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--teal),var(--cyan))}
+  .rbar b{text-align:right;color:var(--muted)}
+
+  .foot{font-size:11.5px;color:var(--muted-2);padding:6px 2px;text-align:center;line-height:1.6}
+  .empty{padding:30px;text-align:center;color:var(--muted-2);font-size:13px}
+
+  /* ---- 联系方式验证与去重 ---- */
+  .vfy{display:flex;flex-direction:column;gap:9px}
+  .vrow{display:flex;align-items:center;gap:9px;font-size:12.5px}
+  .vrow .lab{flex:1;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .vrow b{font-variant-numeric:tabular-nums}
+  .vok{color:var(--good);font-weight:700}
+  .vwarn{color:var(--warn);font-weight:700}
+  .vna{color:var(--muted-2);font-weight:700}
+  .vbar{height:6px;border-radius:5px;background:rgba(255,255,255,.06);overflow:hidden}
+  .vbar > i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,var(--teal),var(--cyan))}
+  .duplist{display:flex;flex-direction:column;gap:7px}
+  .dup{padding:9px 11px;border-radius:10px;border:1px solid rgba(245,184,65,.3);background:rgba(245,184,65,.07);font-size:12px;line-height:1.5}
+  .dup b{color:var(--gold)}
+  .dup .act{margin-top:7px;display:flex;gap:7px;flex-wrap:wrap}
+
+  /* ---- 名片建档 ---- */
+  .drop{border:1px dashed var(--border-2);border-radius:12px;padding:16px;text-align:center;cursor:pointer;background:rgba(0,0,0,.16);transition:.18s}
+  .drop:hover{border-color:var(--cyan);background:rgba(94,234,212,.06)}
+  .drop b{color:var(--cyan);font-size:13px}
+  .drop small{display:block;color:var(--muted-2);font-size:11.5px;margin-top:5px;line-height:1.5}
+  .thumb{max-width:100%;max-height:168px;border-radius:10px;border:1px solid var(--border);display:block;margin:0 auto}
+  .f2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:12px;color:var(--muted)}
+  .inp{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:rgba(0,0,0,.24);color:var(--ink);font-size:13px;font-family:inherit;outline:none}
+  .inp:focus{border-color:var(--border-2)}
+  .cnote2{font-size:11.5px;color:var(--muted-2);line-height:1.6;border-left:2px solid rgba(94,234,212,.35);padding-left:11px}
+  .hitnote{font-size:12px;padding:9px 11px;border-radius:10px;border:1px solid rgba(245,184,65,.32);background:rgba(245,184,65,.08);color:#ffe9b8;line-height:1.5}
+
+  /* ---------- 联系方式弹窗 ---------- */
+  .modal[hidden]{display:none}
+  .modal{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:22px}
+  .modal-mask{position:absolute;inset:0;background:rgba(3,14,18,.7);backdrop-filter:blur(3px)}
+  .modal-box{position:relative;width:min(580px,100%);max-height:88vh;overflow:auto;
+    background:linear-gradient(180deg,#0D3139,#0A2630);border:1px solid var(--border-2);border-radius:18px;
+    box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .modal-h{display:flex;align-items:flex-start;gap:12px;padding:17px 20px;border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:2;background:rgba(11,40,50,.97);backdrop-filter:blur(6px)}
+  .modal-h b{font-size:16px;display:block}
+  .modal-h .mh-s{font-size:12px;color:var(--muted-2);display:block;margin-top:2px}
+  .modal-x{margin-left:auto;flex:0 0 auto;width:32px;height:32px;border-radius:9px;border:1px solid var(--border);
+    background:rgba(0,0,0,.2);color:var(--muted);cursor:pointer;font-size:14px;line-height:1}
+  .modal-x:hover{color:var(--ink);border-color:var(--border-2)}
+  .modal-b{padding:16px 20px 22px;display:flex;flex-direction:column;gap:14px}
+  .csec{border:1px solid var(--border);border-radius:13px;padding:12px 15px;background:rgba(0,0,0,.16)}
+  .csec > h4{font-size:12px;color:var(--muted-2);letter-spacing:.6px;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+  .csec > h4 .lay{margin-left:auto;font-size:10.5px}
+  .crow{display:grid;grid-template-columns:88px 1fr auto;gap:10px;align-items:center;
+    padding:7px 0;border-bottom:1px dashed rgba(126,154,160,.14);font-size:13px}
+  .crow:last-child{border-bottom:0}
+  .crow .k{color:var(--muted)}
+  .crow .v{color:var(--ink);font-weight:600;word-break:break-all}
+  .crow .v.na{color:var(--muted-2);font-weight:500;font-style:italic}
+  .cform{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:2px}
+  .cform label{display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:var(--muted-2)}
+  .cform input{width:100%;padding:9px 11px;border-radius:9px;border:1px solid var(--border);
+    background:rgba(0,0,0,.26);color:var(--ink);font-size:12.5px;font-family:inherit;outline:none}
+  .cform input:focus{border-color:var(--border-2);box-shadow:0 0 0 3px rgba(94,234,212,.1)}
+  .cform .full{grid-column:1/-1}
+  .cfoot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:2px}
+  .cnote{font-size:11.5px;color:var(--muted-2);line-height:1.65}
+  .cnote b{color:var(--gold)}
+  .cbar{display:flex;gap:9px;flex-wrap:wrap;margin-top:2px}
+  .warnbox{border:1px solid rgba(245,184,65,.34);background:rgba(245,184,65,.10);color:#ffe6b0;
+    border-radius:12px;padding:11px 14px;font-size:12.5px;line-height:1.6}
+  @media(max-width:520px){.cform{grid-template-columns:1fr}}
+
+  @media(max-width:1180px){.layout{grid-template-columns:1fr}.lhead{display:none}.lrow{grid-template-columns:1fr 1fr;gap:8px}.lrow .co{grid-column:1/-1}}
+  @media(max-width:780px){.sidebar{display:none}.topbar{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <img class="brand-mark" src="assets/logo.png" alt="FALCORA" style="width:34px;height:34px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.35)" />
+      <div class="brand-txt"><b>获客通AI</b><span>FALCORA</span></div>
+    </div>
+    <div class="nav-label">主导航</div>
+    <a class="nav-item" href="index.html"><span class="idx">⌂</span> 增长总司令驾驶舱</a>
+    <a class="nav-item" href="01_战略_企业战略档案.html"><span class="idx">①</span> 战略 · 企业战略档案</a>
+    <a class="nav-item active" href="02_全球线索获取.html"><span class="idx">②</span> 全球线索获取</a>
+    <a class="nav-item" href="03_客户尽调与风险核查.html"><span class="idx">③</span> 客户尽调与风险核查</a>
+    <a class="nav-item" href="04_获客执行与内容.html"><span class="idx">④</span> 获客执行与内容</a>
+    <a class="nav-item" href="05_客户深挖.html"><span class="idx">⑤</span> 客户深挖</a>
+    <a class="nav-item" href="06_转化率升级.html"><span class="idx">⑥</span> 转化率升级</a>
+    <div class="side-foot">
+      <div class="avatar">CB</div>
+      <div><b>陈邦杰</b><small>首席产品设计官</small></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="title"><h1>全球线索获取</h1><p>Global Lead Acquisition</p></div>
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        <input id="q" placeholder="搜索公司 / 域名 / 行业 / 区域…" />
+      </div>
+      <div class="top-right">
+        <span class="pill">演示数据 · L1/L2/L3</span>
+        <div class="icon-btn">⚙</div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="insight">
+        <div class="ic">◎</div>
+        <div>
+          <div class="t">AI 增长总司令 · 本周采购方洞察</div>
+          <p>
+            <span>依据您 ① 战略档案的主营产品 / 服务关键词，本周从 6 个公开数据源初筛出 312 家「采购方」——即对您主营品类存在实际采购需求的企业（制造商 / 品牌商 / 分销代理 / 工程商 / 公共采购）。</span>
+            <span>已剔除纯同业竞争者、上游供应商与无采购行为的企业；其中 47 家不在制裁名单内且具备目标市场准入资质，建议优先进入核查管线。</span>
+            <span>注意：下方「未覆盖」标记代表该数据源尚未接入，并非无风险。</span>
+          </p>
+        </div>
+        <div class="go">查看完整报告 →</div>
+      </div>
+
+      <div class="toolbar">
+        <h2>采购方线索池</h2>
+        <span class="sub" id="count">共 0 家</span>
+        <div class="spacer"></div>
+        <span class="saved" id="savedTip" style="display:none">✓ 已加入管线</span>
+        <button class="btn ghost" id="cardBtn">＋ 名片建档</button>
+        <button class="btn ghost" id="resetBtn">重置筛选</button>
+        <button class="btn" id="exportBtn">导出管线 CSV</button>
+      </div>
+
+      <div class="filters">
+        <div class="frow">
+          <span class="flab">目标区域</span>
+          <div class="chips" id="fRegion"></div>
+        </div>
+        <div class="frow">
+          <span class="flab">采购方类型</span>
+          <select class="sel" id="fBtype"><option value="">全部类型</option></select>
+          <span class="flab" style="width:auto">行业</span>
+          <select class="sel" id="fIndustry"><option value="">全部行业</option></select>
+          <span class="flab" style="width:auto">公司规模</span>
+          <select class="sel" id="fSize">
+            <option value="">不限</option>
+            <option value="S">小微（＜50人）</option>
+            <option value="M">中型（50–500人）</option>
+            <option value="L">大型（＞500人）</option>
+          </select>
+          <span class="flab" style="width:auto">联系可用性</span>
+          <select class="sel" id="fContact">
+            <option value="">全部层级</option>
+            <option value="L1">L1 公开信息</option>
+            <option value="L2">L2 职能联系</option>
+            <option value="L3">L3 需自备</option>
+            <option value="none">未覆盖</option>
+          </select>
+        </div>
+        <div class="frow">
+          <span class="flab">最低匹配度</span>
+          <div class="rng"><input type="range" id="fMatch" min="0" max="100" value="0" /><b id="fMatchV">0%</b></div>
+          <span class="flab" style="width:auto">风险</span>
+          <div class="chips" id="fRisk">
+            <span class="chip gold active" data-v="green">低</span>
+            <span class="chip gold active" data-v="yellow">中</span>
+            <span class="chip gold active" data-v="red">高/需复核</span>
+            <span class="chip gold active" data-v="na">未核查</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="layout">
+        <div class="card">
+          <div class="card-h"><h3>采购方线索列表</h3><span class="tag">仅含「采购方」· 点击「加入管线」进入下一步核查</span></div>
+          <div class="lhead">
+            <div>采购方 / 域名</div><div>采购需求 · 命中依据</div><div>匹配度</div><div>风险</div><div>联系可用性</div><div></div>
+          </div>
+          <div id="list"></div>
+        </div>
+
+        <div>
+          <div class="side-card">
+            <div class="card-h"><h3>数据分层覆盖</h3></div>
+            <div class="sb">
+              <div class="legend">
+                <div class="lg"><span class="dot" style="background:#5EEAD4"></span><div><b>L1 公开企业信息</b><small>名称 / 地址 / 官网 / 工商 — 可自由检索</small></div></div>
+                <div class="lg"><span class="dot" style="background:#0E9A8E"></span><div><b>L2 企业公开职能联系</b><small>采购 / 销售公开邮箱电话 — 可用，须标来源</small></div></div>
+                <div class="lg"><span class="dot" style="background:#F5B841"></span><div><b>L3 个人联系方式</b><small>只接受用户自备（名片 / 展会 / 客户留资）</small></div></div>
+                <div class="lg"><span class="dot" style="background:#6E878C"></span><div><b>未覆盖</b><small>该数据源尚未接入，不代表无风险</small></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="side-card">
+            <div class="card-h"><h3>联系方式验证与去重</h3><span class="tag" id="vfyTag">—</span></div>
+            <div class="sb">
+              <div class="vfy" id="vfyBody"></div>
+              <button class="mini ghost" id="vfyBtn" style="align-self:flex-start">↻ 重新校验</button>
+              <div class="cnote2">校验规则：域名归一化去重 → 邮箱格式 / 域名与主体一致性 / 一次性邮箱识别 → 电话 E.164 格式。未接入 MX 与实投验证前，<b>一律标「未验证」，不标「有效」</b>。</div>
+            </div>
+          </div>
+
+          <div class="side-card">
+            <div class="card-h"><h3>采购方转化漏斗</h3></div>
+            <div class="sb">
+              <div class="funnel">
+                <div class="fstep"><span class="fl">发现命中</span><div class="ft s1" id="fn1">312</div></div>
+                <div class="fstep"><span class="fl">已核查通过</span><div class="ft s2" id="fn2">47</div></div>
+                <div class="fstep"><span class="fl">已加入管线</span><div class="ft s3" id="fn3">0</div></div>
+              </div>
+              <div class="note" style="font-size:11.5px;color:var(--muted-2)">「已加入管线」随下方操作实时累计；真实环境由后端按数据源校准。</div>
+            </div>
+          </div>
+
+          <div class="side-card">
+            <div class="card-h"><h3>区域分布</h3></div>
+            <div class="sb" id="regionDist"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="foot">
+        <span>本池只收录「采购方」——即对您主营品类存在实际采购需求的企业；纯同业竞争者、上游供应商与无采购行为的企业已在初筛阶段剔除。</span><br />
+        <span>演示数据 · 所有公司、联系方式与评分均为示例，不对应真实主体；联系可用性严格遵循 L1/L2/L3 分层与合规边界。 「未发现命中」与「数据未覆盖」均不等于「无风险」。</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- 联系方式弹窗 -->
+<div class="modal" id="cmModal" hidden>
+  <div class="modal-mask" data-cm-close></div>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="cmName">
+    <div class="modal-h">
+      <div><b id="cmName">—</b><span class="mh-s" id="cmDom"></span></div>
+      <button class="modal-x" id="cmClose" aria-label="关闭">✕</button>
+    </div>
+    <div class="modal-b" id="cmBody"></div>
+  </div>
+</div>
+
+<!-- 展会名片建档 -->
+<div class="modal" id="cardModal" hidden>
+  <div class="modal-mask" data-card-close></div>
+  <div class="modal-box" role="dialog" aria-modal="true">
+    <div class="modal-h">
+      <div><b>展会名片建档</b><span class="mh-s">名片是 L3 个人联系方式的唯一合法来源 · 只存本机</span></div>
+      <button class="modal-x" data-card-close aria-label="关闭">✕</button>
+    </div>
+    <div class="modal-b">
+      <div class="cnote2">
+        拍 / 传名片后请<b>人工核对字段</b>——名片上的姓名、手机、私人邮箱属 <b>L3 个人联系方式</b>，
+        平台只接受用户自备，不做抓取、不买卖、不推断，也不替您「猜」上面的字。
+        图片<b>不会上传</b>，仅在本机预览。
+      </div>
+
+      <label class="drop" id="cardDrop">
+        <input type="file" id="cardFile" accept="image/*" hidden />
+        <b>📷 点击选择名片照片</b>
+        <small>支持拍照 / 相册图片；仅本机预览，不上传服务器</small>
+      </label>
+      <img class="thumb" id="cardThumb" hidden alt="名片预览" />
+
+      <div class="f2">
+        <div class="field"><label>姓名（L3 · 用户自备）</label><input class="inp" id="kPerson" placeholder="例：张伟" /></div>
+        <div class="field"><label>职位</label><input class="inp" id="kTitle" placeholder="例：采购经理" /></div>
+      </div>
+      <div class="field"><label>公司名称</label><input class="inp" id="kCo" placeholder="例：Acme Machinery Co., Ltd." /></div>
+      <div class="f2">
+        <div class="field"><label>官网域名</label><input class="inp" id="kDm" placeholder="例：acme-machinery.com" /></div>
+        <div class="field"><label>所在区域</label><select class="inp" id="kRegion"></select></div>
+      </div>
+      <div class="f2">
+        <div class="field"><label>邮箱</label><input class="inp" id="kMail" placeholder="name@company.com" /></div>
+        <div class="field"><label>电话（含国码）</label><input class="inp" id="kTel" placeholder="+86 138 0000 0000" /></div>
+      </div>
+      <div class="f2">
+        <div class="field"><label>来源场景</label><select class="inp" id="kScene">
+          <option>展会</option><option>客户拜访</option><option>客户留资</option><option>转介绍</option><option>其他线下</option>
+        </select></div>
+        <div class="field"><label>取得日期</label><input class="inp" id="kDate" type="date" /></div>
+      </div>
+
+      <div class="hitnote" id="kDup" hidden></div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn ghost" data-card-close>取消</button>
+        <button class="btn" id="kSave">建档并加入线索池</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* 采购方线索池 —— 只收「对主营品类有实际采购需求」的企业（买方侧）
+   · btype = 采购方类型（制造商 / 品牌商 / 分销代理 / 工程商 / 系统集成 / 公共采购 / 采购代理）
+   · need  = 采购需求品类（他们买什么 —— 与 ① 战略档案的「主营产品/服务关键词」对齐）
+   · kw    = 命中的主营关键词（为什么判定为「您的」采购方）
+   · why   = 命中依据（判定为采购方的事实依据，用于人工复核）
+   纯同业竞争者、上游供应商、无采购行为的企业已在初筛阶段剔除。 */
+const LEADS = [
+  {nm:"Northwind Industrial Co.", dm:"northwind-ind.com", flag:"🇺🇸", region:"北美", ind:"工业设备", size:"L", match:94, risk:"green", contact:"L2", src:"公开企业库 + 展会名录",
+    btype:"制造商 (OEM/ODM)", need:"工业传感器 · OEM 模组", kw:"工业传感器", why:"官网公开采购需求页 + 海关近 12 个月同类进口记录"},
+  {nm:"RheinMasch GmbH", dm:"rheinmasch.de", flag:"🇩🇪", region:"欧盟", ind:"工业设备", size:"M", match:91, risk:"green", contact:"L2", src:"公开企业库 + 海关数据",
+    btype:"制造商 (OEM/ODM)", need:"伺服驱动 · 精密模组", kw:"精密模组", why:"公共招标平台发布过同类采购公告；采购部门邮箱公开"},
+  {nm:"GulfTech Trading LLC", dm:"gulftech.ae", flag:"🇦🇪", region:"中东", ind:"新能源", size:"M", match:88, risk:"yellow", contact:"L2", src:"公开企业库 + 官网联系页",
+    btype:"分销商 / 代理", need:"储能逆变器 · 光伏组件", kw:"储能逆变器", why:"主营分销业务，公开代理品牌清单含相邻品类"},
+  {nm:"Pacific Sourcing Ltd.", dm:"pacsourcing.sg", flag:"🇸🇬", region:"东南亚", ind:"电子制造", size:"L", match:86, risk:"green", contact:"L2", src:"公开企业库 + 海关数据",
+    btype:"采购代理 / 贸易", need:"电子元器件 · 模组代采", kw:"OEM 模组", why:"公开为多品牌提供代采服务，采购量稳定"},
+  {nm:"Andes Components S.A.", dm:"andescomp.ar", flag:"🇦🇷", region:"拉美", ind:"汽车零部件", size:"M", match:83, risk:"yellow", contact:"L2", src:"公开企业库 + 官网联系页",
+    btype:"制造商 (OEM/ODM)", need:"车用传感器 · 线束", kw:"工业传感器", why:"公开产线扩产新闻，配套件外采比例高"},
+  {nm:"Sahara Build Supplies", dm:"saharabuild.ma", flag:"🇲🇦", region:"非洲", ind:"建材", size:"S", match:79, risk:"red", contact:"L2", src:"公开企业库 + 官网联系页",
+    btype:"分销商 / 代理", need:"建材五金 · 工具", kw:"—", why:"仅域名线索，采购行为待验证（数据未覆盖）"},
+  {nm:"Nordic Med Devices", dm:"nordicmed.fi", flag:"🇫🇮", region:"欧盟", ind:"医疗器械", size:"M", match:90, risk:"green", contact:"L2", src:"公开企业库 + 认证库",
+    btype:"品牌商", need:"医疗设备模组 · 传感组件", kw:"精密模组", why:"持 CE/FDA 认证，官网设供应商招募入口"},
+  {nm:"BlueOcean Renewables", dm:"blueocean.co.jp", flag:"🇯🇵", region:"东亚", ind:"新能源", size:"L", match:87, risk:"green", contact:"L2", src:"公开企业库 + 新闻",
+    btype:"工程商 / 项目方", need:"储能系统 · 逆变器", kw:"储能逆变器", why:"公开中标项目清单，EPC 采购量大"},
+  {nm:"Levant Chemical Hldg", dm:"levantchem.com", flag:"🇯🇴", region:"中东", ind:"化工", size:"L", match:81, risk:"yellow", contact:"L2", src:"公开企业库 + 官网联系页",
+    btype:"制造商 (OEM/ODM)", need:"化工设备 · 仪表", kw:"工业传感器", why:"公开新建产线环评，需采购仪表与成套设备"},
+  {nm:"Mekong Packaging", dm:"mekongpkg.vn", flag:"🇻🇳", region:"东南亚", ind:"包装", size:"S", match:76, risk:"green", contact:"L2", src:"公开企业库 + 官网联系页",
+    btype:"制造商 (OEM/ODM)", need:"包装机械配件", kw:"精密模组", why:"展会采购团留资（用户自备名片）"},
+  {nm:"Cordillera AgriTech", dm:"cordagri.cl", flag:"🇨🇱", region:"拉美", ind:"工业设备", size:"S", match:74, risk:"yellow", contact:"L2", src:"公开企业库 + 官网联系页",
+    btype:"系统集成商", need:"农业自动化模组", kw:"OEM 模组", why:"公开集成项目案例，模组为外采件"},
+  {nm:"Atlas Pharma Logistics", dm:"atlaspharm.eu", flag:"🇳🇱", region:"欧盟", ind:"医疗器械", size:"M", match:92, risk:"green", contact:"L2", src:"公开企业库 + 认证库",
+    btype:"采购代理 / 贸易", need:"冷链设备 · 监测仪表", kw:"工业传感器", why:"公开供应商准入页 + 采购部门职能邮箱"},
+  {nm:"Sahel Solar Works", dm:"sahelsolar.sn", flag:"🇸🇳", region:"非洲", ind:"新能源", size:"S", match:71, risk:"red", contact:"L2", src:"公开企业库 + 官网联系页",
+    btype:"工程商 / 项目方", need:"光伏 · 储能", kw:"—", why:"仅域名线索，采购行为待核实（数据未覆盖）"},
+  {nm:"Han River Components", dm:"hanriver.kr", flag:"🇰🇷", region:"东亚", ind:"汽车零部件", size:"L", match:89, risk:"green", contact:"L2", src:"公开企业库 + 海关数据",
+    btype:"制造商 (OEM/ODM)", need:"车用电子 · 传感器", kw:"工业传感器", why:"海关数据连续进口记录；采购部门公开"},
+  {nm:"Baltic Trade House", dm:"baltictrade.lv", flag:"🇱🇻", region:"欧盟", ind:"建材", size:"M", match:82, risk:"green", contact:"L2", src:"公开企业库 + 官网联系页",
+    btype:"分销商 / 代理", need:"建材 · 五金", kw:"—", why:"公开分销品类清单，含相邻品类"},
+  {nm:"GulfStar Contracting", dm:"gulfstar.qa", flag:"🇶🇦", region:"中东", ind:"建材", size:"M", match:85, risk:"yellow", contact:"L2", src:"公开企业库 + 官网联系页",
+    btype:"工程商 / 项目方", need:"建材 · 机电设备", kw:"精密模组", why:"客户留资，在建项目需采购机电设备"},
+];
+
+const BTYPES = ["制造商 (OEM/ODM)","品牌商","分销商 / 代理","工程商 / 项目方","系统集成商","采购代理 / 贸易","公共采购"];
+
+/* ================= 展会名片建档（矩阵独家能力） =================
+   名片是 L3 个人联系方式唯一合法来源。建档后进入线索池，风险默认「未核查」，
+   必须走 ③ 尽调后才更新——绝不因为「自己录入的」就默认干净。 */
+const CARDKEY = "falcora_cards_v1";
+function loadCards(){ try { return JSON.parse(localStorage.getItem(CARDKEY) || "[]") || []; } catch (e) { return []; } }
+function saveCards(a){ try { localStorage.setItem(CARDKEY, JSON.stringify(a)); } catch (e) {} }
+
+function importedLeads(){
+  return loadCards().map(c => ({
+    nm:c.nm, dm:c.dm, flag:"🏳", region:c.region || "待确认", ind:c.ind || "待确认", size:"",
+    match:null, risk:"na", contact:"L3", src:"展会名片（用户自备）",
+    btype:"待确认", need:"待确认", kw:"—", why:(c.scene || "线下取得") + " · " + (c.date || "") + (c.title ? " · " + c.title : ""),
+    card:c
+  }));
+}
+function allLeads(){ return LEADS.concat(importedLeads()); }
+
+/* 联系方式（合规分层 · 演示数据，不对应真实主体）
+   · role        = 联系窗口人「岗位」——公开职能 / 职位信息（L2）
+   · cp / ce     = 企业总机 / 部门职能邮箱——企业公开职能联系方式（L2），须标来源
+   · web / li    = 官网 / 公司主页——公开企业信息（L1）
+   · person / wa / wc / tg = 个人姓名与即时通讯——L3，只接受使用者自备，
+     平台不抓取、不买卖、不推断。故这里一律留空（不使用任何预设值），
+     由使用者在弹窗内自行补录，补录内容只存本机。 */
+const CONTACTS = {
+  "northwind-ind.com":{role:"采购总监",person:"",cp:"+1 312 555 0148",ce:"procurement@northwind-ind.com",web:"northwind-ind.com",li:"linkedin.com/company/northwind-industrial",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
+  "rheinmasch.de":{role:"采购经理",person:"",cp:"+49 89 5550 2210",ce:"einkauf@rheinmasch.de",web:"rheinmasch.de",li:"linkedin.com/company/rheinmasch",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
+  "gulftech.ae":{role:"采购负责人",person:"",cp:"+971 4 555 7788",ce:"info@gulftech.ae",web:"gulftech.ae",li:"linkedin.com/company/gulftech-trading",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
+  "pacsourcing.sg":{role:"采购总监",person:"",cp:"+65 6555 3320",ce:"sourcing@pacsourcing.sg",web:"pacsourcing.sg",li:"linkedin.com/company/pacific-sourcing",wa:"",wc:"",tg:"",src:"公开企业库 + 海关数据"},
+  "andescomp.ar":{role:"采购主管",person:"",cp:"+54 11 5555 8890",ce:"compras@andescomp.ar",web:"andescomp.ar",li:"linkedin.com/company/andes-components",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
+  "saharabuild.ma":{role:"采购经理",person:"",cp:"+212 5 22 555 340",ce:"achats@saharabuild.ma",web:"saharabuild.ma",li:"linkedin.com/company/sahara-build-supplies",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
+  "nordicmed.fi":{role:"采购总监",person:"",cp:"+358 9 5550 1180",ce:"procurement@nordicmed.fi",web:"nordicmed.fi",li:"linkedin.com/company/nordic-med-devices",wa:"",wc:"",tg:"",src:"公开企业库 + 认证库"},
+  "blueocean.co.jp":{role:"調達部長",person:"",cp:"+81 3 5555 6600",ce:"procurement@blueocean.co.jp",web:"blueocean.co.jp",li:"linkedin.com/company/blueocean-renewables",wa:"",wc:"",tg:"",src:"公开企业库 + 新闻"},
+  "levantchem.com":{role:"采购经理",person:"",cp:"+962 6 555 2211",ce:"info@levantchem.com",web:"levantchem.com",li:"linkedin.com/company/levant-chemical",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
+  "mekongpkg.vn":{role:"采购经理",person:"",cp:"+84 28 5555 1234",ce:"purchasing@mekongpkg.vn",web:"mekongpkg.vn",li:"linkedin.com/company/mekong-packaging",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
+  "cordagri.cl":{role:"采购主管",person:"",cp:"+56 2 5555 4477",ce:"compras@cordagri.cl",web:"cordagri.cl",li:"linkedin.com/company/cordillera-agritech",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
+  "atlaspharm.eu":{role:"采购总监",person:"",cp:"+31 20 555 8899",ce:"procurement@atlaspharm.eu",web:"atlaspharm.eu",li:"linkedin.com/company/atlas-pharma-logistics",wa:"",wc:"",tg:"",src:"公开企业库 + 认证库"},
+  "sahelsolar.sn":{role:"采购负责人",person:"",cp:"+221 33 555 4120",ce:"approvisionnement@sahelsolar.sn",web:"sahelsolar.sn",li:"linkedin.com/company/sahel-solar-works",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
+  "hanriver.kr":{role:"구매 이사",person:"",cp:"+82 2 5555 1122",ce:"purchasing@hanriver.kr",web:"hanriver.kr",li:"linkedin.com/company/han-river-components",wa:"",wc:"",tg:"",src:"公开企业库 + 海关数据"},
+  "baltictrade.lv":{role:"采购经理",person:"",cp:"+371 6 555 3344",ce:"info@baltictrade.lv",web:"baltictrade.lv",li:"linkedin.com/company/baltic-trade-house",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
+  "gulfstar.qa":{role:"采购经理",person:"",cp:"+974 4 555 7788",ce:"purchasing@gulfstar.qa",web:"gulfstar.qa",li:"linkedin.com/company/gulfstar-contracting",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
+};
+
+const REGIONS = ["北美","欧盟","中东","东南亚","拉美","非洲","东亚"];
+const INDUSTRIES = ["工业设备","电子制造","医疗器械","新能源","建材","化工","汽车零部件","包装"];
+
+const state = {region:new Set(), industry:"", btype:"", size:"", contact:"", match:0, risk:new Set(["green","yellow","red","na"]), q:"", added:new Set()};
+
+// build filter chips
+const fRegion = document.getElementById("fRegion");
+REGIONS.forEach(r=>{const c=document.createElement("span");c.className="chip";c.textContent=r;c.onclick=()=>{c.classList.toggle("active");state.region.has(r)?state.region.delete(r):state.region.add(r);render();};fRegion.appendChild(c);});
+const fIndustry=document.getElementById("fIndustry");
+INDUSTRIES.forEach(i=>{const o=document.createElement("option");o.value=i;o.textContent=i;fIndustry.appendChild(o);});
+fIndustry.onchange=()=>{state.industry=fIndustry.value;render();};
+const fBtype=document.getElementById("fBtype");
+BTYPES.forEach(i=>{const o=document.createElement("option");o.value=i;o.textContent=i;fBtype.appendChild(o);});
+fBtype.onchange=()=>{state.btype=fBtype.value;render();};
+document.getElementById("fSize").onchange=e=>{state.size=e.target.value;render();};
+document.getElementById("fContact").onchange=e=>{state.contact=e.target.value;render();};
+document.getElementById("fMatch").oninput=e=>{state.match=+e.target.value;document.getElementById("fMatchV").textContent=e.target.value+"%";render();};
+document.getElementById("q").oninput=e=>{state.q=e.target.value.trim().toLowerCase();render();};
+document.querySelectorAll("#fRisk .chip").forEach(c=>{c.onclick=()=>{c.classList.toggle("active");const v=c.dataset.v;state.risk.has(v)?state.risk.delete(v):state.risk.add(v);render();};});
+document.getElementById("resetBtn").onclick=()=>location.reload();
+
+function pass(l){
+  if(state.region.size && !state.region.has(l.region)) return false;
+  if(state.industry && l.ind!==state.industry) return false;
+  if(state.btype && l.btype!==state.btype) return false;
+  if(state.size && l.size!==state.size) return false;
+  if(state.contact && l.contact!==state.contact) return false;
+  if(state.match>0 && !(l.match!=null && l.match>=state.match)) return false;
+  if(!state.risk.has(l.risk)) return false;
+  if(state.q && !(l.nm.toLowerCase().includes(state.q)||l.dm.toLowerCase().includes(state.q)||l.region.includes(state.q)||l.ind.toLowerCase().includes(state.q)
+    ||String(l.btype||"").toLowerCase().includes(state.q)||String(l.need||"").toLowerCase().includes(state.q)||String(l.kw||"").toLowerCase().includes(state.q))) return false;
+  return true;
+}
+
+function render(){
+  const list=document.getElementById("list");
+  const view=allLeads().filter(pass);
+  document.getElementById("count").innerHTML="<span>共</span> <b>"+view.length+"</b> <span>家</span>";
+  if(!view.length){list.innerHTML='<div class="empty">没有符合当前筛选条件的线索，试试放宽匹配度或区域。</div>';}
+  else{
+    list.innerHTML=view.map((l,i)=>{
+      const added=state.added.has(l.dm);
+      const c=CONTACTS[l.dm]||{}; const own=loadOwn()[l.dm]||{};
+      const card=l.card||{};
+      const hasPerson=(own.person||card.person||c.person||'').trim();
+      const hasPhone=(own.phone||card.tel||c.cp||'').trim();
+      const hint=hasPerson||hasPhone;
+      const szTxt={S:'小微',M:'中型',L:'大型'}[l.size]||'';
+      const needNA = !l.kw || l.kw==='—';
+      const riskCls = l.risk==='na' ? 'b-none' : 'b-'+l.risk;
+      const riskTxt = l.risk==='green'?'低':l.risk==='yellow'?'中':l.risk==='red'?'高':'未核查';
+      return `<div class="lrow">
+        <div class="co"><span class="flag">${l.flag}</span><div style="min-width:0"><div class="nm" data-cm="${l.dm}" data-nm="${l.nm}" title="点击查看联系方式与命中依据">${l.nm}</div><div class="dm">${l.dm}</div><div class="dm2"><span>${l.region}</span><span> · </span><span>${l.ind}</span>${szTxt?`<span> · </span><span>${szTxt}</span>`:''}</div><div class="btline"><span class="badge b-bt">${l.btype||'—'}</span></div>${hint?`<button class="link-co" data-cm="${l.dm}" data-nm="${l.nm}">☎ ${esc(hasPerson||hasPhone)}</button>`:''}</div></div>
+        <div class="need">${needNA?'<span class="needna">待验证</span>':esc(l.need)}<small title="${esc(l.why||'')}">${esc(l.why||'')}</small>${needNA?'':'<span class="kwb"><span>命中：</span>'+esc(l.kw)+'</span>'}</div>
+        <div class="mbar">${l.match==null?'<span class="vna">待核查</span>':`<div class="bar"><i style="width:${l.match}%"></i></div><b>${l.match}</b>`}</div>
+        <div><span class="badge ${riskCls}">${riskTxt}</span></div>
+        <div><span class="badge b-${l.contact}">${l.contact==='L1'?'L1 公开':l.contact==='L2'?'L2 职能':l.contact==='L3'?'L3 自备':'未覆盖'}</span></div>
+        <div class="act"><button class="mini ${added?'added':''}" data-dm="${l.dm}" ${added?'disabled':''}>${added?'✓ 已加入':'加入管线'}</button><button class="mini" data-cm="${l.dm}" data-nm="${l.nm}">联系方式</button>${l.card?'<button class="mini" data-card="'+l.dm+'">名片</button>':'<button class="mini ghost" data-dd="'+l.dm+'" data-nm="'+esc(l.nm)+'" data-rg="'+esc(l.region)+'" data-ind="'+esc(l.ind)+'">→ 核查</button>'}</div>
+      </div>`;
+    }).join("");
+    list.querySelectorAll(".mini:not(.added)").forEach(b=>{if(b.dataset.dm)b.onclick=()=>{state.added.add(b.dataset.dm);updateFunnel();render();showSaved();};});
+    list.querySelectorAll("[data-cm]").forEach(b=>{b.onclick=()=>openCM(b.dataset.cm,b.dataset.nm);});
+    list.querySelectorAll("[data-dd]").forEach(b=>{b.onclick=()=>{location.href="03_客户尽调与风险核查.html?co="+encodeURIComponent(b.dataset.dd)+"&nm="+encodeURIComponent(b.dataset.nm)+"&rg="+encodeURIComponent(b.dataset.rg||"")+"&ind="+encodeURIComponent(b.dataset.ind||"");};});
+    list.querySelectorAll("[data-card]").forEach(b=>{b.onclick=()=>openCM(b.dataset.card, (allLeads().find(x=>x.dm===b.dataset.card)||{}).nm||"");});
+  }
+  renderRegionDist(view);
+}
+
+function updateFunnel(){document.getElementById("fn3").textContent=state.added.size;}
+function showSaved(){const t=document.getElementById("savedTip");t.style.display="inline-flex";setTimeout(()=>t.style.display="none",1600);}
+
+function renderRegionDist(view){
+  const el=document.getElementById("regionDist");
+  const max=Math.max(1,...REGIONS.map(r=>view.filter(l=>l.region===r).length));
+  el.innerHTML=REGIONS.map(r=>{const n=view.filter(l=>l.region===r).length;return `<div class="rbar"><span>${r}</span><div class="bar"><i style="width:${Math.round(n/max*100)}%"></i></div><b>${n}</b></div>`;}).join("");
+}
+
+document.getElementById("exportBtn").onclick=()=>{
+  if(!state.added.size){alert("尚未加入任何管线线索。");return;}
+  const rows=allLeads().filter(l=>state.added.has(l.dm));
+  const q=x=>'"'+String(x==null?"":x).replace(/"/g,'""')+'"';
+  const head=["公司","域名","区域","行业","规模","采购方类型","采购需求品类","命中关键词","命中依据","匹配度","风险","联系可用性","窗口人岗位","企业电话","部门邮箱","人名","WhatsApp","WeChat","Telegram","来源"];
+  const body=rows.map(l=>{const c=CONTACTS[l.dm]||{};const o=loadOwn()[l.dm]||{};
+    return [l.nm,l.dm,l.region,l.ind,l.size,l.btype||"",l.need||"",l.kw||"",l.why||"",l.match,l.risk,l.contact,c.role||"",o.phone||c.cp||"",o.email||c.ce||"",o.person||c.person||"",o.whatsapp||c.wa||"",o.wechat||c.wc||"",o.telegram||c.tg||"",c.src||l.src].map(q).join(",");});
+  const csv="\ufeff"+[head.map(q).join(",")].concat(body).join("\n");
+  const blob=new Blob([csv],{type:"text/csv"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="FALCORA_管线线索_演示.csv";a.click();
+};
+
+/* ---------- 联系方式弹窗（L1/L2 公开 · L3 仅自备） ---------- */
+const CKEY="falcora_contacts_v1";
+function loadOwn(){try{return JSON.parse(localStorage.getItem(CKEY)||"{}")}catch(e){return {}}}
+function saveOwn(o){try{localStorage.setItem(CKEY,JSON.stringify(o))}catch(e){}}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+const LAYER_TXT={L1:"L1 公开",L2:"L2 职能",L3:"L3 自备",none:"未覆盖"};
+function lb(layer){return '<span class="badge b-'+layer+'">'+(LAYER_TXT[layer]||layer)+'</span>'}
+function cRow(k,v,layer,naTxt){const has=v&&String(v).trim();
+  return '<div class="crow"><span class="k">'+esc(k)+'</span><span class="v'+(has?'':' na')+'">'+esc(has||(naTxt||"需自备"))+'</span>'+lb(layer)+'</div>';}
+function cval(id){const e=document.getElementById(id);return e?e.value.trim():""}
+function openCM(dm,nm){
+  const l=allLeads().find(x=>x.dm===dm)||{nm:nm||dm,dm:dm,region:"",ind:"",contact:"none"};
+  const c=CONTACTS[dm]||{}; const own=loadOwn()[dm]||{};
+  document.getElementById("cmName").textContent=l.nm;
+  document.getElementById("cmDom").innerHTML=[l.dm,l.region,l.ind,l.btype].filter(Boolean).map(function(x){return "<span>"+esc(x)+"</span>";}).join(" · ");
+  const role=c.role||"";
+  const person=own.person||c.person||"";
+  const cp=own.phone||c.cp||"";
+  const ce=own.email||c.ce||"";
+  const wa=own.whatsapp||c.wa||"";
+  const wc=own.wechat||c.wc||"";
+  const tg=own.telegram||c.tg||"";
+  const cov=l.contact;
+  const na=cov==="none"?"数据未覆盖 · 需自备":"需自备（L3）";
+  let h="";
+  if(cov==="none") h+='<div class="warnbox">该线索仅有域名，联系方式数据未覆盖——不代表不存在，需您自行补充或等待数据源接入。</div>';
+  /* 采购需求与命中依据（为什么它是「您的」采购方） */
+  const needNA = !l.kw || l.kw==="—";
+  h+='<div class="csec"><h4><span>采购需求与命中依据</span><span class="lay">'+lb("L1")+'</span></h4>'
+    +'<div class="crow"><span class="k">采购方类型</span><span class="v">'+esc(l.btype||"—")+'</span>'+lb("L1")+'</div>'
+    +'<div class="crow"><span class="k">需求品类</span><span class="v'+(needNA?" na":"")+'">'+esc(needNA?"待验证（数据未覆盖）":l.need)+'</span>'+lb("L1")+'</div>'
+    +'<div class="crow"><span class="k">命中关键词</span><span class="v'+(needNA?" na":"")+'">'+esc(needNA?"—":l.kw)+'</span>'+lb("L1")+'</div>'
+    +'<div class="crow"><span class="k">命中依据</span><span class="v">'+esc(l.why||"—")+'</span>'+lb("L1")+'</div></div>';
+  h+='<div class="csec"><h4><span>联系窗口人</span><span class="lay">'+lb("L2")+'</span></h4>'
+    +cRow("岗位",role,"L2",na)
+    +cRow("人名",person,"L3",na)+'</div>';
+  h+='<div class="csec"><h4><span>企业职能联系方式</span><span class="lay">'+lb("L2")+'</span></h4>'
+    +cRow("企业电话",cp,"L2",na)
+    +cRow("部门邮箱",ce,"L2",na)
+    +cRow("官网",c.web||"","L1","—")
+    +cRow("公司主页",c.li||"","L1","—")+'</div>';
+  h+='<div class="csec"><h4><span>个人 / 即时通讯</span><span class="lay">'+lb("L3")+'</span></h4>'
+    +cRow("WhatsApp",wa,"L3","需自备（L3）")
+    +cRow("WeChat",wc,"L3","需自备（L3）")
+    +cRow("Telegram",tg,"L3","需自备（L3）")+'</div>';
+  h+='<div class="cnote"><span>数据来源</span> <b>'+esc(c.src||"—")+'</b></div>'
+    +'<div class="cnote">个人联系方式（人名 / 手机 / 私人邮箱 / 即时通讯）属 L3，平台只接受用户自备（名片 / 展会 / 客户留资），不抓取、不买卖、不推断。</div>';
+  h+='<div class="csec"><h4><span>补录联系方式（L3 · 仅存本机）</span></h4>'
+    /* 这里只回填「使用者自己上次补录的内容」——
+       绝不用任何演示 / 预设值预填，否则会分不清哪些是自己填的。 */
+    +'<div class="cform">'
+    +'<label>人名<input id="cfPerson" value="'+esc(own.person||"")+'" placeholder="对方姓名" /></label>'
+    +'<label>电话 / 手机<input id="cfPhone" value="'+esc(own.phone||"")+'" placeholder="含国家码" /></label>'
+    +'<label>邮箱<input id="cfEmail" value="'+esc(own.email||"")+'" placeholder="name@company.com" /></label>'
+    +'<label>WhatsApp<input id="cfWa" value="'+esc(own.whatsapp||"")+'" placeholder="含国家码" /></label>'
+    +'<label>WeChat<input id="cfWc" value="'+esc(own.wechat||"")+'" placeholder="wechat id" /></label>'
+    +'<label>Telegram<input id="cfTg" value="'+esc(own.telegram||"")+'" placeholder="@handle" /></label>'
+    +'</div><div class="cfoot"><button class="mini" id="cfSave">保存补录</button><span class="cnote" id="cfTip" style="display:none">✓ 已保存到本机</span></div></div>';
+  h+='<div class="cbar"><button class="btn" id="cmAdd">加入管线</button><button class="btn ghost" id="cmDD">进入尽调核查 →</button></div>';
+  document.getElementById("cmBody").innerHTML=h;
+  document.getElementById("cfSave").onclick=()=>{
+    const o=loadOwn();
+    o[dm]={person:cval("cfPerson"),phone:cval("cfPhone"),email:cval("cfEmail"),whatsapp:cval("cfWa"),wechat:cval("cfWc"),telegram:cval("cfTg")};
+    saveOwn(o); render(); openCM(dm,l.nm);
+    const t=document.getElementById("cfTip"); if(t){t.style.display="inline";setTimeout(()=>{if(t)t.style.display="none";},1600);}
+  };
+  document.getElementById("cmAdd").onclick=()=>{state.added.add(dm);updateFunnel();render();showSaved();closeCM();};
+  document.getElementById("cmDD").onclick=()=>{location.href="03_客户尽调与风险核查.html?co="+encodeURIComponent(dm)+"&nm="+encodeURIComponent(l.nm);};
+  document.getElementById("cmModal").hidden=false;
+  document.body.style.overflow="hidden";
+}
+function closeCM(){const m=document.getElementById("cmModal");if(m)m.hidden=true;document.body.style.overflow="";}
+document.getElementById("cmClose").onclick=closeCM;
+document.querySelector("[data-cm-close]").onclick=closeCM;
+document.addEventListener("keydown",e=>{
+  if(e.key!=="Escape") return;
+  const m=document.getElementById("cmModal"); if(m&&!m.hidden)closeCM();
+  const k=document.getElementById("cardModal"); if(k&&!k.hidden)closeCard();
+});
+
+/* ================= 联系方式验证与去重 ================= */
+const FREEMAIL=/(gmail|yahoo|hotmail|outlook|qq|163|126|foxmail|aol|gmx|yandex|protonmail|icloud)\./i;
+const MAIL_RE=/^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/;
+const TEL_RE=/^\+[1-9]\d{6,14}$/;
+const SUF=/(limited|ltd|llc|inc|incorporated|gmbh|pte|corp|corporation|company|holdings|group|trading|srl|plc|sa|bv|nv|ab|oy)$/;
+
+function normDm(s){return String(s||"").toLowerCase().replace(/^https?:\/\//,"").replace(/^www\./,"").replace(/\/.*$/,"").trim();}
+function normNm(s){return String(s||"").toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]/g,"").replace(SUF,"");}
+
+function runVerify(){
+  const all=allLeads(), own=loadOwn(), cards=loadCards();
+
+  /* 1) 去重：域名归一 + 公司名归一（剥离 Ltd/GmbH/LLC… 后缀） */
+  const byDm={}, dups=[];
+  all.forEach(l=>{const k=normDm(l.dm)||l.nm.toLowerCase(); if(byDm[k]) dups.push({by:"域名",a:byDm[k],b:l}); else byDm[k]=l;});
+  const byNm={};
+  all.forEach(l=>{const k=normNm(l.nm); if(!k) return;
+    if(byNm[k]&&normDm(byNm[k].dm)!==normDm(l.dm)) dups.push({by:"公司名",a:byNm[k],b:l}); else if(!byNm[k]) byNm[k]=l;});
+
+  /* 2) 邮箱有效性 */
+  let mN=0,mBad=0,mFree=0,mOk=0;
+  all.forEach(l=>{const c=CONTACTS[l.dm]||{},o=own[l.dm]||{},k=l.card||{};
+    const m=String(o.email||k.email||c.ce||"").trim(); if(!m) return; mN++;
+    if(!MAIL_RE.test(m)){mBad++;return;}
+    const host=m.split("@")[1].toLowerCase(), base=normDm(l.dm).split(".")[0];
+    if(FREEMAIL.test(m)) mFree++;
+    else if(base&&host.indexOf(base)<0) mBad++;
+    else mOk++;});
+
+  /* 3) 电话 E.164 */
+  let tN=0,tOk=0;
+  all.forEach(l=>{const c=CONTACTS[l.dm]||{},o=own[l.dm]||{},k=l.card||{};
+    const t=String(o.phone||k.tel||c.cp||"").trim(); if(!t) return; tN++; if(TEL_RE.test(t.replace(/[\s-]/g,""))) tOk++;});
+
+  /* 4) 联系可用性分层 */
+  const lyr={L1:0,L2:0,L3:0,none:0};
+  all.forEach(l=>{lyr[l.contact]=(lyr[l.contact]||0)+1;});
+
+  const uniq=Object.keys(byDm).length;
+  const el=document.getElementById("vfyBody");
+  el.innerHTML=
+    '<div class="vrow"><span class="lab">线索总数 / 唯一主体</span><b>'+all.length+' / '+uniq+'</b></div>'+
+    '<div class="vrow"><span class="lab">疑似重复（域名或公司名）</span>'+(dups.length?'<span class="vwarn"><b>'+dups.length+'</b><span> 条</span></span>':'<span class="vok">0 条</span>')+'</div>'+
+    '<div class="vrow"><span class="lab">邮箱格式通过 / 免费邮箱 / 疑似无效</span><b>'+mOk+' / '+mFree+' / '+mBad+'</b></div>'+
+    '<div class="vrow"><span class="lab">电话 E.164 合规</span><b>'+tOk+' / '+tN+'</b></div>'+
+    '<div class="vrow"><span class="lab">L2 职能联系 / L3 自备 / 未覆盖</span><b>'+lyr.L2+' / '+lyr.L3+' / '+lyr.none+'</b></div>'+
+    '<div class="vbar"><i style="width:'+(all.length?Math.round((mOk+mFree+mBad)/all.length*100):0)+'%"></i></div>'+
+    '<div class="cnote2">邮箱与电话<b>只做格式与域名一致性校验</b>；未接入 MX 查询与实投验证前，一律标「未验证」，<b>不标「有效」</b>。</div>'+
+    (dups.length?'<div class="duplist">'+dups.slice(0,4).map((d,i)=>
+        '<div class="dup">重复（按'+d.by+'）：<b>'+esc(d.a.nm)+'</b> ↔ <b>'+esc(d.b.nm)+'</b><div class="act"><button class="mini" data-merge="'+i+'">保留前者，合并后者</button></div></div>').join("")+'</div>':'');
+
+  el.querySelectorAll("[data-merge]").forEach(b=>{b.onclick=()=>{
+    const d=dups[+b.dataset.merge];
+    if(!d.b.card){ toast("「"+d.b.nm+"」为内置演示数据，不可合并"); return; }
+    saveCards(loadCards().filter(x=>normDm(x.dm)!==normDm(d.b.dm)));
+    state.added.delete(d.b.dm);
+    runVerify(); render(); updateFunnel();
+    toast("已合并「"+d.b.nm+"」到「"+d.a.nm+"」");
+  };});
+
+  document.getElementById("vfyTag").innerHTML="<b>"+uniq+"</b><span> 唯一 · </span>"+(dups.length?"<b>"+dups.length+"</b><span> 重复</span>":"<span>无重复</span>");
+}
+document.getElementById("vfyBtn").onclick=()=>{runVerify();toast("已重新校验联系方式");};
+
+/* ================= 展会名片建档 ================= */
+const cardModal=document.getElementById("cardModal");
+const kRegion=document.getElementById("kRegion");
+REGIONS.forEach(r=>{const o=document.createElement("option");o.value=r;o.textContent=r;kRegion.appendChild(o);});
+document.getElementById("kDate").value=new Date().toISOString().slice(0,10);
+
+function openCard(){
+  ["kPerson","kTitle","kCo","kDm","kMail","kTel"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("kDup").hidden=true;
+  document.getElementById("cardThumb").hidden=true;
+  document.getElementById("cardFile").value="";
+  cardModal.hidden=false; document.body.style.overflow="hidden";
+  document.getElementById("kCo").focus();
+}
+function closeCard(){cardModal.hidden=true;document.body.style.overflow="";}
+document.getElementById("cardBtn").onclick=openCard;
+document.querySelectorAll("[data-card-close]").forEach(b=>b.onclick=closeCard);
+cardModal.addEventListener("click",e=>{if(e.target===cardModal)closeCard();});
+
+document.getElementById("cardDrop").onclick=()=>document.getElementById("cardFile").click();
+document.getElementById("cardFile").onchange=e=>{
+  const f=e.target.files&&e.target.files[0]; if(!f) return;
+  const img=document.getElementById("cardThumb");
+  img.src=URL.createObjectURL(f); img.hidden=false;
+};
+document.getElementById("kDm").addEventListener("input",function(){
+  const k=normDm(this.value);
+  const hit=allLeads().find(l=>normDm(l.dm)===k);
+  const note=document.getElementById("kDup");
+  if(hit){note.hidden=false;note.textContent="⚠ 该域名已在池中（"+hit.nm+"）——保存时将合并到既有记录，不新增重复行。";}
+  else note.hidden=true;
+});
+
+document.getElementById("kSave").onclick=()=>{
+  const nm=cval("kCo"), dm=normDm(cval("kDm"));
+  if(!nm&&!dm){document.getElementById("kCo").focus();return;}
+  const key=dm||nm;
+  const rec={nm:nm||key,dm:dm||key,region:kRegion.value,ind:"待确认",
+    person:cval("kPerson"),title:cval("kTitle"),email:cval("kMail"),tel:cval("kTel"),
+    scene:document.getElementById("kScene").value,date:document.getElementById("kDate").value};
+  const before=loadCards().length;
+  saveCards(loadCards().filter(x=>normDm(x.dm)!==normDm(rec.dm)).concat([rec]));
+  state.added.add(rec.dm);
+  closeCard();
+  runVerify(); render(); updateFunnel(); showSaved();
+  toast(before!==loadCards().length?"已建档（同名合并）":"已建档并加入线索池");
+};
+
+function toast(msg){
+  let t=document.getElementById("ldToast");
+  if(!t){t=document.createElement("div");t.id="ldToast";document.body.appendChild(t);
+    t.style.cssText="position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(12px);z-index:9999;background:rgba(8,30,37,.96);border:1px solid var(--border-2);color:var(--ink);padding:10px 18px;border-radius:12px;font-size:13px;opacity:0;transition:.28s;box-shadow:0 12px 34px rgba(0,0,0,.4);pointer-events:none";}
+  t.textContent="✓ "+msg;
+  t.style.opacity="1";t.style.transform="translateX(-50%) translateY(0)";
+  clearTimeout(t.__t);t.__t=setTimeout(()=>{t.style.opacity="0";t.style.transform="translateX(-50%) translateY(12px)";},1900);
+}
+
+if(window.__falOnRefresh) window.__falOnRefresh(function(){runVerify();render();});
+
+/* 已建档名片默认视为已加入管线 */
+loadCards().forEach(c=>{if(c.dm)state.added.add(c.dm);});
+runVerify();
+render();updateFunnel();
+</script>
+<script src="app-update.js"></script>
+<script src="app-nav.js"></script>
+<script src="app-i18n-dict.js"></script>
+<script src="app-i18n.js"></script>
+</body>
+</html>
