@@ -827,7 +827,26 @@ const CONTACTS = {
 const REGIONS = ["北美","欧盟","中东","东南亚","拉美","非洲","东亚","大洋洲"];
 const INDUSTRIES = ["工业设备","电子制造","医疗器械","新能源","建材","化工","汽车零部件","包装"];
 
-const state = {scope:"profile", region:new Set(), industry:"", btype:"", size:"", contact:"", match:0, risk:new Set(["green","yellow","red","na"]), q:"", added:new Set()};
+/* ---------- 管线（跨页商机状态）----------
+   原设计 state.added 只是内存 Set —— 点「加入管线」后刷新即丢，切到 ④ 也找不到。
+   现持久化到 falcora_pipeline_v1，④ 获客执行页读同一键把公司并入「对方资料」。
+   ⚠️ 只存业务主体标识（公司名 / 域名 / 区域 / 行业 / 类型 / 需求），
+      不存任何 L3 个人联系方式 —— 那些仍只在 falcora_contacts_v1 里、只由使用者自备。 */
+const PIPEKEY = "falcora_pipeline_v1";
+function loadPipe(){ try{ return JSON.parse(localStorage.getItem(PIPEKEY) || "{}") || {}; }catch(e){ return {}; } }
+function savePipe(o){ try{ localStorage.setItem(PIPEKEY, JSON.stringify(o)); }catch(e){} }
+function addToPipe(l){
+  if(!l || !l.dm) return;
+  const m = loadPipe();
+  m[l.dm] = { dm:l.dm, nm:l.nm||l.dm, region:l.region||"", ind:l.ind||"",
+              btype:l.btype||"", need:l.need||"", kw:l.kw||"",
+              contact:l.contact||"", src:"② 线索池", at:Date.now() };
+  savePipe(m);
+  state.added.add(l.dm);
+  updateFunnel(); render(); showSaved();
+}
+
+const state = {scope:"profile", region:new Set(), industry:"", btype:"", size:"", contact:"", match:0, risk:new Set(["green","yellow","red","na"]), q:"", added:new Set(Object.keys(loadPipe()))};
 
 // build filter chips
 const fRegion = document.getElementById("fRegion");
@@ -914,7 +933,11 @@ function render(){
         <div class="act"><button class="mini ${added?'added':''}" data-dm="${l.dm}" ${added?'disabled':''}>${added?'✓ 已加入':'加入管线'}</button><button class="mini" data-cm="${l.dm}" data-nm="${l.nm}">联系方式</button>${l.card?'<button class="mini" data-card="'+l.dm+'">名片</button>':'<button class="mini ghost" data-dd="'+l.dm+'" data-nm="'+esc(l.nm)+'" data-rg="'+esc(l.region)+'" data-ind="'+esc(l.ind)+'">→ 核查</button>'}</div>
       </div>`;
     }).join("");
-    list.querySelectorAll(".mini:not(.added)").forEach(b=>{if(b.dataset.dm)b.onclick=()=>{state.added.add(b.dataset.dm);updateFunnel();render();showSaved();};});
+    list.querySelectorAll(".mini:not(.added)").forEach(b=>{if(b.dataset.dm)b.onclick=()=>{
+      const l=allLeads().find(x=>x.dm===b.dataset.dm);
+      if(l) addToPipe(l);
+      else {state.added.add(b.dataset.dm);updateFunnel();render();showSaved();}
+    };});
     list.querySelectorAll("[data-cm]").forEach(b=>{b.onclick=()=>openCM(b.dataset.cm,b.dataset.nm);});
     list.querySelectorAll("[data-dd]").forEach(b=>{b.onclick=()=>{location.href="03_客户尽调与风险核查.html?co="+encodeURIComponent(b.dataset.dd)+"&nm="+encodeURIComponent(b.dataset.nm)+"&rg="+encodeURIComponent(b.dataset.rg||"")+"&ind="+encodeURIComponent(b.dataset.ind||"");};});
     list.querySelectorAll("[data-card]").forEach(b=>{b.onclick=()=>openCM(b.dataset.card, (allLeads().find(x=>x.dm===b.dataset.card)||{}).nm||"");});
@@ -1215,6 +1238,11 @@ document.getElementById("kSave").onclick=()=>{
   const before=loadCards().length;
   saveCards(loadCards().filter(x=>normDm(x.dm)!==normDm(rec.dm)).concat([rec]));
   state.added.add(rec.dm);
+  /* 名片建档同样写入管线（不重绘 —— 下面已有 render()，避免重复） */
+  const pm=loadPipe();
+  pm[rec.dm]={dm:rec.dm,nm:rec.nm,region:rec.region,ind:rec.ind,btype:"",need:"",kw:"",
+    contact:"L3",src:"② 名片建档",at:Date.now()};
+  savePipe(pm);
   closeCard();
   runVerify(); render(); updateFunnel(); showSaved();
   toast(before!==loadCards().length?"已建档（同名合并）":"已建档并加入线索池");
