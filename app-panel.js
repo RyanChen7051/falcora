@@ -170,6 +170,11 @@
     + '.fd-h .fd-ic{width:34px;height:34px;flex:0 0 auto;border-radius:11px;background:rgba(94,234,212,.13);display:grid;place-items:center;color:var(--cyan,#5EEAD4)}'
     + '.fd-h b{font-size:16px;font-weight:700;display:block;line-height:1.3}'
     + '.fd-h small{font-size:11.5px;color:var(--muted-2,#6E878C);letter-spacing:1.1px}'
+    /* 标题是「中文主标 + 英文副标」的双语 lockup。英文界面下主标本身就是 Notifications / Settings，
+       再挂英文副标会重复成「Notifications / Notifications」→ 英文界面隐藏副标。
+       用 CSS + html[data-lang] 而非 JS 判断：切语言时 app-i18n.js 会更新 data-lang，自动生效，
+       不需要在 __falOnRefresh 里额外重绘 header。 */
+    + 'html[data-lang="en"] .fd-h small{display:none}'
     + '.fd-x{margin-left:auto;width:34px;height:34px;flex:0 0 auto;border-radius:10px;border:1px solid var(--border,rgba(126,154,160,.16));'
     + 'background:rgba(0,0,0,.2);color:var(--muted,#8AA3A8);cursor:pointer;font-size:15px;line-height:1;font-family:inherit;transition:.16s}'
     + '.fd-x:hover{color:var(--ink,#E9F3F4);border-color:var(--border-2,rgba(94,234,212,.14))}'
