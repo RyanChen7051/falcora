@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<script src="app-vals.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0B2632" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="assets/favicon.ico" />
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+<title>获客通AI · 客户尽调与风险核查</title>
+<style>
+  :root{
+    --bg:#0B2632; --bg-2:#0A2E38; --side:#0A2A33;
+    --panel:rgba(13,46,54,.72); --panel-2:rgba(16,58,68,.55);
+    --border:rgba(126,154,160,.16); --border-2:rgba(94,234,212,.14);
+    --cyan:#5EEAD4; --teal:#0E9A8E; --gold:#F5B841;
+    --ink:#E9F3F4; --muted:#8AA3A8; --muted-2:#6E878C;
+    --good:#34D399; --danger:#FF6B6B; --warn:#F5B841;
+    --radius:16px; --shadow:0 18px 48px rgba(0,0,0,.35);
+    --font:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);
+    background-image:radial-gradient(1100px 520px at 78% -8%,rgba(14,154,142,.16),transparent 60%),
+      radial-gradient(820px 460px at 8% 108%,rgba(245,184,65,.08),transparent 60%);
+    -webkit-font-smoothing:antialiased;line-height:1.5}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:.2px}
+  .app{display:flex;min-height:100vh}
+  .sidebar{width:248px;flex:0 0 248px;background:linear-gradient(180deg,var(--side),#08222A);
+    border-right:1px solid var(--border);padding:20px 16px;position:sticky;top:0;height:100vh;
+    display:flex;flex-direction:column;gap:6px}
+  .brand{display:flex;align-items:center;gap:11px;padding:6px 8px 18px}
+  .brand-mark{width:34px;height:34px;border-radius:10px;flex:0 0 auto;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+  .brand-txt b{font-size:17px;letter-spacing:.5px;display:block}
+  .brand-txt span{font-size:11px;color:var(--muted-2);letter-spacing:1.5px}
+  .nav-label{font-size:11px;color:var(--muted-2);letter-spacing:1.5px;padding:14px 10px 6px}
+  .nav-item{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:11px;
+    color:var(--muted);font-size:14px;cursor:pointer;transition:.18s;position:relative;text-decoration:none}
+  .nav-item .idx{width:22px;height:22px;flex:0 0 auto;border-radius:7px;display:grid;place-items:center;
+    font-size:11px;font-weight:700;background:rgba(94,234,212,.08);color:var(--cyan)}
+  .nav-item:hover{background:rgba(94,234,212,.06);color:var(--ink)}
+  .nav-item.active{background:linear-gradient(90deg,rgba(94,234,212,.16),rgba(94,234,212,.02));color:#fff}
+  .nav-item.active::before{content:"";position:absolute;left:-16px;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--cyan)}
+  .nav-item.active .idx{background:var(--cyan);color:#06262B}
+  .side-foot{margin-top:auto;border-top:1px solid var(--border);padding-top:14px;display:flex;gap:10px;align-items:center}
+  .avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--teal),var(--cyan));display:grid;place-items:center;font-weight:700;color:#06262B;flex:0 0 auto}
+  .side-foot small{display:block;color:var(--muted-2);font-size:11px}
+  .side-foot b{font-size:13px}
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{display:flex;align-items:center;gap:18px;padding:18px 28px;border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:20;background:rgba(11,38,50,.82);backdrop-filter:blur(10px)}
+  .title h1{font-size:19px;font-weight:700;letter-spacing:.4px}
+  .title p{font-size:12px;color:var(--muted-2);letter-spacing:1.4px;text-transform:uppercase}
+  .search{flex:1;max-width:420px;margin-left:8px;position:relative}
+  .search input{width:100%;padding:10px 14px 10px 38px;border-radius:11px;border:1px solid var(--border);
+    background:rgba(0,0,0,.22);color:var(--ink);font-size:13px;font-family:inherit;outline:none}
+  .search input:focus{border-color:var(--border-2);box-shadow:0 0 0 3px rgba(94,234,212,.1)}
+  .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.5}
+  .top-right{display:flex;align-items:center;gap:12px;margin-left:auto}
+  .pill{font-size:12px;padding:7px 13px;border-radius:999px;background:linear-gradient(135deg,rgba(245,184,65,.22),rgba(245,184,65,.06));
+    color:var(--gold);border:1px solid rgba(245,184,65,.3);font-weight:600}
+  .icon-btn{width:38px;height:38px;border-radius:11px;border:1px solid var(--border);background:rgba(0,0,0,.2);
+    display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+  .icon-btn:hover{color:var(--ink);border-color:var(--border-2)}
+  .content{padding:24px 28px 48px;display:flex;flex-direction:column;gap:18px}
+
+  .toolbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .toolbar h2{font-size:20px;font-weight:750}
+  .toolbar .sub{font-size:12.5px;color:var(--muted-2)}
+  .spacer{flex:1}
+  .btn{padding:11px 20px;border-radius:12px;border:1px solid rgba(245,184,65,.4);cursor:pointer;font-size:14px;font-weight:700;
+    background:linear-gradient(135deg,var(--gold),#E0A02E);color:#3a2a05;font-family:inherit}
+  .btn:hover{filter:brightness(1.06)}
+  .btn.ghost{background:rgba(94,234,212,.08);color:var(--cyan);border-color:var(--border-2)}
+  .btn.sm{padding:8px 14px;font-size:13px;border-radius:10px}
+  .sel{padding:11px 14px;border-radius:11px;border:1px solid var(--border);background:rgba(0,0,0,.24);color:var(--ink);font-size:14px;font-family:inherit;outline:none;min-width:300px}
+  .sel:focus{border-color:var(--border-2)}
+  .inp{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:rgba(0,0,0,.24);color:var(--ink);
+    font-size:13px;font-family:inherit;outline:none;width:100%}
+  .inp:focus{border-color:var(--border-2)}
+
+  /* verdict banner */
+  .verdict{display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center;padding:20px 24px;border-radius:var(--radius);
+    border:1px solid var(--border);background:var(--panel);box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .verdict.v-green{border-color:rgba(52,211,153,.34);background:linear-gradient(100deg,rgba(52,211,153,.12),rgba(13,46,54,.6))}
+  .verdict.v-yellow{border-color:rgba(245,184,65,.34);background:linear-gradient(100deg,rgba(245,184,65,.12),rgba(13,46,54,.6))}
+  .verdict.v-red{border-color:rgba(255,107,107,.34);background:linear-gradient(100deg,rgba(255,107,107,.12),rgba(13,46,54,.6))}
+  .vbadge{width:66px;height:66px;border-radius:16px;display:grid;place-items:center;font-size:26px;flex:0 0 auto}
+  .v-green .vbadge{background:rgba(52,211,153,.16);color:var(--good)}
+  .v-yellow .vbadge{background:rgba(245,184,65,.16);color:var(--gold)}
+  .v-red .vbadge{background:rgba(255,107,107,.16);color:var(--danger)}
+  .vbody h2{font-size:19px;font-weight:750;margin-bottom:4px}
+  .vbody .co{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .vbody .co b{color:var(--ink)}
+  .vsum{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .vtag{font-size:12px;padding:6px 12px;border-radius:999px;font-weight:700}
+  .vmeta{text-align:right;font-size:12px;color:var(--muted-2);line-height:1.7}
+  .vmeta b{color:var(--ink);font-size:22px;display:block;font-weight:750}
+
+  /* 主体信息核验 */
+  .idcard{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .card-h{display:flex;align-items:center;gap:10px;padding:15px 18px;border-bottom:1px solid var(--border)}
+  .card-h .ic{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto;font-size:15px;
+    background:rgba(94,234,212,.1);color:var(--cyan)}
+  .card-h h3{font-size:14.5px;font-weight:700}
+  .card-h .st{margin-left:auto;font-size:11px;padding:4px 10px;border-radius:999px;font-weight:700;white-space:nowrap}
+  .card-h .tag{font-size:11px;color:var(--muted-2)}
+  .st.clear{background:rgba(52,211,153,.14);color:var(--good);border:1px solid rgba(52,211,153,.3)}
+  .st.hit{background:rgba(255,107,107,.14);color:var(--danger);border:1px solid rgba(255,107,107,.3)}
+  .st.na{background:rgba(126,154,160,.14);color:var(--muted);border:1px solid var(--border)}
+  .st.warn{background:rgba(245,184,65,.14);color:var(--gold);border:1px solid rgba(245,184,65,.3)}
+  .idgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+  .idrow{padding:12px 18px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);display:flex;flex-direction:column;gap:5px}
+  .idrow:nth-child(3n){border-right:0}
+  .idrow .k{font-size:11.5px;color:var(--muted-2);display:flex;align-items:center;gap:7px}
+  .idrow .v{font-size:13.5px;font-weight:600;word-break:break-all}
+  .idrow .s{font-size:11px;color:var(--muted-2)}
+  .mdot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+  .mdot.match{background:var(--good);box-shadow:0 0 0 3px rgba(52,211,153,.14)}
+  .mdot.mismatch{background:var(--danger);box-shadow:0 0 0 3px rgba(255,107,107,.14)}
+  .mdot.na{background:var(--muted-2);box-shadow:0 0 0 3px rgba(126,154,160,.14)}
+
+  .layout{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+  .checks{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .check{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .check.wide{grid-column:1 / -1}
+  .check-h{display:flex;align-items:center;gap:11px;padding:14px 16px;border-bottom:1px solid var(--border)}
+  .check-h .ic{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto;font-size:15px;
+    background:rgba(94,234,212,.1);color:var(--cyan)}
+  .check-h h3{font-size:14px;font-weight:700}
+  .check-h .st{margin-left:auto;font-size:11px;padding:4px 10px;border-radius:999px;font-weight:700;white-space:nowrap}
+  .check-b{padding:14px 16px;display:flex;flex-direction:column;gap:11px}
+  .srcs{font-size:11.5px;color:var(--muted-2);line-height:1.6}
+  .srcs b{color:var(--muted);font-weight:600}
+  .find{list-style:none;display:flex;flex-direction:column;gap:8px}
+  .find li{font-size:12.5px;display:flex;gap:9px;line-height:1.5;align-items:flex-start}
+  .find li::before{content:"";flex:0 0 auto;width:7px;height:7px;border-radius:50%;margin-top:6px;background:var(--cyan);box-shadow:0 0 0 3px rgba(94,234,212,.12)}
+  .find li.hit::before{background:var(--danger);box-shadow:0 0 0 3px rgba(255,107,107,.14)}
+  .find li.na::before{background:var(--muted-2);box-shadow:0 0 0 3px rgba(126,154,160,.14)}
+  .find li.warn::before{background:var(--gold);box-shadow:0 0 0 3px rgba(245,184,65,.14)}
+  .cov{font-size:11.5px;color:var(--muted-2);border-top:1px dashed var(--border);padding-top:9px;display:flex;align-items:center;gap:7px}
+  .cov .dot{width:7px;height:7px;border-radius:50%;background:var(--cyan)}
+
+  /* 名单 / 条目小表 */
+  table.mini{width:100%;border-collapse:collapse;font-size:12px}
+  table.mini th{text-align:left;font-weight:600;color:var(--muted-2);font-size:11px;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap}
+  table.mini td{padding:7px 8px;border-bottom:1px solid rgba(126,154,160,.08);vertical-align:top}
+  table.mini tr:last-child td{border-bottom:0}
+  table.mini td.n{color:var(--muted)}
+  table.mini td.c{text-align:center;white-space:nowrap}
+  .ok-i{color:var(--good);font-weight:700}
+  .no-i{color:var(--danger);font-weight:700}
+  .na-i{color:var(--muted-2)}
+  .wn-i{color:var(--gold);font-weight:700}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--muted)}
+
+  .side-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:18px}
+  .sb{padding:15px 16px;display:flex;flex-direction:column;gap:12px}
+  .covrow{display:grid;grid-template-columns:104px 1fr 38px;gap:9px;align-items:center;font-size:12px}
+  .covrow .bar{height:8px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden}
+  .covrow .bar > i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--teal),var(--cyan))}
+  .covrow b{text-align:right;color:var(--muted)}
+  .advice{font-size:12.8px;line-height:1.65}
+  .advice b{color:var(--gold)}
+  .disclaimer{font-size:11.5px;color:var(--muted-2);line-height:1.6;border-left:2px solid rgba(245,184,65,.4);padding-left:11px}
+  .foot{font-size:11.5px;color:var(--muted-2);padding:6px 2px;text-align:center;line-height:1.6}
+
+  /* 新增主体弹窗 */
+  .modal{position:fixed;inset:0;z-index:60;background:rgba(4,16,20,.72);backdrop-filter:blur(4px);
+    display:grid;place-items:center;padding:24px}
+  .modal[hidden]{display:none}
+  .mbox{width:min(560px,100%);background:linear-gradient(180deg,#0C2A33,#0A242C);border:1px solid var(--border-2);
+    border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.55);overflow:hidden}
+  .mhead{display:flex;align-items:center;gap:11px;padding:16px 20px;border-bottom:1px solid var(--border)}
+  .mhead h3{font-size:15px;font-weight:750}
+  .mhead .x{margin-left:auto;cursor:pointer;color:var(--muted);font-size:18px;line-height:1}
+  .mbody{padding:18px 20px;display:flex;flex-direction:column;gap:13px}
+  .mfoot{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:12px;color:var(--muted)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .note{font-size:11.5px;color:var(--muted-2);line-height:1.6;border-left:2px solid rgba(94,234,212,.35);padding-left:11px}
+
+  @media(max-width:1180px){.layout{grid-template-columns:1fr}.checks{grid-template-columns:1fr}.idgrid{grid-template-columns:1fr 1fr}}
+  @media(max-width:780px){.sidebar{display:none}.topbar{flex-wrap:wrap}.sel{min-width:0;width:100%}.verdict{grid-template-columns:1fr}.idgrid{grid-template-columns:1fr}.row2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <img class="brand-mark" src="assets/logo.png" alt="FALCORA" />
+      <div class="brand-txt"><b>获客通AI</b><span>FALCORA</span></div>
+    </div>
+    <div class="nav-label">主导航</div>
+    <a class="nav-item" href="index.html"><span class="idx">⌂</span> 增长总司令驾驶舱</a>
+    <a class="nav-item" href="01_战略_企业战略档案.html"><span class="idx">①</span> 战略 · 企业战略档案</a>
+    <a class="nav-item" href="02_全球线索获取.html"><span class="idx">②</span> 全球线索获取</a>
+    <a class="nav-item active" href="03_客户尽调与风险核查.html"><span class="idx">③</span> 客户尽调与风险核查</a>
+    <a class="nav-item" href="04_获客执行与内容.html"><span class="idx">④</span> 获客执行与内容</a>
+    <a class="nav-item" href="05_客户深挖.html"><span class="idx">⑤</span> 客户深挖</a>
+    <a class="nav-item" href="06_转化率升级.html"><span class="idx">⑥</span> 转化率升级</a>
+    <div class="side-foot">
+      <div class="avatar">CB</div>
+      <div><b>陈邦杰</b><small>首席产品设计官</small></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="title"><h1>客户尽调与风险核查</h1><p>Customer Due Diligence</p></div>
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        <input id="q" placeholder="搜索公司 / 域名 / 名单关键词…" />
+      </div>
+      <div class="top-right">
+        <span class="pill">演示数据 · 三态输出</span>
+        <div class="icon-btn">⚙</div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="toolbar">
+        <h2>尽调工作台</h2>
+        <span class="sub">对任意交易对手做身份核验 + 名单筛查 + 信用舆情核查；非法律 / 信用意见</span>
+        <div class="spacer"></div>
+        <select class="sel" id="picker"></select>
+        <button class="btn ghost sm" id="addBtn">＋ 核查新主体</button>
+        <button class="btn ghost sm" id="rerun">重新核查</button>
+        <button class="btn sm" id="exportBtn">导出尽调报告</button>
+      </div>
+
+      <div class="verdict" id="verdict"></div>
+
+      <div class="idcard">
+        <div class="card-h"><div class="ic">🪪</div><h3>主体信息核验 · 企业身份</h3><span class="st" id="idtSt"></span></div>
+        <div class="idgrid" id="idtGrid"></div>
+        <div class="srcs" style="padding:11px 18px"><b>数据源：</b><span id="idtSrc"></span></div>
+      </div>
+
+      <div class="layout">
+        <div class="checks" id="checks"></div>
+
+        <div>
+          <div class="side-card">
+            <div class="card-h"><h3>核查覆盖度</h3><span class="tag" id="covTag">—</span></div>
+            <div class="sb" id="covBody"></div>
+          </div>
+          <div class="side-card">
+            <div class="card-h"><h3>核查结论与建议</h3></div>
+            <div class="sb"><div class="advice" id="advice"></div></div>
+          </div>
+          <div class="side-card">
+            <div class="card-h"><h3>合规声明</h3></div>
+            <div class="sb">
+              <div class="disclaimer">
+                · 本报告基于有限公开数据源，<b>「未发现命中」≠「无风险」</b>，<b>「数据未覆盖」≠「清白」</b>。<br>
+                · 制裁 / 名单核查结果随名单更新而变化，须以核查时点为准。<br>
+                · 个人联系方式属 L3，平台只接受用户自备，不做抓取、买卖或推断。<br>
+                · 不构成法律、合规、信用或投资意见；重大交易请委托持牌机构复核。
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="foot">演示数据 · 所有核查结果、来源与主体均为示例，不对应真实公司；严格遵循 L1/L2/L3 分层与三态输出原则。</div>
+    </div>
+  </main>
+</div>
+
+<!-- 核查新主体 -->
+<div class="modal" id="addModal" hidden>
+  <div class="mbox">
+    <div class="mhead"><h3>核查新主体</h3><span class="x" id="addX">✕</span></div>
+    <div class="mbody">
+      <div class="note">输入任意交易对手，系统按现有数据源做一遍核查。<b>未接入的数据源会明确标「数据未覆盖」，不会替你猜。</b></div>
+      <div class="field"><label>企业名称</label><input class="inp" id="nNm" placeholder="例：Northwind Industrial Co." /></div>
+      <div class="row2">
+        <div class="field"><label>官网域名</label><input class="inp" id="nDm" placeholder="例：example.com" /></div>
+        <div class="field"><label>所在区域</label>
+          <select class="inp" id="nRg"></select></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>所属行业</label>
+          <select class="inp" id="nInd"></select></div>
+        <div class="field"><label>当地注册号（可选）</label><input class="inp" id="nReg" placeholder="工商 / 商业登记号" /></div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn ghost sm" id="addCancel">取消</button>
+      <button class="btn sm" id="addOk">开始核查</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   ③ 客户尽调与风险核查 —— 尽调工作台
+   三态输出：clear 未发现命中 / hit 发现命中 / na 数据未覆盖（另有 warn 需复核）
+   ⚠️ 硬规则：绝不输出「无风险」；未接数据源一律 na，不得用推测填充。
+   ========================================================================= */
+
+const REGIONS = ["北美","欧盟","中东","东南亚","拉美","非洲","东亚"];
+const INDS = ["工业设备","电子制造","医疗器械","新能源","建材","化工","汽车零部件","包装"];
+
+/* 名单库：筛查逐条列出，不合并成一句「未发现命中」 */
+const LIST_DEF = [
+  ["OFAC SDN","美国财政部 特别指定国民名单"],
+  ["OFAC 50% Rule","美方 50% 穿透规则"],
+  ["BIS Entity List","美国商务部 实体清单"],
+  ["BIS MEU","美国商务部 军事最终用户"],
+  ["EU Consolidated","欧盟 综合制裁名单"],
+  ["UK OFSI","英国 金融制裁名单"],
+  ["UN SC Consolidated","联合国安理会 综合名单"],
+  ["中国商务部 不可靠实体清单","中国 不可靠实体清单"]
+];
+const EXPORT_DEF = [
+  ["产品类别","工业设备 / 电子模组","非管制"],
+  ["出口目的地","美国 · 欧盟","非受制裁地区"],
+  ["最终用途","工业自动化产线","非军事最终用途"],
+  ["最终用户","采购方自用 / 集成","非军事最终用户"],
+  ["许可要求","无需出口许可","—"]
+];
+
+const DOSSIERS = {
+  "northwind-ind.com":{
+    nm:"Northwind Industrial Co.", dm:"northwind-ind.com", flag:"🇺🇸", region:"北美", ind:"工业设备",
+    overall:"green", checked:"2026-10-13 10:20",
+    advice:"身份、名单、出口管制、诉讼、舆情五类均<b>未发现命中</b>，覆盖度较高，建议进入正常商务推进。<b>信用与财务健康</b>数据源未接入 → 若要给账期，请另行索取财报或委托信用报告。签约前请对<b>最终受益人（UBO）</b>做一次书面确认。",
+    idt:{st:"clear", cov:"6/6 项已核对", srcs:"州务卿登记 / 公开工商库 / 企业官网",
+      rows:[["企业名称","Northwind Industrial Co.","match","与登记名称一致"],
+            ["注册号","CORP #67812345","match","公开登记可查"],
+            ["注册地","美国 · 伊利诺伊州","match","与官网地址一致"],
+            ["成立日期","2009-04-17","match","存续 17 年"],
+            ["经营状态","Active（存续）","match","无异常标记"],
+            ["法定代表人 / 董事","M. Halvorsen","match","公开登记披露"]]},
+    sanc:{st:"clear", cov:"8/8 名单已覆盖", upd:"2026-10-11",
+      lists:[["OFAC SDN","clear",0],["OFAC 50% Rule","clear",0],["BIS Entity List","clear",0],["BIS MEU","clear",0],
+             ["EU Consolidated","clear",0],["UK OFSI","clear",0],["UN SC Consolidated","clear",0],["中国商务部 不可靠实体清单","clear",0]],
+      f:["未发现命中任何制裁或出口管制名单","未发现同名或近似名实体需要人工复核"]},
+    ec:{st:"clear", cov:"5/5 项已核对", srcs:"各国出口管制公开清单 / 商品编码库",
+      rows:EXPORT_DEF, f:["出口目的地与最终用途均不在管制范围"]},
+    cr:{st:"na", cov:"数据源未接入", srcs:"邓白氏 / 各国工商年报 / 公开财报 / 银行付款记录",
+      dims:[["实缴资本","—"],["营收规模","—"],["经营年限","17 年（据注册日）"],["付款记录","—"],["财务风险评分","—"]],
+      f:["该法域财务与信用数据源未接入 → 数据未覆盖，不做推测","建议：索取近 2 年财报 / 委托信用报告后再给账期"]},
+    lit:{st:"clear", cov:"主要法域已覆盖", srcs:"PACER / 公开法院记录",
+      f:["未发现公开诉讼或判决记录"]},
+    sen:{st:"clear", cov:"近 24 个月 · 检索 46 条", srcs:"公开新闻 / 监管公告 / 行业媒体",
+      items:[["扩建伊利诺伊仓储中心，预计增员 80 人","行业媒体","2026-06-18","正面","低"],
+             ["发布新一代工业传感器模组","企业新闻稿","2026-02-04","中性","低"]],
+      f:["未发现负面舆情、监管处罚或劳资纠纷"]},
+    rel:{st:"na", cov:"未覆盖", srcs:"公开股权库",
+      f:["该法域最终受益人信息未接入 → 需客户提供或委托尽调"]},
+    cert:{st:"clear", cov:"部分覆盖", srcs:"认证机构公开库",
+      f:["UL 认证有效（公开库可查）","ISO 9001 待客户提供证书编号复核"]}
+  },
+
+  "rheinmasch.de":{
+    nm:"RheinMasch GmbH", dm:"rheinmasch.de", flag:"🇩🇪", region:"欧盟", ind:"工业设备",
+    overall:"green", checked:"2026-10-13 10:20",
+    advice:"身份、名单、出口管制、诉讼、舆情、资质六类均<b>未发现命中</b>，且工商与认证信息完整，是本次样本中<b>覆盖度最高</b>的主体。建议正常推进；如需给账期，仍建议加做<b>信用与财务健康</b>专项（本模块数据源未接入）。",
+    idt:{st:"clear", cov:"6/6 项已核对", srcs:"Handelsregister / 公开工商库 / 企业官网",
+      rows:[["企业名称","RheinMasch GmbH","match","与登记名称一致"],
+            ["注册号","HRB 118472","match","商业登记可查"],
+            ["注册地","德国 · 北威州","match","与登记一致"],
+            ["成立日期","1998-11-03","match","存续 27 年"],
+            ["经营状态","在营（存续）","match","无异常标记"],
+            ["法定代表人 / 董事","K. Brandt","match","登记披露"]]},
+    sanc:{st:"clear", cov:"8/8 名单已覆盖", upd:"2026-10-11",
+      lists:[["OFAC SDN","clear",0],["OFAC 50% Rule","clear",0],["BIS Entity List","clear",0],["BIS MEU","clear",0],
+             ["EU Consolidated","clear",0],["UK OFSI","clear",0],["UN SC Consolidated","clear",0],["中国商务部 不可靠实体清单","clear",0]],
+      f:["未发现命中任何名单"]},
+    ec:{st:"clear", cov:"5/5 项已核对", srcs:"EU 两用物项清单 / 各国出口管制库",
+      rows:[["产品类别","精密传动部件","非管制"],["出口目的地","中国内地 · 东南亚","非受制裁地区"],
+            ["最终用途","工业产线集成","非军事最终用途"],["最终用户","制造商自用","非军事最终用户"],
+            ["许可要求","无需出口许可","—"]],
+      f:["不属于两用物项管制范围"]},
+    cr:{st:"clear", cov:"4/5 项已覆盖", srcs:"德国联邦公报（Bundesanzeiger）/ 公开年报",
+      dims:[["实缴资本","€ 250 万","已披露"],["营收规模","€ 4,100 万（FY2024）","年报披露"],["经营年限","27 年","据注册日"],
+            ["付款记录","—","未接入"],["财务风险评分","低（据年报）","按公开财报测算"]],
+      f:["公开年报显示连续 3 年营收增长，负债率处于行业中位","付款记录未接入 → 该维度数据未覆盖"]},
+    lit:{st:"clear", cov:"已覆盖", srcs:"公开法院记录",
+      f:["未发现诉讼记录"]},
+    sen:{st:"clear", cov:"近 24 个月 · 检索 38 条", srcs:"公开新闻 / 行业媒体",
+      items:[["获 TÜV 体系认证复评通过","认证公告","2026-05-09","正面","低"]],
+      f:["未发现负面舆情"]},
+    rel:{st:"clear", cov:"已覆盖", srcs:"公开股权库 / 联邦公报",
+      f:["股权结构清晰，无异常关联方"]},
+    cert:{st:"clear", cov:"已覆盖", srcs:"TÜV / CE 公开库",
+      f:["CE 认证有效","TÜV 体系认证有效"]}
+  },
+
+  "sunrise-industries.com":{
+    nm:"Sunrise Industries Pte Ltd", dm:"sunrise-industries.com", flag:"🇸🇬", region:"东南亚", ind:"电子制造",
+    overall:"yellow", checked:"2026-10-13 10:20",
+    advice:"筛查出现<b>需复核项</b>：名单库中存在<b>同名 / 近似名实体</b>，系统无法自动判定是否同一主体，须人工比对地址与注册号后再决定。<b>不要据此认定为命中，也不要据此认定安全。</b>另：该法域财务数据源未接入。",
+    idt:{st:"warn", cov:"4/6 项已核对", srcs:"当地 ACRA 公开登记 / 企业官网",
+      rows:[["企业名称","Sunrise Industries Pte Ltd","match","与登记名称一致"],
+            ["注册号","201812345K","match","登记可查"],
+            ["注册地","新加坡","match","与登记一致"],
+            ["成立日期","2018-06-22","match","存续 8 年"],
+            ["经营状态","—","na","公开库未返回状态字段"],
+            ["法定代表人 / 董事","—","na","该字段未接入 → 数据未覆盖"]]},
+    sanc:{st:"warn", cov:"8/8 名单已覆盖", upd:"2026-10-11",
+      lists:[["OFAC SDN","warn",1],["OFAC 50% Rule","clear",0],["BIS Entity List","clear",0],["BIS MEU","clear",0],
+             ["EU Consolidated","warn",1],["UK OFSI","clear",0],["UN SC Consolidated","clear",0],["中国商务部 不可靠实体清单","clear",0]],
+      f:["<b>疑似命中需复核</b>：OFAC SDN 中存在名称高度相似的实体「Sunrise Industries Ltd.」，登记地不同 → 需人工比对注册号与地址",
+         "EU Consolidated 存在同类近似名实体 1 条，同样需人工复核",
+         "系统<b>不做自动判定</b>：既不能认定为同一主体，也不能排除"]},
+    ec:{st:"warn", cov:"4/5 项已核对", srcs:"各国出口管制公开清单",
+      rows:[["产品类别","电子模组 / PCB 组装","部分需判定"],["出口目的地","新加坡 · 马来西亚","非受制裁地区"],
+            ["最终用途","待客户书面确认","未核实"],["最终用户","待确认","未核实"],
+            ["许可要求","视最终用途而定","需补充资料"]],
+      f:["最终用途与最终用户未取得书面确认 → 无法排除转口风险"]},
+    cr:{st:"na", cov:"数据源未接入", srcs:"邓白氏 / 当地工商年报",
+      dims:[["实缴资本","—"],["营收规模","—"],["经营年限","8 年（据注册日）"],["付款记录","—"],["财务风险评分","—"]],
+      f:["该法域财务与信用数据源未接入 → 数据未覆盖"]},
+    lit:{st:"na", cov:"未覆盖", srcs:"—",
+      f:["该法域司法记录未接入 → 数据未覆盖"]},
+    sen:{st:"clear", cov:"近 24 个月 · 检索 21 条", srcs:"公开新闻 / 行业媒体",
+      items:[["扩产第二产线，主攻汽车电子","行业媒体","2025-11-02","正面","低"]],
+      f:["未发现负面舆情"]},
+    rel:{st:"na", cov:"未覆盖", srcs:"公开股权库",
+      f:["未接入 → 需客户提供"]},
+    cert:{st:"na", cov:"未覆盖", srcs:"认证机构公开库",
+      f:["未检索到有效认证记录 → 数据未覆盖"]}
+  },
+
+  "gulftech.ae":{
+    nm:"GulfTech Trading LLC", dm:"gulftech.ae", flag:"🇦🇪", region:"中东", ind:"新能源",
+    overall:"yellow", checked:"2026-10-13 10:20",
+    advice:"存在需复核项：一份<b>关联方司法记录</b>，且 <b>BIS 名单未覆盖</b>、信用财务数据未接入。建议报价前要求对方补充说明，并对 <b>UBO</b> 做穿透核查；<b>覆盖补齐前不要据以判断为「无风险」</b>。",
+    idt:{st:"clear", cov:"5/6 项已核对", srcs:"自由区登记 / 公开工商库",
+      rows:[["企业名称","GulfTech Trading LLC","match","与登记名称一致"],
+            ["注册号","DXB-FZ-448210","match","自由区登记可查"],
+            ["注册地","阿联酋 · 迪拜自由区","match","与登记一致"],
+            ["成立日期","2014-02-11","match","存续 12 年"],
+            ["经营状态","正常，许可证在有效期内","match","—"],
+            ["法定代表人 / 董事","—","na","该字段未接入 → 数据未覆盖"]]},
+    sanc:{st:"warn", cov:"7/8 名单已覆盖", upd:"2026-10-11",
+      lists:[["OFAC SDN","clear",0],["OFAC 50% Rule","clear",0],["BIS Entity List","na",0],["BIS MEU","na",0],
+             ["EU Consolidated","clear",0],["UK OFSI","clear",0],["UN SC Consolidated","clear",0],["中国商务部 不可靠实体清单","clear",0]],
+      f:["已覆盖名单未发现命中","<b>BIS Entity List / MEU 数据未覆盖</b> → 该两项结论不成立，需人工复核"]},
+    ec:{st:"clear", cov:"5/5 项已核对", srcs:"各国出口管制公开清单",
+      rows:[["产品类别","光伏组件 / 储能柜","非管制"],["出口目的地","阿联酋 · 沙特","非受制裁地区"],
+            ["最终用途","分布式电站","非军事最终用途"],["最终用户","工程商自用","非军事最终用户"],
+            ["许可要求","无需出口许可","—"]],
+      f:["未发现出口管制风险"]},
+    cr:{st:"na", cov:"数据源未接入", srcs:"邓白氏 / 当地工商年报",
+      dims:[["实缴资本","—"],["营收规模","—"],["经营年限","12 年（据注册日）"],["付款记录","—"],["财务风险评分","—"]],
+      f:["该法域财务与信用数据源未接入 → 数据未覆盖"]},
+    lit:{st:"hit", cov:"部分覆盖", srcs:"公开法院记录",
+      f:["<b>命中 1 起</b>：2024 年合同纠纷（关联公司名下，金额未披露）","该记录登记在关联方，非本主体直接被告 → 需核实关联关系"]},
+    sen:{st:"clear", cov:"近 24 个月 · 检索 33 条", srcs:"公开新闻",
+      items:[["中标 12MW 分布式光伏项目","行业媒体","2026-03-27","正面","低"]],
+      f:["未发现重大负面舆情"]},
+    rel:{st:"warn", cov:"部分覆盖", srcs:"公开股权库",
+      f:["识别到 2 家关联公司，其中 1 家见「诉讼」项","UBO 未穿透 → 需客户提供或委托尽调"]},
+    cert:{st:"na", cov:"未覆盖", srcs:"认证机构公开库",
+      f:["新能源产品认证记录未接入 → 需客户提供"]}
+  },
+
+  "saharabuild.ma":{
+    nm:"Sahara Build Supplies", dm:"saharabuild.ma", flag:"🇲🇦", region:"非洲", ind:"建材",
+    overall:"red", checked:"2026-10-13 10:20",
+    advice:"<b>核查覆盖不足</b>：该法域多数数据源未接入，<b>无法给出风险结论</b>。建议：① 要求对方提供注册与资质文件；② 委托当地持牌机构现场尽调；③ 如需先行推进，采用<b>预付款 + 分批交付</b>控制敞口。<b>覆盖补齐前不要据此判断为「无风险」。</b>",
+    idt:{st:"na", cov:"1/6 项已核对", srcs:"公开工商库（覆盖有限）",
+      rows:[["企业名称","Sahara Build Supplies","na","未接入当地登记库 → 无法核实"],
+            ["注册号","—","na","未覆盖"],["注册地","摩洛哥","na","仅知国别"],
+            ["成立日期","—","na","未覆盖"],["经营状态","—","na","未覆盖"],
+            ["法定代表人 / 董事","—","na","未覆盖"]]},
+    sanc:{st:"na", cov:"仅 2/8 名单可查", upd:"2026-10-11",
+      lists:[["OFAC SDN","clear",0],["OFAC 50% Rule","na",0],["BIS Entity List","na",0],["BIS MEU","na",0],
+             ["EU Consolidated","na",0],["UK OFSI","na",0],["UN SC Consolidated","clear",0],["中国商务部 不可靠实体清单","na",0]],
+      f:["仅 OFAC SDN 与 UN SC 两项可查，均未发现命中","其余 6 项<b>数据未覆盖</b> → 不能据此认定名单干净"]},
+    ec:{st:"na", cov:"3/5 项已核对", srcs:"各国出口管制公开清单",
+      rows:[["产品类别","建材 / 钢结构件","一般非管制"],["出口目的地","摩洛哥","非受制裁地区"],
+            ["最终用途","—","未核实"],["最终用户","—","未核实"],["许可要求","—","需补充资料"]],
+      f:["最终用途与最终用户未核实"]},
+    cr:{st:"na", cov:"数据源未接入", srcs:"—",
+      dims:[["实缴资本","—"],["营收规模","—"],["经营年限","—"],["付款记录","—"],["财务风险评分","—"]],
+      f:["该法域财务与信用数据源未接入 → 数据未覆盖"]},
+    lit:{st:"na", cov:"未覆盖", srcs:"—",
+      f:["该法域司法记录未接入 → 数据未覆盖"]},
+    sen:{st:"na", cov:"极少量 · 检索 1 条", srcs:"公开新闻",
+      items:[["仅检索到 1 条公司介绍，无实质信息","企业自述","2024-08-15","中性","—"]],
+      f:["公开信息极少，不足以支撑舆情判断"]},
+    rel:{st:"na", cov:"未覆盖", srcs:"—",
+      f:["未接入 → 需客户提供"]},
+    cert:{st:"na", cov:"未覆盖", srcs:"—",
+      f:["无认证记录可查"]}
+  }
+};
+
+/* 状态字典 */
+const ST  = {clear:["未发现命中","clear"], hit:["发现命中","hit"], na:["数据未覆盖","na"], warn:["需复核","warn"]};
+const OV  = {green:["低风险","v-green","✓"], yellow:["需复核","v-yellow","!"], red:["核查不足 · 勿据以判断","v-red","?"]};
+const MARK= {match:"一致", mismatch:"不一致", na:"未覆盖"};
+const CHK_ORDER = ["sanc","ec","cr","lit","sen","rel","cert"];
+const CHK_META = {
+  sanc:{ic:"🛂", k:"制裁与出口管制名单筛查", wide:true},
+  ec:  {ic:"📦", k:"出口管制与两用物项"},
+  cr:  {ic:"💰", k:"信用与财务健康"},
+  lit: {ic:"⚖️", k:"诉讼与司法记录"},
+  sen: {ic:"📰", k:"舆情与负面新闻"},
+  rel: {ic:"🕸️", k:"关联方与股权穿透"},
+  cert:{ic:"📜", k:"资质认证核查"}
+};
+const SHORT = {sanc:"制裁名单", ec:"出口管制", cr:"信用财务", lit:"诉讼记录", sen:"舆情新闻", rel:"关联方股权", cert:"资质认证"};
+
+const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const L = s => (window.__falT ? window.__falT(s) : s);
+
+/* ---------- 从 ② 页跳入 / 手动新增的主体 ---------- */
+const MKEY = "falcora_dd_manual_v1";
+function loadManual(){ try { return JSON.parse(localStorage.getItem(MKEY) || "{}") || {}; } catch (e) { return {}; } }
+function saveManual(o){ try { localStorage.setItem(MKEY, JSON.stringify(o)); } catch (e) {} }
+
+function naDossier(nm, dm, region, ind, regNo){
+  const naCheck = (k) => ({ st:"na", cov:"未覆盖", srcs:"—", f:["该数据源未接入 → 无法核实"] });
+  const d = {
+    nm, dm, flag:"🏳", region: region || "待确认", ind: ind || "待确认",
+    overall:"red", checked: nowStr(),
+    advice:"该主体<b>尚未建立详细核查档案</b>，多数数据源未覆盖。<b>核查不足 ≠ 无风险</b>。建议：① 索取注册与资质文件；② 补齐域名与注册号后重跑核查；③ 覆盖补齐前不要据以判断为「无风险」。",
+    idt:{st:"na", cov:"0/6 项已核对", srcs:"—",
+      rows:[["企业名称", nm || "—", nm ? "na" : "na", "未接入登记库 → 无法比对"],
+            ["注册号", regNo || "—", regNo ? "na" : "na", regNo ? "未接入核验源" : "未覆盖"],
+            ["注册地", region || "—", "na", "未接入核验源"],
+            ["成立日期","—","na","未覆盖"],["经营状态","—","na","未覆盖"],
+            ["法定代表人 / 董事","—","na","未覆盖"]]},
+    sanc:{st:"na", cov:"0/8 名单可查", upd:"2026-10-11", lists:LIST_DEF.map(x=>[x[0],"na",0]),
+      f:["尚未接入名单筛查 → 数据未覆盖","覆盖补齐前，<b>任何「未发现命中」的表述都不成立</b>"]},
+    ec:{st:"na", cov:"0/5 项已核对", srcs:"—", rows:EXPORT_DEF.map(x=>[x[0],"—","未覆盖"]),
+      f:["产品类别与最终用途未知 → 无法判定"]},
+    cr:{st:"na", cov:"数据源未接入", srcs:"—",
+      dims:[["实缴资本","—"],["营收规模","—"],["经营年限","—"],["付款记录","—"],["财务风险评分","—"]],
+      f:["财务与信用数据源未接入 → 数据未覆盖"]},
+    lit:naCheck("诉讼与司法记录"), sen:{...naCheck("舆情"), items:[], cov:"未覆盖"},
+    rel:naCheck("关联方与股权穿透"), cert:naCheck("资质认证核查")
+  };
+  d.lit.k = "诉讼与司法记录";
+  return d;
+}
+
+function nowStr(){
+  const d = new Date(), p = n => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+}
+
+/* URL 参数：?co=域名&nm=名称&rg=区域&ind=行业  （② 页「加入管线 → 核查」跳转） */
+const QP = new URLSearchParams(location.search);
+const qco = QP.get("co");
+const manual = loadManual();
+Object.keys(manual).forEach(k => { if (!DOSSIERS[k]) DOSSIERS[k] = manual[k]; });
+if (qco && !DOSSIERS[qco]) DOSSIERS[qco] = naDossier(QP.get("nm") || qco, qco, QP.get("rg") || "", QP.get("ind") || "", "");
+
+/* ---------- 渲染 ---------- */
+const picker = document.getElementById("picker");
+function buildPicker(){
+  const cur = picker.value;
+  picker.innerHTML = "";
+  Object.values(DOSSIERS).forEach(c => {
+    const o = document.createElement("option");
+    o.value = c.dm; o.textContent = c.nm + "  ·  " + (window.__falVal ? window.__falVal(c.region) : c.region);
+    picker.appendChild(o);
+  });
+  if (cur && DOSSIERS[cur]) picker.value = cur; else if (qco && DOSSIERS[qco]) picker.value = qco;
+}
+
+function badge(st){ const [lab,cls]=ST[st]||ST.na; return '<span class="st '+cls+'">'+L(lab)+'</span>'; }
+
+function rowsTable(rows){
+  return '<table class="mini"><tbody>' + rows.map(r=>{
+    const st = r[2]==="match" ? '<span class="ok-i">'+L("一致")+'</span>'
+             : r[2]==="mismatch" ? '<span class="no-i">'+L("不一致")+'</span>'
+             : r[2]==="warn" ? '<span class="wn-i">'+L("需复核")+'</span>'
+             : '<span class="na-i">'+L("未覆盖")+'</span>';
+    return '<tr><td class="n" style="width:34%">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td class="c" style="width:22%">'+st+'</td></tr>';
+  }).join("") + '</tbody></table>';
+}
+
+function sancTable(lists){
+  const upd = arguments[1];
+  return '<table class="mini" style="max-width:880px"><thead><tr><th>'+L("名单")+'</th><th style="width:22%">'+L("结论")+'</th><th style="width:16%" class="c">'+L("疑似命中")+'</th></tr></thead><tbody>'
+    + lists.map(x=>{
+        const st = x[1]==="clear" ? '<span class="ok-i">'+L("未发现命中")+'</span>'
+                 : x[1]==="warn" ? '<span class="wn-i">'+L("需复核")+'</span>'
+                 : '<span class="na-i">'+L("未覆盖")+'</span>';
+        const n = x[1]==="na" ? '<span class="na-i">—</span>' : (x[2]>0 ? '<span class="wn-i">'+x[2]+'</span>' : '0');
+        return '<tr><td>'+esc(x[0])+'</td><td>'+st+'</td><td class="c">'+n+'</td></tr>';
+      }).join("")
+    + '</tbody></table>'
+    + '<div class="srcs">'+L("名单更新：")+'<b>'+esc(upd||"—")+'</b> · '+L("筛查按「名称 + 地址 + 注册号」三项比对，疑似命中一律转人工复核")+'</div>';
+}
+
+function sentTable(items){
+  if (!items || !items.length) return "";
+  return '<table class="mini"><thead><tr><th>'+L("标题")+'</th><th style="width:18%">'+L("来源")+'</th><th style="width:14%" class="c">'+L("日期")+'</th><th style="width:12%" class="c">'+L("情感")+'</th></tr></thead><tbody>'
+    + items.map(x=>'<tr><td>'+esc(x[0])+'</td><td class="n">'+esc(x[1])+'</td><td class="c mono">'+esc(x[2])+'</td><td class="c">'+esc(x[3])+'</td></tr>').join("")
+    + '</tbody></table>';
+}
+
+function dimTable(dims){
+  return '<table class="mini"><tbody>' + dims.map(d=>
+    '<tr><td class="n" style="width:34%">'+esc(d[0])+'</td><td>'+esc(d[1])+'</td><td class="c" style="width:22%">'+(d[2]?esc(d[2]):'<span class="na-i">'+L("未覆盖")+'</span>')+'</td></tr>'
+  ).join("") + '</tbody></table>';
+}
+
+function body(c, key){
+  const d = c[key];
+  if (key === "sanc") return sancTable(d.lists, d.upd) + '<ul class="find">'+d.f.map(x=>'<li class="'+(d.st==="warn"?"warn":d.st==="hit"?"hit":d.st==="na"?"na":"")+'">'+x+'</li>').join("")+'</ul>';
+  if (key === "ec")   return rowsTable(d.rows) + '<ul class="find">'+d.f.map(x=>'<li class="'+(d.st==="na"?"na":d.st==="warn"?"warn":"")+'">'+x+'</li>').join("")+'</ul>';
+  if (key === "cr")   return dimTable(d.dims) + '<ul class="find">'+d.f.map(x=>'<li class="'+(d.st==="na"?"na":"")+'">'+x+'</li>').join("")+'</ul>';
+  if (key === "sen")  return sentTable(d.items) + '<ul class="find">'+d.f.map(x=>'<li class="'+(d.st==="na"?"na":"")+'">'+x+'</li>').join("")+'</ul>';
+  return '<ul class="find">'+d.f.map(x=>'<li class="'+(d.st==="na"?"na":d.st==="hit"?"hit":d.st==="warn"?"warn":"")+'">'+x+'</li>').join("")+'</ul>';
+}
+
+function render(dm){
+  const c = DOSSIERS[dm] || Object.values(DOSSIERS)[0];
+  const [ovLab, ovCls, ovIc] = OV[c.overall];
+  const counts = {clear:0, hit:0, na:0, warn:0};
+  CHK_ORDER.forEach(k => { counts[c[k].st] = (counts[c[k].st]||0) + 1; });
+  const covered = CHK_ORDER.filter(k => c[k].st !== "na").length;
+
+  document.getElementById("verdict").className = "verdict " + ovCls;
+  document.getElementById("verdict").innerHTML =
+    '<div class="vbadge">' + ovIc + '</div>' +
+    '<div class="vbody">' +
+      '<h2>' + L(ovLab) + '</h2>' +
+      '<div class="co"><span>' + c.flag + '</span><b>' + esc(c.nm) + '</b><span>· ' + esc(c.dm) + '</span><span>· <span>' + esc(c.region) + '</span> · <span>' + esc(c.ind) + '</span></span></div>' +
+      '<div class="vsum">' +
+        '<span class="vtag" style="background:rgba(52,211,153,.14);color:var(--good)">' + L("未发现命中") + ' ' + counts.clear + '</span>' +
+        '<span class="vtag" style="background:rgba(255,107,107,.14);color:var(--danger)">' + L("发现命中") + ' ' + counts.hit + '</span>' +
+        '<span class="vtag" style="background:rgba(245,184,65,.14);color:var(--gold)">' + L("需复核") + ' ' + counts.warn + '</span>' +
+        '<span class="vtag" style="background:rgba(126,154,160,.14);color:var(--muted)">' + L("数据未覆盖") + ' ' + counts.na + '</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="vmeta">' + L("核查覆盖") + '<b>' + covered + '/7</b>' + L("核查时点") + ' <span>' + esc(c.checked) + '</span></div>';
+
+  /* 主体信息核验 */
+  document.getElementById("idtSt").className = "st " + (ST[c.idt.st]||ST.na)[1];
+  document.getElementById("idtSt").textContent = L(c.idt.cov);
+  document.getElementById("idtGrid").innerHTML = c.idt.rows.map(r =>
+    '<div class="idrow">' +
+      '<div class="k"><span class="mdot ' + r[2] + '"></span>' + esc(r[0]) + '</div>' +
+      '<div class="v">' + esc(r[1]) + '</div>' +
+      '<div class="s">' + esc(r[3]) + '</div>' +
+    '</div>').join("");
+  document.getElementById("idtSrc").textContent = c.idt.srcs;
+
+  /* 7 张核查卡 */
+  document.getElementById("checks").innerHTML = CHK_ORDER.map(key => {
+    const d = c[key], m = CHK_META[key];
+    return '<div class="check' + (m.wide ? ' wide' : '') + '">' +
+      '<div class="check-h"><div class="ic">' + m.ic + '</div><h3>' + L(m.k) + '</h3>' + badge(d.st) + '</div>' +
+      '<div class="check-b">' + body(c, key) +
+        '<div class="cov"><span class="dot"></span>' + esc(d.cov) + '</div>' +
+        '<div class="srcs"><b>' + L("数据源：") + '</b>' + esc(d.srcs) + '</div>' +
+      '</div></div>';
+  }).join("");
+
+  /* 覆盖度 */
+  const pct = Math.round(covered / 7 * 100);
+  document.getElementById("covTag").textContent = covered + "/7";
+  document.getElementById("covBody").innerHTML = CHK_ORDER.map(k => {
+    const st = c[k].st;
+    const p = st === "na" ? 8 : st === "warn" ? 55 : 100;
+    return '<div class="covrow"><span>' + L(SHORT[k]) + '</span><div class="bar"><i style="width:' + p + '%"></i></div><b>' + (st === "na" ? "—" : st === "warn" ? "!" : "✓") + '</b></div>';
+  }).join("") + '<div class="srcs" style="border-top:1px dashed var(--border);padding-top:10px">' + L("整体覆盖度") + ' <b style="color:var(--cyan)">' + pct + '%</b> · ' + L("覆盖不足的模块不代表「无风险」") + '</div>';
+
+  document.getElementById("advice").innerHTML = c.advice;
+}
+
+/* ---------- 交互 ---------- */
+buildPicker();
+picker.onchange = () => render(picker.value);
+
+document.getElementById("rerun").onclick = () => {
+  DOSSIERS[picker.value].checked = nowStr();
+  render(picker.value);
+};
+
+document.getElementById("exportBtn").onclick = () => {
+  const c = DOSSIERS[picker.value];
+  const lines = ["FALCORA 尽调报告（演示）", "公司," + c.nm, "域名," + c.dm, "区域," + c.region, "行业," + c.ind,
+    "核查时点," + c.checked, "综合结论," + OV[c.overall][0], ""];
+  lines.push("【主体信息核验】" + c.idt.cov + " / 数据源: " + c.idt.srcs);
+  c.idt.rows.forEach(r => lines.push("  - " + r[0] + ": " + r[1] + "  [" + MARK[r[2]] + "] " + r[3]));
+  lines.push("");
+  CHK_ORDER.forEach(key => {
+    const d = c[key];
+    lines.push("【" + CHK_META[key].k + "】" + ST[d.st][0] + "（覆盖度: " + d.cov + "）");
+    lines.push("  数据源: " + d.srcs);
+    if (d.lists) d.lists.forEach(x => lines.push("   · " + x[0] + ": " + (x[1] === "na" ? "数据未覆盖" : x[1] === "warn" ? "需复核" : "未发现命中") + (x[2] ? " 疑似命中 " + x[2] : "")));
+    if (d.rows) d.rows.forEach(x => lines.push("   · " + x[0] + ": " + x[1] + " [" + (MARK[x[2]] || x[2] || "") + "]"));
+    if (d.dims) d.dims.forEach(x => lines.push("   · " + x[0] + ": " + x[1]));
+    if (d.items) d.items.forEach(x => lines.push("   · [" + x[2] + "] " + x[0] + " — " + x[1] + "（" + x[3] + "）"));
+    d.f.forEach(x => lines.push("   - " + x.replace(/<[^>]+>/g, "")));
+    lines.push("");
+  });
+  lines.push("声明：未发现命中≠无风险；数据未覆盖≠清白；不构成法律/信用意见。");
+  const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/plain;charset=utf-8" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "FALCORA_尽调报告_" + c.dm + ".txt"; a.click();
+};
+
+/* 新增主体 */
+const addModal = document.getElementById("addModal");
+const nRg = document.getElementById("nRg"), nInd = document.getElementById("nInd");
+REGIONS.forEach(r => { const o = document.createElement("option"); o.value = r; o.textContent = r; nRg.appendChild(o); });
+INDS.forEach(r => { const o = document.createElement("option"); o.value = r; o.textContent = r; nInd.appendChild(o); });
+
+function openAdd(){ addModal.hidden = false; document.getElementById("nNm").focus(); }
+function closeAdd(){ addModal.hidden = true; }
+document.getElementById("addBtn").onclick = openAdd;
+document.getElementById("addX").onclick = closeAdd;
+document.getElementById("addCancel").onclick = closeAdd;
+addModal.addEventListener("click", e => { if (e.target === addModal) closeAdd(); });
+
+document.getElementById("addOk").onclick = () => {
+  const nm = document.getElementById("nNm").value.trim();
+  const dm = document.getElementById("nDm").value.trim().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+  if (!nm && !dm) { document.getElementById("nNm").focus(); return; }
+  const key = dm || nm;
+  const d = naDossier(nm || key, dm || key, nRg.value, nInd.value, document.getElementById("nReg").value.trim());
+  DOSSIERS[key] = d;
+  const m = loadManual(); m[key] = d; saveManual(m);
+  closeAdd();
+  buildPicker(); picker.value = key; render(key);
+  toast("已建立待核查档案 · 多数数据源未覆盖");
+};
+
+function toast(msg){
+  let t = document.getElementById("ddToast");
+  if (!t) { t = document.createElement("div"); t.id = "ddToast"; document.body.appendChild(t);
+    t.style.cssText = "position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(12px);z-index:9999;background:rgba(8,30,37,.96);border:1px solid var(--border-2);color:var(--ink);padding:10px 18px;border-radius:12px;font-size:13px;opacity:0;transition:.28s;box-shadow:0 12px 34px rgba(0,0,0,.4);pointer-events:none"; }
+  t.textContent = "✓ " + msg;
+  t.style.opacity = "1"; t.style.transform = "translateX(-50%) translateY(0)";
+  clearTimeout(t.__t); t.__t = setTimeout(() => { t.style.opacity = "0"; t.style.transform = "translateX(-50%) translateY(12px)"; }, 1800);
+}
+
+/* 搜索：按公司名 / 域名过滤下拉 */
+document.getElementById("q").addEventListener("input", function(){
+  const kw = this.value.trim().toLowerCase();
+  picker.innerHTML = "";
+  Object.values(DOSSIERS).filter(c => !kw || c.nm.toLowerCase().includes(kw) || c.dm.toLowerCase().includes(kw))
+    .forEach(c => { const o = document.createElement("option"); o.value = c.dm; o.textContent = c.nm + "  ·  " + (window.__falVal ? window.__falVal(c.region) : c.region); picker.appendChild(o); });
+  if (picker.options.length) render(picker.value);
+});
+
+window.__falOnRefresh(function(){ buildPicker(); render(picker.value); });
+
+if (qco && DOSSIERS[qco]) picker.value = qco;
+render(picker.value);
+</script>
+<script src="app-update.js"></script>
+<script src="app-nav.js"></script>
+<script src="app-i18n-dict.js"></script>
+<script src="app-i18n.js"></script>
+</body>
+</html>
