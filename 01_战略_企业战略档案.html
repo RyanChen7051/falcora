@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<script src="app-vals.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0B2632" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="assets/favicon.ico" />
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+<title>获客通AI · 企业战略档案</title>
+<style>
+  :root{
+    --bg:#0B2632; --bg-2:#0A2E38; --side:#0A2A33;
+    --panel:rgba(13,46,54,.72); --panel-2:rgba(16,58,68,.55);
+    --border:rgba(126,154,160,.16); --border-2:rgba(94,234,212,.14);
+    --cyan:#5EEAD4; --teal:#0E9A8E; --gold:#F5B841;
+    --ink:#E9F3F4; --muted:#8AA3A8; --muted-2:#6E878C;
+    --good:#34D399; --danger:#FF6B6B; --warn:#F5B841;
+    --radius:16px; --shadow:0 18px 48px rgba(0,0,0,.35);
+    --font:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);
+    background-image:radial-gradient(1100px 520px at 78% -8%,rgba(14,154,142,.16),transparent 60%),
+      radial-gradient(820px 460px at 8% 108%,rgba(245,184,65,.08),transparent 60%);
+    -webkit-font-smoothing:antialiased;line-height:1.5}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:.2px}
+  .app{display:flex;min-height:100vh}
+  .sidebar{width:248px;flex:0 0 248px;background:linear-gradient(180deg,var(--side),#08222A);
+    border-right:1px solid var(--border);padding:20px 16px;position:sticky;top:0;height:100vh;
+    display:flex;flex-direction:column;gap:6px}
+  .brand{display:flex;align-items:center;gap:11px;padding:6px 8px 18px}
+  .brand-mark{flex:0 0 auto}
+  .brand-txt b{font-size:17px;letter-spacing:.5px;display:block}
+  .brand-txt span{font-size:11px;color:var(--muted-2);letter-spacing:1.5px}
+  .nav-label{font-size:11px;color:var(--muted-2);letter-spacing:1.5px;padding:14px 10px 6px}
+  .nav-item{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:11px;
+    color:var(--muted);font-size:14px;cursor:pointer;transition:.18s;position:relative;text-decoration:none}
+  .nav-item .idx{width:22px;height:22px;flex:0 0 auto;border-radius:7px;display:grid;place-items:center;
+    font-size:11px;font-weight:700;background:rgba(94,234,212,.08);color:var(--cyan)}
+  .nav-item:hover{background:rgba(94,234,212,.06);color:var(--ink)}
+  .nav-item.active{background:linear-gradient(90deg,rgba(94,234,212,.16),rgba(94,234,212,.02));color:#fff}
+  .nav-item.active::before{content:"";position:absolute;left:-16px;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--cyan)}
+  .nav-item.active .idx{background:var(--cyan);color:#06262B}
+  .side-foot{margin-top:auto;border-top:1px solid var(--border);padding-top:14px;display:flex;gap:10px;align-items:center}
+  .avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--teal),var(--cyan));display:grid;place-items:center;font-weight:700;color:#06262B;flex:0 0 auto}
+  .side-foot small{display:block;color:var(--muted-2);font-size:11px}
+  .side-foot b{font-size:13px}
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{display:flex;align-items:center;gap:18px;padding:18px 28px;border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:20;background:rgba(11,38,50,.82);backdrop-filter:blur(10px)}
+  .title h1{font-size:19px;font-weight:700;letter-spacing:.4px}
+  .title p{font-size:12px;color:var(--muted-2);letter-spacing:1.4px;text-transform:uppercase}
+  .search{flex:1;max-width:420px;margin-left:8px;position:relative}
+  .search input{width:100%;padding:10px 14px 10px 38px;border-radius:11px;border:1px solid var(--border);
+    background:rgba(0,0,0,.22);color:var(--ink);font-size:13px;font-family:inherit;outline:none}
+  .search input:focus{border-color:var(--border-2);box-shadow:0 0 0 3px rgba(94,234,212,.1)}
+  .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.5}
+  .top-right{display:flex;align-items:center;gap:12px;margin-left:auto}
+  .pill{font-size:12px;padding:7px 13px;border-radius:999px;background:linear-gradient(135deg,rgba(245,184,65,.22),rgba(245,184,65,.06));
+    color:var(--gold);border:1px solid rgba(245,184,65,.3);font-weight:600}
+  .icon-btn{width:38px;height:38px;border-radius:11px;border:1px solid var(--border);background:rgba(0,0,0,.2);
+    display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+  .icon-btn:hover{color:var(--ink);border-color:var(--border-2)}
+  .content{padding:24px 28px 48px;display:flex;flex-direction:column;gap:18px}
+
+  .toolbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .toolbar h2{font-size:20px;font-weight:750}
+  .toolbar .sub{font-size:12.5px;color:var(--muted-2)}
+  .spacer{flex:1}
+  .btn{padding:11px 20px;border-radius:12px;border:1px solid rgba(245,184,65,.4);cursor:pointer;font-size:14px;font-weight:700;
+    background:linear-gradient(135deg,var(--gold),#E0A02E);color:#3a2a05;font-family:inherit}
+  .btn:hover{filter:brightness(1.06)}
+  .btn.ghost{background:rgba(94,234,212,.08);color:var(--cyan);border-color:var(--border-2)}
+  .saved{font-size:12px;color:var(--good);display:flex;align-items:center;gap:6px}
+
+  .form-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .form-h{display:flex;align-items:center;gap:11px;padding:15px 18px;border-bottom:1px solid var(--border)}
+  .form-h .step{width:27px;height:27px;border-radius:8px;background:linear-gradient(135deg,var(--teal),var(--cyan));
+    color:#06262B;display:grid;place-items:center;font-weight:800;font-size:13px;flex:0 0 auto}
+  .form-h h3{font-size:15px;font-weight:700}
+  .form-h .tag{margin-left:auto;font-size:11px;color:var(--muted-2);letter-spacing:1px}
+  .form-body{padding:18px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:15px 20px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px 20px}
+  .field{display:flex;flex-direction:column;gap:7px}
+  .field.full{grid-column:1/-1}
+  .field > label{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:7px}
+  .field .hint{font-size:11px;color:var(--muted-2)}
+  .inp,.sel{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);
+    background:rgba(0,0,0,.22);color:var(--ink);font-size:13px;font-family:inherit;outline:none}
+  .inp:focus,.sel:focus{border-color:var(--border-2);box-shadow:0 0 0 3px rgba(94,234,212,.1)}
+  textarea.inp{resize:vertical;min-height:64px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{padding:7px 12px;border-radius:999px;border:1px solid var(--border);background:rgba(0,0,0,.18);
+    color:var(--muted);font-size:12.5px;cursor:pointer;transition:.15s;user-select:none}
+  .chip:hover{border-color:var(--border-2);color:var(--ink)}
+  .chip.active{background:linear-gradient(135deg,rgba(94,234,212,.22),rgba(14,154,142,.08));border-color:var(--cyan);color:#eafff9}
+  .chip.gold.active{background:linear-gradient(135deg,rgba(245,184,65,.25),rgba(245,184,65,.06));border-color:var(--gold);color:#fff3d6}
+
+  .crow{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.5fr 34px;gap:10px;align-items:end;
+    padding:11px 0;border-bottom:1px dashed var(--border)}
+  .crow .del{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:transparent;
+    color:var(--muted);cursor:pointer;display:grid;place-items:center;font-size:16px}
+  .crow .del:hover{color:var(--danger);border-color:rgba(255,107,107,.4)}
+  .addrow{margin-top:12px;font-size:13px;color:var(--cyan);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+  .addrow:hover{text-decoration:underline}
+
+  .analyses{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .analysis{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .analysis-h{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+  .analysis-h .ai{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto;
+    background:rgba(245,184,65,.16);color:var(--gold)}
+  .analysis-h h3{font-size:14.5px;font-weight:700}
+  .analysis-h .tag{margin-left:auto;font-size:11px;color:var(--muted-2)}
+  .analysis-b{padding:15px 16px;display:flex;flex-direction:column;gap:12px}
+  .verdict{font-size:13.5px;line-height:1.6}
+  .verdict b{color:var(--gold)}
+  .find{list-style:none;display:flex;flex-direction:column;gap:9px}
+  .find li{font-size:12.8px;color:var(--ink);display:flex;gap:9px;line-height:1.5;align-items:flex-start}
+  .find li::before{content:"";flex:0 0 auto;width:7px;height:7px;border-radius:50%;margin-top:6px;
+    background:var(--cyan);box-shadow:0 0 0 3px rgba(94,234,212,.14)}
+  .bar{height:9px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden;min-width:90px}
+  .bar > i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--teal),var(--cyan))}
+  .bar.g > i{background:linear-gradient(90deg,#2f9e7e,var(--good))}
+  .bar.r > i{background:linear-gradient(90deg,#c8504a,var(--danger))}
+  .bar.y > i{background:linear-gradient(90deg,#c79420,var(--gold))}
+  .barrow{display:grid;grid-template-columns:120px 1fr 56px;gap:10px;align-items:center;font-size:12.5px}
+  .barrow b{color:var(--ink)}
+  .matrix{width:100%;border-collapse:collapse;font-size:12px;margin-top:2px}
+  .matrix th,.matrix td{border:1px solid var(--border);padding:7px 8px;text-align:center;color:var(--muted)}
+  .matrix th{color:var(--ink);background:rgba(94,234,212,.05)}
+  .matrix td.n{color:var(--ink);text-align:left;font-weight:600}
+  .dot-b{color:var(--good);font-weight:700}.dot-y{color:var(--gold);font-weight:700}.dot-r{color:var(--danger);font-weight:700}
+  .dot-n{color:var(--muted-2);font-weight:600}
+  .note{font-size:11.5px;color:var(--muted-2);padding:4px 0 0}
+
+  /* ===== 综合竞争战略卡 ===== */
+  .strategy-full{grid-column:1/-1}
+  .strategy-full .analysis-h .ai{background:linear-gradient(135deg,rgba(94,234,212,.24),rgba(14,154,142,.10));color:var(--cyan)}
+  .sgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .sbox{border:1px solid var(--border);border-radius:12px;padding:13px 14px;background:rgba(0,0,0,.14)}
+  .sbox h4{font-size:12.5px;color:var(--cyan);letter-spacing:.5px;margin-bottom:9px;display:flex;align-items:center;gap:7px}
+  .sbox h4 .n{width:18px;height:18px;border-radius:6px;background:rgba(94,234,212,.14);display:grid;place-items:center;font-size:10px;font-weight:800;color:var(--cyan);flex:0 0 auto}
+  .sbox p{font-size:12.8px;line-height:1.66}
+  .sbox b{color:var(--gold)}
+  .stagelist{display:flex;flex-direction:column;gap:10px}
+  .stg{display:grid;grid-template-columns:104px 1fr;gap:12px;align-items:start;font-size:12.7px;line-height:1.6}
+  .stg .ph{font-size:11.5px;font-weight:700;color:var(--cyan);background:rgba(94,234,212,.1);
+    border:1px solid var(--border-2);border-radius:9px;padding:6px 8px;text-align:center;line-height:1.35}
+  .assume{list-style:none;display:flex;flex-direction:column;gap:8px}
+  .assume li{font-size:12.3px;color:var(--muted);display:flex;gap:8px;line-height:1.55}
+  .assume li::before{content:"?";flex:0 0 auto;width:15px;height:15px;border-radius:5px;
+    background:rgba(245,184,65,.16);color:var(--gold);font-size:10px;font-weight:800;
+    display:grid;place-items:center;margin-top:2px}
+  .genstatus{font-size:12px;color:var(--muted-2);display:inline-flex;align-items:center;gap:7px;min-height:18px}
+  .genstatus.ok{color:var(--good)}
+  .spinner{width:13px;height:13px;border-radius:50%;border:2px solid rgba(94,234,212,.25);
+    border-top-color:var(--cyan);animation:falsp .7s linear infinite;flex:0 0 auto}
+  @keyframes falsp{to{transform:rotate(360deg)}}
+  .btn[disabled]{opacity:.72;cursor:progress}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(14px);opacity:0;
+    background:rgba(10,46,54,.97);border:1px solid var(--border-2);color:var(--ink);
+    padding:12px 20px;border-radius:12px;font-size:13px;box-shadow:var(--shadow);z-index:60;
+    transition:.26s;pointer-events:none;display:flex;align-items:center;gap:9px;max-width:92vw}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast b{color:var(--good)}
+
+  @media(max-width:1180px){.grid3{grid-template-columns:1fr 1fr}.analyses{grid-template-columns:1fr}}
+  @media(max-width:900px){.sgrid{grid-template-columns:1fr}.stg{grid-template-columns:1fr}}
+  @media(max-width:780px){.sidebar{display:none}.grid2,.grid3{grid-template-columns:1fr}.topbar{flex-wrap:wrap}.crow{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <img class="brand-mark" src="assets/logo.png" alt="FALCORA" style="width:34px;height:34px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.35)" />
+      <div class="brand-txt"><b>获客通AI</b><span>FALCORA</span></div>
+    </div>
+    <div class="nav-label">主导航</div>
+    <a class="nav-item" href="index.html"><span class="idx">⌂</span> 增长总司令驾驶舱</a>
+    <a class="nav-item active" href="01_战略_企业战略档案.html"><span class="idx">①</span> 战略 · 企业战略档案</a>
+    <a class="nav-item" href="02_全球线索获取.html"><span class="idx">②</span> 全球线索获取</a>
+    <a class="nav-item" href="03_客户尽调与风险核查.html"><span class="idx">③</span> 客户尽调与风险核查</a>
+    <a class="nav-item" href="04_获客执行与内容.html"><span class="idx">④</span> 获客执行与内容</a>
+    <a class="nav-item" href="05_客户深挖.html"><span class="idx">⑤</span> 客户深挖</a>
+    <a class="nav-item" href="06_转化率升级.html"><span class="idx">⑥</span> 转化率升级</a>
+    <div class="side-foot">
+      <div class="avatar">CB</div>
+      <div><b>陈邦杰</b><small>首席产品设计官</small></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="title"><h1>企业战略档案</h1><p>Company Strategy Profile</p></div>
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        <input placeholder="搜索企业 / 域名 / 联系人 / 风险关键词…" />
+      </div>
+      <div class="top-right">
+        <span class="pill">旗舰版 · 试用</span>
+        <div class="icon-btn" title="通知"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
+        <div class="icon-btn" title="设置"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 2.6 14H2.5a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 7a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 9 2.6V2.5a2 2 0 1 1 4 0v.1A1.6 1.6 0 0 0 17 4.6a1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.6 1.6 0 0 0 21.4 10h.1a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg></div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="toolbar">
+        <div>
+          <h2>企业战略档案</h2>
+          <div class="sub">越详细，AI 增长总司令的竞争分析与策略越准 · 自动保存于本机</div>
+        </div>
+        <div class="spacer"></div>
+        <span class="saved" id="savedTag">● 尚未保存</span>
+        <button class="btn ghost" id="clearBtn">清空档案</button>
+        <button class="btn" id="genBtn">⚡ 生成竞争分析</button>
+      </div>
+
+      <!-- A 企业与主体 -->
+      <section class="form-card">
+        <div class="form-h"><div class="step">A</div><h3>企业与主体</h3><span class="tag">基础画像</span></div>
+        <div class="form-body grid2">
+          <div class="field"><label>企业中文名称</label><input class="inp" data-k="cn" placeholder="如：深圳XX科技有限公司"></div>
+          <div class="field"><label>企业英文名称</label><input class="inp" data-k="en" placeholder="如：Shenzhen XX Technology Co., Ltd."></div>
+          <div class="field"><label>成立年份</label>
+            <select class="sel" data-k="founded"><option value="">请选择</option></select></div>
+          <div class="field"><label>企业性质</label>
+            <select class="sel" data-k="nature">
+              <option value="">请选择</option>
+              <option>国有控股</option><option>民营</option><option>外资独资</option>
+              <option>中外合资</option><option>股份制</option><option>个体工商户</option><option>事业单位/协会</option>
+            </select></div>
+          <div class="field"><label>注册资本</label>
+            <select class="sel" data-k="regcap">
+              <option value="">请选择</option><option>&lt;50万</option><option>50-100万</option>
+              <option>100-500万</option><option>500万-2000万</option><option>2000万-1亿</option><option>&gt;1亿</option>
+            </select></div>
+          <div class="field"><label>员工规模</label>
+            <select class="sel" data-k="staff">
+              <option value="">请选择</option><option>1-10</option><option>11-50</option><option>51-200</option>
+              <option>201-500</option><option>501-1000</option><option>1001-5000</option><option>&gt;5000</option>
+            </select></div>
+          <div class="field"><label>上一年营收</label>
+            <select class="sel" data-k="revenue">
+              <option value="">请选择</option><option>未营收</option><option>&lt;500万</option>
+              <option>500万-2000万</option><option>2000万-1亿</option><option>1亿-10亿</option><option>&gt;10亿</option>
+            </select></div>
+          <div class="field"><label>上市状态</label>
+            <select class="sel" data-k="listing">
+              <option value="">请选择</option><option>未上市</option><option>新三板</option>
+              <option>主板/中小板</option><option>创业板</option><option>科创板</option><option>美股</option><option>港股</option><option>其他</option>
+            </select></div>
+          <div class="field"><label>总部国家 / 地区</label>
+            <select class="sel" data-k="hqCountry">
+              <option value="">请选择</option>
+              <option>中国大陆</option><option>中国香港</option><option>中国台湾</option><option>美国</option>
+              <option>德国</option><option>日本</option><option>英国</option><option>新加坡</option>
+              <option>阿联酋</option><option>越南</option><option>印度</option><option>韩国</option><option>其他</option>
+            </select></div>
+          <div class="field"><label>总部省份 / 州</label><input class="inp" data-k="hqProv" placeholder="如：广东 / California"></div>
+          <div class="field full"><label>所属行业（一级 → 二级）</label>
+            <div class="grid2" style="gap:12px">
+              <select class="sel" id="ind1"></select>
+              <select class="sel" id="ind2" data-k="industry"></select>
+            </div>
+          </div>
+          <div class="field full"><label>主营产品 / 服务关键词</label>
+            <input class="inp" data-k="keywords" placeholder="如：工业传感器、OEM 模组、储能逆变器（用逗号分隔）"></div>
+        </div>
+      </section>
+
+      <!-- B 市场与客群 -->
+      <section class="form-card">
+        <div class="form-h"><div class="step">B</div><h3>市场与客群</h3><span class="tag">卖给谁 · 在哪卖</span></div>
+        <div class="form-body grid2">
+          <div class="field full"><label>目标销售区域 <span class="hint">（可多选，非常详细）</span></label>
+            <div class="chips" id="ch_regions"></div></div>
+          <div class="field full"><label>目标客户类型 <span class="hint">（可多选）</span></label>
+            <div class="chips" id="ch_custTypes"></div></div>
+          <div class="field full"><label>客户规模偏好 <span class="hint">（可多选）</span></label>
+            <div class="chips" id="ch_custSizes"></div></div>
+          <div class="field full"><label>销售渠道 <span class="hint">（可多选）</span></label>
+            <div class="chips" id="ch_channels"></div></div>
+          <div class="field"><label>典型决策角色 <span class="hint">（可多选）</span></label>
+            <div class="chips" id="ch_roles"></div></div>
+          <div class="field"><label>市场进入阶段</label>
+            <select class="sel" data-k="stage">
+              <option value="">请选择</option><option>未进入</option><option>试水期</option>
+              <option>成长期</option><option>成熟期</option><option>战略收缩</option>
+            </select></div>
+          <div class="field"><label>客单价区间</label>
+            <select class="sel" data-k="ticket">
+              <option value="">请选择</option><option>&lt;¥1万</option><option>¥1万-10万</option>
+              <option>¥10万-50万</option><option>¥50万-200万</option><option>&gt;¥200万</option>
+            </select></div>
+          <div class="field"><label>年出口额占比</label>
+            <select class="sel" data-k="exportShare">
+              <option value="">请选择</option><option>仅内销</option><option>&lt;20%</option>
+              <option>20%-50%</option><option>50%-80%</option><option>&gt;80%</option>
+            </select></div>
+        </div>
+      </section>
+
+      <!-- C 产品与竞争力 -->
+      <section class="form-card">
+        <div class="form-h"><div class="step">C</div><h3>产品与竞争力</h3><span class="tag">凭什么赢</span></div>
+        <div class="form-body grid2">
+          <div class="field full"><label>核心产品类别 <span class="hint">（可多选）</span></label>
+            <div class="chips" id="ch_productCats"></div></div>
+          <div class="field"><label>产品定位</label>
+            <select class="sel" data-k="positioning">
+              <option value="">请选择</option><option>高端品牌</option><option>中高端</option>
+              <option>中端主流</option><option>性价比</option><option>白牌/OEM</option>
+            </select></div>
+          <div class="field"><label>是否支持定制</label>
+            <select class="sel" data-k="custom">
+              <option value="">请选择</option><option>支持</option><option>部分支持</option><option>不支持</option>
+            </select></div>
+          <div class="field full"><label>技术壁垒 <span class="hint">（可多选）</span></label>
+            <div class="chips" id="ch_tech"></div></div>
+          <div class="field full"><label>资质认证 <span class="hint">（可多选，影响可进入市场）</span></label>
+            <div class="chips" id="ch_certs"></div></div>
+          <div class="field full"><label>核心差异化卖点</label>
+            <textarea class="inp" data-k="usp" placeholder="一句话说清你和同行最大的不同…"></textarea></div>
+          <div class="field"><label>最小起订量 MOQ</label>
+            <select class="sel" data-k="moq">
+              <option value="">请选择</option><option>无 MOQ</option><option>&lt;100</option>
+              <option>100-500</option><option>500-1000</option><option>1000-5000</option><option>&gt;5000</option>
+            </select></div>
+          <div class="field"><label>交付周期</label>
+            <select class="sel" data-k="lead">
+              <option value="">请选择</option><option>&lt;7天</option><option>7-15天</option>
+              <option>15-30天</option><option>30-60天</option><option>60-90天</option><option>&gt;90天</option>
+            </select></div>
+          <div class="field"><label>月产能</label>
+            <select class="sel" data-k="capacity">
+              <option value="">请选择</option><option>&lt;1万/月</option><option>1-10万/月</option>
+              <option>10-50万/月</option><option>50-100万/月</option><option>&gt;100万/月</option>
+            </select></div>
+          <div class="field"><label>毛利率区间</label>
+            <select class="sel" data-k="margin">
+              <option value="">请选择</option><option>&lt;10%</option><option>10-20%</option>
+              <option>20-30%</option><option>30-50%</option><option>&gt;50%</option>
+            </select></div>
+        </div>
+      </section>
+
+      <!-- D 报价与商务 -->
+      <section class="form-card">
+        <div class="form-h"><div class="step">D</div><h3>报价与商务</h3><span class="tag">报价体系</span></div>
+        <div class="form-body grid2">
+          <div class="field full"><label>报价币种 <span class="hint">（可多选）</span></label>
+            <div class="chips gold" id="ch_currencies"></div></div>
+          <div class="field full"><label>贸易术语 Incoterms <span class="hint">（可多选）</span></label>
+            <div class="chips" id="ch_incoterms"></div></div>
+          <div class="field"><label>主流价格区间</label>
+            <select class="sel" data-k="priceTier">
+              <option value="">请选择</option><option value="70">低（&lt;行业均价70%）</option>
+              <option value="95">中（行业均价70-110%）</option>
+              <option value="125">高（&gt;行业均价110%）</option>
+            </select></div>
+          <div class="field"><label>价格调整机制</label>
+            <select class="sel" data-k="priceAdj">
+              <option value="">请选择</option><option>固定价</option><option>随原料浮动</option>
+              <option>随汇率浮动</option><option>可协商</option><option>年度框架价</option>
+            </select></div>
+          <div class="field full"><label>付款条款 <span class="hint">（可多选）</span></label>
+            <div class="chips" id="ch_payments"></div></div>
+          <div class="field"><label>信用账期</label>
+            <select class="sel" data-k="credit">
+              <option value="">请选择</option><option>预付款</option><option>发货前付清</option>
+              <option>30天</option><option>60天</option><option>90天以上</option>
+            </select></div>
+          <div class="field"><label>定制能力描述</label>
+            <input class="inp" data-k="customDesc" placeholder="如：支持丝印/LOGO/参数定制"></div>
+        </div>
+      </section>
+
+      <!-- E 竞争环境与战略输入 -->
+      <section class="form-card">
+        <div class="form-h"><div class="step">E</div><h3>竞争环境与战略输入</h3><span class="tag">驱动四类竞争分析</span></div>
+        <div class="form-body grid2">
+          <div class="field full"><label>已知主要竞争对手 <span class="hint">（可增删，越多分析越准）</span></label>
+            <div id="compList"></div>
+            <div class="addrow" id="addComp">＋ 添加竞争对手</div>
+          </div>
+          <div class="field full"><label>替代品 / 替代方案描述</label>
+            <textarea class="inp" data-k="substitutes" placeholder="如：客户可自建产线 / 采用开源替代方案 / 标准品即可满足…"></textarea></div>
+          <div class="field full"><label>主要市场进入壁垒 <span class="hint">（可多选）</span></label>
+            <div class="chips" id="ch_barriers"></div></div>
+          <div class="field full"><label>核心战略意图（AI 分析的目标）</label>
+            <textarea class="inp" data-k="intent" placeholder="如：18 个月内进入中东工业采购市场，做到品类前三…"></textarea></div>
+        </div>
+      </section>
+
+      <!-- 竞争分析 -->
+      <div class="toolbar" id="analysesBar" style="margin-top:6px">
+        <div><h2>竞争分析</h2><div class="sub">依据上方档案即时合成 · 六维分析 + 综合竞争战略</div></div>
+        <!-- 注：该副标题为独立文本节点，便于反查字典整句翻译 -->
+        <div class="spacer"></div>
+        <span class="genstatus" id="genStatus"></span>
+        <button class="btn ghost" id="genBtn2">⚡ 依据当前档案重新生成</button>
+      </div>
+      <section class="analyses">
+        <div class="analysis">
+          <div class="analysis-h"><div class="ai">¥</div><h3>报价竞争分析</h3><span class="tag">Pricing</span></div>
+          <div class="analysis-b" id="anPrice"></div>
+        </div>
+        <div class="analysis">
+          <div class="analysis-h"><div class="ai">🌐</div><h3>市场机会分析</h3><span class="tag">Opportunity</span></div>
+          <div class="analysis-b" id="anMarket"></div>
+        </div>
+        <div class="analysis">
+          <div class="analysis-h"><div class="ai">⚔️</div><h3>同行竞争分析</h3><span class="tag">Peers</span></div>
+          <div class="analysis-b" id="anPeer"></div>
+        </div>
+        <div class="analysis">
+          <div class="analysis-h"><div class="ai">🔁</div><h3>替代品竞争分析</h3><span class="tag">Substitutes</span></div>
+          <div class="analysis-b" id="anSub"></div>
+        </div>
+        <div class="analysis">
+          <div class="analysis-h"><div class="ai">⚠️</div><h3>地缘政治风险</h3><span class="tag">Geopolitical</span></div>
+          <div class="analysis-b" id="anGeo"></div>
+        </div>
+        <div class="analysis">
+          <div class="analysis-h"><div class="ai">🛂</div><h3>市场准入政策（动态）</h3><span class="tag">Market Access</span></div>
+          <div class="analysis-b" id="anAccess"></div>
+        </div>
+
+        <!-- 综合竞争战略（全宽） -->
+        <div class="analysis strategy-full">
+          <div class="analysis-h"><div class="ai">🎯</div><h3>综合竞争战略</h3><span class="tag"><span>AI 增长总司令</span><span> · Strategy</span></span></div>
+          <div class="analysis-b" id="anStrategy"></div>
+        </div>
+      </section>
+      <div class="note">⚠️ 以上分析为原型演示逻辑（依据表单选项即时合成），接真实数据后将由 AI 增长总司令基于公开数据源生成，并标注数据与覆盖边界。</div>
+    </div>
+  </main>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+  const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+  /* ---- 选项数据（非常详细） ---- */
+  const OPT = {
+    regions:["北美(美/加)","欧盟","英国","东南亚","中东","拉美","非洲","日韩","澳洲/新西兰","中国内地","中国港澳台","其他"],
+    custTypes:["制造商(OEM/ODM)","品牌商","零售商/连锁","跨境电商","分销商/代理","工程商/项目方","政府/公共采购","终端消费者","研究所/院校"],
+    custSizes:["小微企业","中小企业","大型企业","跨国集团"],
+    channels:["线下展会","B2B平台(阿里巴巴等)","独立站","经销/代理网络","电商(亚马逊等)","招投标","直营团队","行业协会/商会"],
+    roles:["采购","技术/研发","财务","决策者(老板/总监)","终端用户","法务/合规"],
+    productCats:["电子/电气","机械设备","化工/材料","消费品/快消","软件/SaaS","专业服务","医疗器械","新能源","汽车零部件","纺织/服装","五金/工具","其他"],
+    tech:["发明专利","实用新型","外观设计","配方/工艺秘密","软件著作权","数据资产","品牌资产","独家渠道","体系认证","Know-how"],
+    certs:["CE","UL","RoHS","REACH","ISO 9001","IATF 16949","FCC","CCC","FDA","API","ISO 14001","其他"],
+    currencies:["USD","EUR","CNY","GBP","JPY","AED","其他"],
+    incoterms:["EXW","FOB","CIF","CFR","DDP","DDU","FCA","其他"],
+    payments:["T/T 预付款","即期信用证","远期信用证","赊销(O/A)","承兑交单(D/A)","分期付款","Escrow/托管"],
+    barriers:["认证合规","资本门槛","渠道资源","品牌认知","技术专利","政策壁垒","客户关系","本地化服务"]
+  };
+  const INDUSTRY = {
+    "制造业":["电子制造","机械设备","化工","汽车零部件","新能源","医疗器械","五金工具","纺织服装"],
+    "消费品":["消费电子","家居日用","美妆个护","食品饮料","玩具婴童","运动户外"],
+    "科技/软件":["SaaS","AI/大数据","工业软件","嵌入式系统","游戏"],
+    "专业服务":["检测认证","物流仓储","营销咨询","金融服务","法律合规"],
+    "能源/材料":["光伏","储能","新材料","石油化工"],
+    "医疗健康":["制药","医疗器械","诊断试剂","医疗服务"]
+  };
+  /* 早期版本曾在表单里「预勾选 / 预填」过一批演示内容，会让使用者分不清
+     哪些是自己填的、哪些是系统预设的。现已全部移除，表单首屏为空。
+     下面这份清单只用于一次性清理旧存档（精确匹配才清，不误伤使用者输入），
+     不再参与任何渲染。 */
+  const LEGACY_PRESET = {
+    chips:{
+      regions:["东南亚","北美(美/加)","欧盟"],
+      custTypes:["制造商(OEM/ODM)","分销商/代理","工程商/项目方"],
+      custSizes:["中小企业","大型企业"],
+      channels:["线下展会","B2B平台(阿里巴巴等)","独立站"],
+      roles:["采购","技术/研发","决策者(老板/总监)"],
+      productCats:["电子/电气","机械设备","新能源"],
+      tech:["发明专利","体系认证","Know-how"],
+      certs:["CE","ISO 9001"],
+      currencies:["USD","EUR"],
+      incoterms:["FOB","CIF"],
+      payments:["T/T 预付款","即期信用证"]
+    },
+    text:["工业传感器、OEM 模组、储能逆变器",
+          "CE/UL 认证产能 + 交期确定性，支持小批量定制",
+          "客户可自建产线，或直接采购标准品替代",
+          "18 个月内进入北美与东南亚工业采购市场，做到品类前三"],
+    comps:[{n:"示例竞争方 A",r:"欧盟",p:"高",s:"品牌与渠道强"},
+           {n:"示例竞争方 B",r:"东南亚",p:"低",s:"价格极低"}]
+  };
+
+  /* ---- 渲染 chips（一律不预勾选，全部由使用者自行选择） ---- */
+  function renderChips(id, arr, defaults){
+    const box = document.getElementById(id);
+    arr.forEach(v=>{
+      const b=document.createElement("button");
+      b.type="button"; b.className="chip"+(box.classList.contains("gold")?" gold":"");
+      b.textContent=v; b.dataset.v=v;
+      if(defaults && defaults.includes(v)) b.classList.add("active");
+      b.addEventListener("click",()=>{ b.classList.toggle("active"); scheduleSave(); });
+      box.appendChild(b);
+    });
+  }
+  Object.entries(OPT).forEach(([k,arr])=>{
+    const id = "ch_"+k;
+    if(document.getElementById(id)) renderChips(id, arr);
+  });
+
+  /* ---- 行业级联（首屏为空，由使用者自行选择） ---- */
+  const ind1=$("#ind1");
+  const blankOpt=()=>{ const o=document.createElement("option"); o.value=""; o.textContent="请选择"; return o; };
+  ind1.appendChild(blankOpt());
+  Object.keys(INDUSTRY).forEach(k=>{ const o=document.createElement("option"); o.value=k; o.textContent=k; ind1.appendChild(o); });
+  function fillInd2(){
+    const ind2=$("#ind2"); ind2.innerHTML=""; ind2.appendChild(blankOpt());
+    (INDUSTRY[ind1.value]||[]).forEach(k=>{ const o=document.createElement("option"); o.value=k; o.textContent=k; ind2.appendChild(o); });
+  }
+  ind1.value=""; ind1.addEventListener("change",()=>{ fillInd2(); scheduleSave(); });
+  ind2.addEventListener("change",scheduleSave); fillInd2();
+
+  /* ---- 成立年份 ---- */
+  const fd=$('[data-k="founded"]');
+  for(let y=2026;y>=1980;y--){ const o=document.createElement("option"); o.value=y; o.textContent=y; fd.appendChild(o); }
+
+  /* ---- 竞争对手动态行 ---- */
+  const compList=$("#compList");
+  function compRow(c){
+    const row=document.createElement("div"); row.className="crow";
+    row.innerHTML=`
+      <input class="inp" placeholder="竞争对手名称" value="${c.n||''}">
+      <input class="inp" placeholder="主战场区域" value="${c.r||''}">
+      <select class="sel"><option>低</option><option>中</option><option>高</option></select>
+      <input class="inp" placeholder="其相对强项" value="${c.s||''}">
+      <button class="del" title="删除">×</button>`;
+    row.querySelector("select").value=c.p||"中";
+    row.querySelector(".del").addEventListener("click",()=>{ row.remove(); scheduleSave(); });
+    row.querySelectorAll("input,select").forEach(el=>el.addEventListener("change",scheduleSave));
+    compList.appendChild(row);
+  }
+  /* 竞争对手：首屏不预置任何行，由使用者自行「＋ 添加竞争对手」 */
+  $("#addComp").addEventListener("click",()=>{ compRow({p:"中"}); scheduleSave(); });
+
+  /* ---- 读取 ---- */
+  function chips(id){ return $$(`#${id} .chip.active`).map(c=>c.dataset.v); }
+  function get(k){ const el=document.querySelector(`[data-k="${k}"]`); return el?el.value:""; }
+  function set(k,v){ const el=document.querySelector(`[data-k="${k}"]`); if(el&&v) el.value=v; }
+  function getComps(){
+    return $$("#compList .crow").map(r=>{
+      const i=r.querySelectorAll("input"); return {n:i[0].value,r:i[1].value,p:r.querySelector("select").value,s:i[2].value};
+    });
+  }
+
+  /* ---- 本地自动保存 ---- */
+  const KEY="falcora_strategy_profile_v1";
+  const KEY_OLD="falpora_strategy_profile_v1"; /* 旧键名（拼写笔误）：仅作迁移回退读取，不再写入 */
+  let saveTimer=null;
+  function scheduleSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(save,400);
+    $("#savedTag").textContent="● 保存中…"; }
+  function save(){
+    const st={};
+    $$("[data-k]").forEach(el=>{ if(el.value) st[el.dataset.k]=el.value; });
+    Object.keys(OPT).forEach(k=>st["ch_"+k]=chips("ch_"+k));
+    st.ind1=ind1.value; st.comps=getComps();
+    try{ localStorage.setItem(KEY, JSON.stringify(st)); $("#savedTag").textContent="● 已自动保存"; }catch(e){}
+  }
+  /* 旧存档里可能残留早期版本预设的演示内容 —— 精确匹配才清除，不误伤使用者自己填的 */
+  function stripLegacy(st){
+    let changed=false;
+    const same=(a,b)=>Array.isArray(a)&&Array.isArray(b)&&a.length===b.length&&a.every(v=>b.includes(v));
+    Object.keys(LEGACY_PRESET.chips).forEach(k=>{
+      if(same(st["ch_"+k], LEGACY_PRESET.chips[k])){ st["ch_"+k]=[]; changed=true; }
+    });
+    $$("[data-k]").forEach(el=>{ if(LEGACY_PRESET.text.indexOf(el.value)!==-1){ el.value=""; changed=true; } });
+    if(Array.isArray(st.comps)&&same(st.comps.map(c=>c.n), LEGACY_PRESET.comps.map(c=>c.n))){ st.comps=[]; changed=true; }
+    return changed;
+  }
+  function setSavedTag(saved){ const t=$("#savedTag"); if(t) t.textContent = saved ? "● 已自动保存" : "● 尚未保存"; }
+  function load(){
+    let st; try{ st=JSON.parse(localStorage.getItem(KEY)||localStorage.getItem(KEY_OLD)||"null"); }catch(e){ st=null; }
+    if(!st){ setSavedTag(false); return false; }
+    $$("[data-k]").forEach(el=>{ if(st[el.dataset.k]!==undefined) el.value=st[el.dataset.k]; });
+    const cleaned = stripLegacy(st);
+    Object.keys(OPT).forEach(k=>{
+      const box=document.getElementById("ch_"+k); const sel=st["ch_"+k]||[];
+      if(box) box.querySelectorAll(".chip").forEach(c=>{ if(sel.includes(c.dataset.v)) c.classList.add("active"); });
+    });
+    if(st.ind1){ ind1.value=st.ind1; fillInd2(); if(st.industry!==undefined) $("#ind2").value=st.industry; }
+    if(st.comps&&st.comps.length){ compList.innerHTML=""; st.comps.forEach(compRow); }
+    /* 只有「确实存在使用者自己填的内容」才算有效档案；否则视同空白，不自动出分析 */
+    const hasContent = $$("[data-k]").some(el=>el.value)
+      || Object.keys(OPT).some(k=>chips("ch_"+k).length)
+      || $$("#compList .crow").length>0;
+    if(cleaned) save();
+    setSavedTag(hasContent);
+    return hasContent;
+  }
+  $$("[data-k]").forEach(el=>el.addEventListener("change",scheduleSave));
+  const hadProfile = load();
+  /* 「清空档案」：把本机保存的整份档案删掉，回到空白状态 */
+  $("#clearBtn").addEventListener("click",function(){
+    if(!confirm("确定清空整份战略档案？本机保存的内容将被删除，且无法恢复。")) return;
+    try{ localStorage.removeItem(KEY); localStorage.removeItem(KEY_OLD); }catch(e){}
+    location.reload();
+  });
+
+  /* ============ 竞争分析生成 ============ */
+
+  /* 区域：地缘政治 + 市场准入（演示数据，真实值每日校准待接源） */
+  const REGION_DATA = {
+    "北美(美/加)":{sanction:30,political:20,trade:55,fx:15,access:{certs:["UL","FCC","FDA(医疗)"],tariff:"多数工业品 0–3% (MFN)",local:"无强制本地化；政府采购买方偏好",restrict:"部分敏感技术出口管制 (EAR/ITAR)"}},
+    "欧盟":{sanction:25,political:20,trade:50,fx:30,access:{certs:["CE","RoHS","REACH"],tariff:"同盟内 0%；通用 0–4%",local:"部分行业需欧盟授权代表 (EC Rep)",restrict:"CBAM 碳边境、GDPR、部分技术管制"}},
+    "英国":{sanction:25,political:22,trade:48,fx:35,access:{certs:["UKCA(过渡)","CE 暂认"],tariff:"0–4%",local:"UKCA 逐步替代 CE",restrict:"脱欧后监管独立化"}},
+    "东南亚":{sanction:35,political:45,trade:40,fx:50,access:{certs:["TISI(泰)","SNI(印尼)","SIRIM(马来)"],tariff:"ASEAN 内 0–5%；外 5–10%",local:"部分品类本地含量要求",restrict:"认证分散、清关效率参差"}},
+    "中东":{sanction:45,political:55,trade:45,fx:40,access:{certs:["G-Mark(沙特)","ECAS","Halal(食/妆)"],tariff:"5–15%",local:"部分政府项目需本地代理/合资",restrict:"关联受制裁国须谨慎、Halal 合规"}},
+    "拉美":{sanction:40,political:50,trade:55,fx:65,access:{certs:["NOM(墨)","INMETRO(巴西)"],tariff:"高 10–35%",local:"高本地化/国产化率要求",restrict:"外汇管制、清关慢、政治波动"}},
+    "非洲":{sanction:55,political:65,trade:50,fx:70,access:{certs:["SONCAP(尼日)","PVoC(肯尼亚)"],tariff:"中高",local:"部分强制本地代理",restrict:"政局/外汇/清关风险高"}},
+    "日韩":{sanction:25,political:25,trade:45,fx:25,access:{certs:["PSE(日)","KC(韩)"],tariff:"低 0–8%",local:"标准严苛、认证周期长",restrict:"非关税壁垒高"}},
+    "澳洲/新西兰":{sanction:20,political:20,trade:40,fx:25,access:{certs:["RCM","WaterMark"],tariff:"低",local:"标准近似欧盟",restrict:"较少"}},
+    "中国内地":{sanction:25,political:25,trade:50,fx:30,access:{certs:["CCC","SRRC","械/药字号"],tariff:"—(内销)",local:"部分行业准入/备案",restrict:"外资准入负面清单、数据出境合规"}},
+    "中国港澳台":{sanction:22,political:28,trade:42,fx:28,access:{certs:["本地安全认证"],tariff:"港澳零关税；台 ECFA",local:"—",restrict:"较少"}},
+    "其他":{sanction:50,political:55,trade:50,fx:55,access:{certs:["视目的国"],tariff:"视协定",local:"视目的国",restrict:"需逐国研判"}}
+  };
+
+  function genGeo(regions){
+    if(!regions.length) return `<div class="verdict">请在 B 区勾选<b>目标销售区域</b>，系统将据此评估各地缘政治风险。</div>`;
+    const D=REGION_DATA;
+    const dot=v=> v>=60?"dot-r":v>=40?"dot-y":"dot-b";
+    const rows = regions.map(r=>{
+      const g=D[r]||{sanction:50,political:55,trade:50,fx:55};
+      const avg=Math.round((g.sanction+g.political+g.trade+g.fx)/4);
+      const lvl= avg>=60?"高":avg>=40?"中":"低";
+      const cls= avg>=60?"dot-r":avg>=40?"dot-y":"dot-b";
+      return `<tr><td class="n">${r}</td>
+        <td class="${dot(g.sanction)}">${g.sanction}</td>
+        <td class="${dot(g.political)}">${g.political}</td>
+        <td class="${dot(g.trade)}">${g.trade}</td>
+        <td class="${dot(g.fx)}">${g.fx}</td>
+        <td class="${cls}">${lvl}</td></tr>`;
+    }).join("");
+    const high = regions.filter(r=>{const g=D[r]||{};return (g.sanction||0)>=60||(g.political||0)>=60;});
+    const verdict = high.length
+      ? `以下区域<b>地缘政治风险偏高</b>，进入前须做专项尽调与备选方案：<b>${high.join("、")}</b>。`
+      : `所选区域整体地缘风险可控，以<b>中低风险</b>为主；建议持续监控制裁名单与贸易政策变动。`;
+    return `<div class="verdict">${verdict}</div>
+      <table class="matrix"><tr><th>区域</th><th>制裁</th><th>政局</th><th>贸易壁垒</th><th>汇率波动</th><th>综合</th></tr>${rows}</table>
+      <div class="note">分值越高风险越大（演示数据；真实值来自制裁名单 / 政治风险指数 / 贸易数据库，每日校准）。</div>`;
+  }
+
+  function genAccess(regions){
+    if(!regions.length) return `<div class="verdict">请在 B 区勾选<b>目标销售区域</b>，系统将列出各地<b>动态市场准入政策</b>。</div>`;
+    const D=REGION_DATA;
+    const cards = regions.map(r=>{
+      const a=(D[r]&&D[r].access)||{certs:["待接真实源"],tariff:"—",local:"—",restrict:"—"};
+      return `<div style="border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
+        <b style="color:var(--cyan)">${r}</b>
+        <ul class="find" style="margin-top:8px">
+          <li><b>强制认证：</b>${a.certs.join("、")}</li>
+          <li><b>关税参考：</b>${a.tariff}</li>
+          <li><b>本地化要求：</b>${a.local}</li>
+          <li><b>行业限制：</b>${a.restrict}</li>
+        </ul></div>`;
+    }).join("");
+    return `${cards}
+      <div class="note">🛂 数据更新：演示 · 真实版本每日从<b>各国监管官网 / 贸易数据库</b>校准，政策变更将触发预警。</div>`;
+  }
+
+  function genAnalyses(){
+    /* ⚠️ 绝不预置兜底值：未选就是未选，相应结论改为「尚未填写」引导，
+       否则会把系统预设（如「中端主流」「价位 95」）当成使用者自己填的数据呈现。 */
+    const pos=get("positioning")||"";
+    const priceRaw=get("priceTier")||"";
+    const price=priceRaw?parseInt(priceRaw,10):NaN;
+    const hasPrice=!isNaN(price);
+    const regions=chips("ch_regions");
+    const certs=chips("ch_certs");
+    const curr=chips("ch_currencies");
+    const inco=chips("ch_incoterms");
+    const pay=chips("ch_payments");
+    const comps=getComps().filter(c=>c.n);
+    const subs=get("substitutes")||"";
+    const barriers=chips("ch_barriers");
+
+    /* 1. 报价竞争分析 */
+    const diff=price-100;
+    const flex = (curr.length>=2?1:0)+(inco.length>=2?1:0)+(pay.length>=2?1:0);
+    const flexLabel = flex>=2?"灵活":(flex===1?"中等":"单一/受限");
+    let verdictPrice;
+    if(!hasPrice) verdictPrice='尚未填写「主流价格区间」—— 请先在 C 区选择价格带，报价竞争分析才有依据。';
+    else if(price>=120) verdictPrice=`当前价格定位为 <b>高端（高于行业均价约 ${diff}%）</b>，靠品牌/技术壁垒支撑；若壁垒不足，易被性价比竞品挤压。`;
+    else if(price<=75) verdictPrice=`当前价格定位为 <b>低位（低于行业均价约 ${Math.abs(diff)}%）</b>，利于抢量，但毛利与抗风险空间薄，需靠规模与成本优势守住。`;
+    else verdictPrice=`当前价格定位<b>贴近行业均价</b>，处于主流竞争带，胜负更取决于交付、认证与服务，而非单纯价格。`;
+    const priceFind=[
+      `报价体系灵活度：币种 ${curr.length} 种 · 贸易术语 ${inco.length} 种 · 付款条款 ${pay.length} 种 → <b style="white-space:nowrap">${flexLabel}</b>${flex<2?"（建议补充多币种/多术语以适配多地买家）":""}。`,
+      hasPrice ? (`风险提示：${inco.includes("EXW")&&!inco.includes("DDP")?"仅报 EXW 把物流与清关甩给买家，跨境小B客户转化阻力大，可增 DDP/DDU；":""}${price<=75?"低位定价需严控获客成本，避免陷入纯价格战；":""}${price>=120?"高端定价必须配套强背书（认证/案例），否则询盘质量下滑。":""}`||"报价结构无明显硬伤，建议保留弹性以应对不同区域买家。") : ""
+    ].filter(Boolean);
+    $("#anPrice").innerHTML =
+      `<div class="verdict">${verdictPrice}</div>
+       ${hasPrice?`<div class="barrow"><b>您的价位</b><div class="bar"><i style="width:${Math.min(100,price)}%"></i></div><span class="num">${price}</span></div>
+       <div class="barrow"><b>行业均价（基准＝100）</b><div class="bar"><i style="width:100%"></i></div><span class="num">100</span></div>`:""}
+       <ul class="find">${priceFind.map(f=>`<li>${f}</li>`).join("")}</ul>`;
+
+    /* 2. 市场机会分析 */
+    const allRegions=OPT.regions;
+    const oppMap={"北美(美/加)":92,"欧盟":88,"中东":85,"东南亚":90,"拉美":78,"非洲":70,"日韩":76,"澳洲/新西兰":68,"中国内地":60,"中国港澳台":64,"其他":55};
+    const untapped = allRegions.filter(r=>!regions.includes(r))
+      .map(r=>({r,sc:oppMap[r]||60}))
+      .sort((a,b)=>b.sc-a.sc).slice(0,4);
+    const certMarket={CE:"欧盟",UL:"北美",RoHS:"欧盟",REACH:"欧盟",FCC:"北美",CCC:"中国内地",FDA:"北美/医疗",IATF16949:"汽车"};
+    const unlocked=[...new Set(certs.map(c=>certMarket[c]).filter(Boolean))];
+    const gap = allRegions.filter(r=>!regions.includes(r)&&unlocked.includes(certMarket_key(r)));
+    function certMarket_key(r){ for(const k in certMarket) if(certMarket[k]===r) return k; return null; }
+    let mVerdict = regions.length
+      ? `已覆盖 <b>${regions.length}</b> 个目标区域；尚有 <b>${untapped.length}</b> 个高匹配区域未纳入，其中 <b>${untapped[0]?untapped[0].r:""}</b> 机会评分最高。`
+      : `尚未选择目标区域，无法定位机会；请先在 B 区勾选。`;
+    const mFind=[
+      mVerdict,
+      `资质已解锁市场：<b>${unlocked.join("、")||"无"}</b>${unlocked.length?"——这些市场凭现有认证可直接进入，应优先放量":""}。`,
+      untapped.length?`建议优先评估：<b>${untapped.map(u=>u.r).join("、")}</b>，其与您的品类匹配度高且当前未覆盖。`:"当前覆盖已较全面。",
+      `进入壁垒方面，您自评估的主要门槛：<b>${barriers.join("、")||"未填写"}</b>，需针对性准备（认证/本地渠道/案例）。`
+    ];
+    $("#anMarket").innerHTML =
+      `<div class="verdict">${mVerdict}</div>
+       <ul class="find">${mFind.slice(1).map(f=>`<li>${f}</li>`).join("")}</ul>
+       ${untapped.length?`<div style="margin-top:4px">${untapped.map(u=>`<div class="barrow"><b>${u.r}</b><div class="bar y"><i style="width:${u.sc}%"></i></div><span class="num">${u.sc}</span></div>`).join("")}</div>
+       <div class="note">📊 未覆盖区域的<b>机会评分为演示值</b>（未接数据源）——接入贸易数据库后按真实进口规模 / 增速 / 竞争强度重算。</div>`:""}`;
+
+    /* 3. 同行竞争分析（不预置示例竞争方：未录入时只给引导，不伪造对标） */
+    const peers = comps;
+    const dims=["价格","认证","渠道","品牌","交付"];
+    /* ⚠️ 竞品各维度强弱必须来自真实数据源（财报 / 认证库 / 渠道库）。
+       未接源前一律留空「—」，绝不用名称哈希等方式生成占位评分——那是编造数据。 */
+    const userRow = dims.map(d=>{
+      if(d==="价格") return !hasPrice?"—":price>=120?"强":price<=75?"弱":"中";
+      if(d==="认证") return certs.length>=3?"强":certs.length>=1?"中":"—";
+      if(d==="渠道") return chips("ch_channels").length>=3?"强":chips("ch_channels").length>=1?"中":"—";
+      if(d==="品牌") return !pos?"—":(pos==="高端品牌"||pos==="中高端")?"强":"中";
+      if(d==="交付"){ const ld=get("lead")||""; return !ld?"—":(ld.includes("<")?"强":"中"); }
+      return "—";
+    });
+    function cell(v){ const c=v==="强"?"dot-b":v==="中"?"dot-y":v==="—"?"dot-n":"dot-r"; return `<td class="${c}">${v}</td>`; }
+    if(!peers.length){
+      $("#anPeer").innerHTML = '<div class="verdict">尚未录入主要竞争对手 —— 请在 E 区「已知主要竞争对手」补充至少 2 家真实同业，同行对标才有依据。</div>';
+    } else {
+      const strengths=dims.filter((d,i)=>userRow[i]==="强");
+      const gaps=dims.filter((d,i)=>userRow[i]==="弱");
+      const unknown=dims.filter((d,i)=>userRow[i]==="—");
+      const pVerdict = `已录入 <b>${peers.length}</b> 个主要竞争对手。下表只呈现<b>您档案自评的维度强弱</b>；竞品列留空——需接入真实数据源后才能判定，不做占位评分。`;
+      const pFind=[
+        `您的相对强项维度：<b>${strengths.join("、")||"暂无明显强项"}</b>。`,
+        `您自评偏弱的维度：<b>${gaps.join("、")||"无"}</b>${gaps.length?"——若同行在这些维度更强，提案中应避开正面比价，转向您的优势叙事。":"。"}`,
+        unknown.length?`尚未评估的维度：<b>${unknown.join("、")}</b>（因对应档案未填写）。`:"",
+        `建议为前 2 名竞品建立持续监测（价格 / 认证 / 新闻），由 AI 增长总司令每周更新对标；接入数据源后自动补齐竞品列。`
+      ].filter(Boolean);
+      $("#anPeer").innerHTML =
+        `<div class="verdict">${pVerdict}</div>
+         <table class="matrix"><tr><th>维度</th><th>您</th>${peers.map(p=>`<th>${esc(p.n).slice(0,6)||"竞品"}</th>`).join("")}</tr>
+         ${dims.map((d,i)=>`<tr><td class="n">${d}</td>${cell(userRow[i])}${peers.map(()=>`<td class="dot-n" title="数据未覆盖 · 接入数据源后补齐">—</td>`).join("")}</tr>`).join("")}</table>
+         <ul class="find">${pFind.map(f=>`<li>${f}</li>`).join("")}</ul>`;
+    }
+
+    /* 4. 替代品竞争分析（未填就不给威胁分值，避免伪造「威胁等级 35」） */
+    const subLen=subs.trim().length;
+    let lvl=null, lvlClass="y", lvlTxt="";
+    if(subLen===0){ lvlTxt="待补充（请填写替代品描述）"; }
+    else if(/自建|开源|标准品|通用|低价/.test(subs)){ lvl=82; lvlClass="r"; lvlTxt="高 — 存在强替代逻辑"; }
+    else { lvl=58; lvlClass="y"; lvlTxt="中 — 需关注转换成本"; }
+    const switchCost = lvl===null ? "待补充（需先填写替代品描述）" : (lvl>=80?"低（客户易转向替代品）":"中（存在一定迁移门槛）");
+    const sVerdict = subLen
+      ? `替代品威胁等级评估为 <b>${lvlTxt}</b>。${lvl>=80?"客户可能绕过您的产品直接采用替代方案，须在价值主张上拉开差距。":""}`
+      : `尚未填写替代品信息，无法评估替代威胁——建议补充后再看本项结论。`;
+    const sFind=[
+      `转换成本判断：<b>${switchCost}</b>。`,
+      `缓解建议：${lvl===null?"先补全替代品描述，再据此制定应对策略。":(lvl>=80?"将卖点从「产品功能」升级为「结果 / 合规 / 风险兜底」，抬高替代难度；并用数据与案例固化粘性。":"持续强化服务、认证与定制能力，使替代成本高于节省。")}`,
+      `监控信号：客户开始比价标准品、自建产线新闻、开源方案成熟度——任一出现即触发预警。`
+    ];
+    $("#anSub").innerHTML =
+      `<div class="verdict">${sVerdict}</div>
+       ${lvl===null?"":`<div class="barrow"><b>威胁等级</b><div class="bar ${lvlClass}"><i style="width:${lvl}%"></i></div><span class="num">${lvl}</span></div>`}
+       <ul class="find">${sFind.map(f=>`<li>${f}</li>`).join("")}</ul>`;
+
+    $("#anGeo").innerHTML = genGeo(regions);
+    $("#anAccess").innerHTML = genAccess(regions);
+
+    /* 5. 综合竞争战略（全宽卡） */
+    genStrategy();
+
+    $("#savedTag").textContent="● 已自动保存";
+  }
+
+  /* ---- 综合竞争战略：把「主营关键词 + 企业数据 + 主要竞争对手 + 战略意图」合成一份可执行战略 ---- */
+  function genStrategy(){
+    const cn=(get("cn")||"").trim(), en=(get("en")||"").trim();
+    const kwRaw=(get("keywords")||"").trim();
+    const kws=kwRaw.split(/[,，、;；\/]/).map(s=>s.trim()).filter(Boolean);
+    const custTypes=chips("ch_custTypes"), custSizes=chips("ch_custSizes");
+    const roles=chips("ch_roles"), channels=chips("ch_channels");
+    const regions=chips("ch_regions"), certs=chips("ch_certs");
+    const tech=chips("ch_tech"), barriers=chips("ch_barriers");
+    const comps=getComps().filter(c=>c.n);
+    const intent=(get("intent")||"").trim();
+    const usp=(get("usp")||"").trim();
+    const subs=(get("substitutes")||"").trim();
+    const pos=(get("positioning")||"").trim();
+    const priceRaw=(get("priceTier")||"").trim();
+    const price=priceRaw?parseInt(priceRaw,10):NaN;
+    const hasPrice=!isNaN(price);
+    const exportShare=get("exportShare")||"";
+    const who = cn||en||"贵司";
+    const kwTxt = kws.length?kws.join("、"):"（未填写）";
+    const regTxt = regions.length?regions.join("、"):"（未选区域）";
+    const buyerType = custTypes.length?custTypes.join(" / "):"（未选客户类型）";
+    const buyerSize = custSizes.length?custSizes.join(" / "):"（未选规模偏好）";
+    const buyerRole = roles.length?roles.join(" / "):"（未选决策角色）";
+    const chanTxt = channels.length?channels.join("、"):"（未选渠道）";
+    const coreKw = kws[0]||"主营品类";
+
+    /* 1 定位与主张 —— ⚠️ pos / price 未填时不得编造，改用「尚未填写」引导态 */
+    const posTxt = pos ? `以 <b>${esc(pos)}</b> 定位` : `<b>产品定位尚未填写</b>（B 区可选）`;
+    const priceTxt = hasPrice
+      ? `、<b>${price>=120?"高于":price<=75?"低于":"贴近"}行业均价</b> 的价格带`
+      : `、<b>价格带尚未填写</b>（C 区可选）`;
+    const posBox = `<div class="sbox"><h4><span class="n">1</span>定位与主张</h4><p>
+      <b>${esc(who)}</b> ${posTxt}${priceTxt}，进入 <b>${regTxt}</b>；
+      主营关键词：<b>${esc(kwTxt)}</b>。
+      ${kws.length?`建议把「<b>${esc(kws[0])}</b>」做成可被搜索、可被询盘的<b>品类词</b>，其余关键词作为长尾与交叉销售补充。`:"建议先补全主营关键词——它是②线索匹配与④内容生成的共同锚点。"}
+      ${usp?`差异化主张：「<b>${esc(usp)}</b>」。`:"尚未填写核心差异化卖点，提案与报价缺少锚点，建议补齐。"}
+    </p></div>`;
+
+    /* 2 目标采购方画像 */
+    const buyerBox = `<div class="sbox"><h4><span class="n">2</span>目标采购方画像</h4><p>
+      目标采购方＝<b>${buyerType}</b>，规模偏好 <b>${buyerSize}</b>，决策角色 <b>${buyerRole}</b>，主要触达渠道 <b>${chanTxt}</b>。
+      ②「全球线索获取」应<b>只保留对「${esc(kws.slice(0,2).join(" / ")||"主营品类")}」有实际采购需求</b>的企业（采购方 / 使用方 / 集成方），
+      排除纯同业竞争者、上游供应商与无采购行为的企业。
+      采购触发信号：扩产或新建产线、认证更新、进入新市场、供应商切换、招标公告、展会采购团。
+    </p></div>`;
+
+    /* 3 竞争态势判断 */
+    const cs=[];
+    cs.push(comps.length
+      ? `已录入 <b>${comps.length}</b> 个主要竞争对手：<b>${comps.slice(0,3).map(c=>esc(c.n)).join("、")}</b>${comps.length>3?" 等":""}。`
+      : `主要竞争对手<b>尚未录入</b>——同行对标暂缺，请至少补 2 家真实同业，对标结论才可用。`);
+    if(!hasPrice) cs.push("主流价格区间<b>尚未填写</b>——无法判断我方所处价格带，价格竞争结论暂缺（请在 C 区选择价格带）。");
+    else if(price>=120) cs.push("我方处<b>高端价格带</b>：需以认证、技术与案例背书支撑溢价，否则易被性价比竞品挤压。");
+    else if(price<=75) cs.push("我方处<b>低位价格带</b>：抢量有利但毛利薄，须靠规模与成本护城河守住。");
+    else cs.push("我方价格<b>贴近行业均价</b>：胜负取决于交付、认证与服务，而非单纯比价。");
+    cs.push(`技术壁垒自评：<b>${tech.length?tech.join("、"):"未填写"}</b>；资质认证：<b>${certs.length?certs.join("、"):"未填写"}</b>。`);
+    if(barriers.length) cs.push(`自评进入壁垒：<b>${barriers.join("、")}</b>——须逐项准备应对（认证 / 本地渠道 / 案例 / 关系）。`);
+
+    /* 4 战略路径（三阶段） */
+    const p1=`在 <b>${esc(regions[0]||"首选区域")}</b> 中选 1 个「认证已解锁 + 竞争强度低」的细分市场做<b>样板案例</b>；把「<b>${esc(coreKw)}</b>」做成可询盘的内容资产；在②按「采购方 + 匹配度 ≥ 85」筛出 20–30 家，逐个走③尽调。目标：跑通 3–5 个可复制的询盘→报价闭环。`;
+    const p2=`补齐关键认证与资质以解锁更多区域（当前认证：<b>${certs.length?certs.join("、"):"未填写"}</b>）；从所选渠道中收敛出 2 个主力渠道并跑通首单；对前 2 名竞品建立价格 / 认证 / 新闻的<b>周度监测</b>。`;
+    const p3=`围绕 <b>${tech.length?esc(tech[0]):"技术壁垒"}</b> 与差异化卖点构建不可替代性；针对替代方案抬高客户切换成本；以 <b>${esc(coreKw)}</b> 的品类心智对齐战略意图达成度。`;
+
+    /* 5 待验证假设 */
+    const asm=[];
+    if(!kws.length) asm.push("主营产品 / 服务关键词未填写 → 线索匹配与内容生成缺少锚点");
+    if(!comps.length) asm.push("主要竞争对手未录入 → 同行对标无法展开");
+    if(!intent) asm.push("核心战略意图未填写 → 战略路径缺少可量化目标");
+    if(certs.length<2) asm.push("资质认证偏少 → 可进入市场受限，建议优先补目标区域的强制认证");
+    if(!subs) asm.push("替代品描述为空 → 替代威胁无法评估");
+    if(!exportShare) asm.push("年出口额占比未填 → 海外市场依赖度未知");
+    if(!asm.length) asm.push("关键输入较完整 → 建议补充真实产能 / 财务数据以提升预测精度");
+    asm.push("区域地缘与准入分值为演示值 → 接入真实数据源后需重新校准");
+
+    /* 6 边界与免责 */
+    const edge=`<p>本页分析基于<b>您填写的档案</b>即时合成，属<b>决策辅助</b>而非结论，且不含尚未接入的第三方数据源。
+      区域风险与准入政策为演示值，接源后将标注来源与更新日期。
+      <b>不构成法律、财务或投资建议</b>，亦不承诺获客或转化结果。</p>`;
+
+    const posInVerdict = pos ? `用 <b>${esc(pos)}</b> 定位的 ` : "";
+    /* 关键词未填时不写「主营品类 打」，避免出现悬空的占位词 + 空格 */
+    const objPart = kws.length ? `<b>${esc(coreKw)}</b> 打` : `主营品类打`;
+    const gapNote = (!pos||!hasPrice) ? `（定位与价格带尚未填写，补全后结论更准）` : "";
+    $("#anStrategy").innerHTML =
+      `<div class="verdict">一句话结论：在 <b>${regTxt}</b>，${posInVerdict}${objPart}「<b>认证 + 交付确定性</b>」，
+        避开纯比价，先立样板再复制。${gapNote}${intent?`战略意图：<b>${esc(intent)}</b>。`:""}</div>
+       <div class="sgrid">${posBox}${buyerBox}</div>
+       <div class="sbox" style="margin-top:14px"><h4><span class="n">3</span>竞争态势判断</h4>
+         <ul class="find">${cs.map(x=>`<li>${x}</li>`).join("")}</ul></div>
+       <div class="sbox" style="margin-top:14px"><h4><span class="n">4</span>战略路径（分阶段）</h4>
+         <div class="stagelist">
+           <div class="stg"><span class="ph">阶段一 · 立标杆</span><div>${p1}</div></div>
+           <div class="stg"><span class="ph">阶段二 · 扩通道</span><div>${p2}</div></div>
+           <div class="stg"><span class="ph">阶段三 · 筑壁垒</span><div>${p3}</div></div>
+         </div></div>
+       <div class="sgrid" style="margin-top:14px">
+         <div class="sbox"><h4><span class="n">5</span>待验证假设</h4>
+           <ul class="assume">${asm.map(x=>`<li>${x}</li>`).join("")}</ul></div>
+         <div class="sbox"><h4><span class="n">6</span>边界与免责</h4>${edge}</div>
+       </div>`;
+  }
+
+  /* ============ 生成入口：按钮状态 + 完成提示 + 自动滚动 ============ */
+  let busy=false;
+  function stamp(){
+    const d=new Date(), p=n=>String(n).padStart(2,"0");
+    return p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds());
+  }
+  function setBusy(on){
+    busy=on;
+    const b1=$("#genBtn"), b2=$("#genBtn2");
+    [b1,b2].forEach(b=>{ if(b) b.disabled=on; });
+    if(b1) b1.textContent = on?"◌ 分析中…":"⚡ 生成竞争分析";
+    if(b2) b2.textContent = on?"◌ 分析中…":"⚡ 依据当前档案重新生成";
+  }
+  function setStatus(html){ const el=$("#genStatus"); el.classList.remove("ok"); el.innerHTML=html; }
+  function toast(msg){
+    let t=document.getElementById("falToast");
+    if(!t){ t=document.createElement("div"); t.id="falToast"; t.className="toast"; document.body.appendChild(t); }
+    t.innerHTML=msg; t.classList.add("show");
+    clearTimeout(t._tm); t._tm=setTimeout(()=>t.classList.remove("show"),2600);
+  }
+  function runGenerate(){
+    if(busy) return;
+    setBusy(true);
+    setStatus('<span class="spinner"></span><span>正在依据档案重算…</span>');
+    setTimeout(function(){
+      genAnalyses();
+      setBusy(false);
+      const el=$("#genStatus"); el.classList.add("ok");
+      el.innerHTML='<span>已生成 7 项分析</span><span class="num">· '+stamp()+'</span>';
+      toast("<b>✓</b> 已依据「主营关键词 · 企业数据 · 竞争对手」重新生成分析与综合竞争战略");
+      const bar=document.getElementById("analysesBar");
+      if(bar) bar.scrollIntoView({behavior:"smooth",block:"start"});
+    },520);
+  }
+
+  $("#genBtn").addEventListener("click",runGenerate);
+  $("#genBtn2").addEventListener("click",runGenerate);
+  /* 首屏不再自动生成分析 —— 档案为空时只给引导态，
+     避免出现「不是使用者填的内容」的分析结果（那正是造成混乱的根源）。
+     仅当本机已有使用者自己保存过的档案时，才按该档案自动生成。 */
+  function showGuide(){
+    const g='<div class="verdict">尚未生成 —— 请先填写上方档案（A–E 区），再点右上角「⚡ 生成竞争分析」。</div>';
+    ["anPrice","anMarket","anPeer","anSub","anGeo","anAccess","anStrategy"].forEach(function(id){
+      const el=document.getElementById(id); if(el) el.innerHTML=g;
+    });
+    const s=$("#genStatus"); s.classList.remove("ok"); s.innerHTML='<span>未生成</span>';
+  }
+  if(hadProfile){
+    genAnalyses();
+    $("#genStatus").classList.add("ok");
+    $("#genStatus").innerHTML='<span>已生成 7 项分析</span><span class="num">· '+stamp()+'</span>';
+  } else {
+    showGuide();
+  }
+})();
+</script>
+<script src="app-update.js"></script>
+<script src="app-nav.js"></script>
+<script src="app-i18n-dict.js"></script>
+<script src="app-i18n.js"></script>
+</body>
+</html>
