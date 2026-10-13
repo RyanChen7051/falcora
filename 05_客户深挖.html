@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<script src="app-vals.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0B2632" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="assets/favicon.ico" />
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+<title>获客通AI · 客户深挖</title>
+<style>
+  :root{
+    --bg:#0B2632; --bg-2:#0A2E38; --side:#0A2A33;
+    --panel:rgba(13,46,54,.72); --panel-2:rgba(16,58,68,.55);
+    --border:rgba(126,154,160,.16); --border-2:rgba(94,234,212,.14);
+    --cyan:#5EEAD4; --teal:#0E9A8E; --gold:#F5B841;
+    --ink:#E9F3F4; --muted:#8AA3A8; --muted-2:#6E878C;
+    --good:#34D399; --danger:#FF6B6B; --warn:#F5B841;
+    --radius:16px; --shadow:0 18px 48px rgba(0,0,0,.35);
+    --font:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);
+    background-image:radial-gradient(1100px 520px at 78% -8%,rgba(14,154,142,.16),transparent 60%),
+      radial-gradient(820px 460px at 8% 108%,rgba(245,184,65,.08),transparent 60%);
+    -webkit-font-smoothing:antialiased;line-height:1.5}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:.2px}
+  .app{display:flex;min-height:100vh}
+  .sidebar{width:248px;flex:0 0 248px;background:linear-gradient(180deg,var(--side),#08222A);
+    border-right:1px solid var(--border);padding:20px 16px;position:sticky;top:0;height:100vh;
+    display:flex;flex-direction:column;gap:6px}
+  .brand{display:flex;align-items:center;gap:11px;padding:6px 8px 18px}
+  .brand-mark{width:34px;height:34px;border-radius:10px;flex:0 0 auto;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+  .brand-txt b{font-size:17px;letter-spacing:.5px;display:block}
+  .brand-txt span{font-size:11px;color:var(--muted-2);letter-spacing:1.5px}
+  .nav-label{font-size:11px;color:var(--muted-2);letter-spacing:1.5px;padding:14px 10px 6px}
+  .nav-item{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:11px;
+    color:var(--muted);font-size:14px;cursor:pointer;transition:.18s;position:relative;text-decoration:none}
+  .nav-item .idx{width:22px;height:22px;flex:0 0 auto;border-radius:7px;display:grid;place-items:center;
+    font-size:11px;font-weight:700;background:rgba(94,234,212,.08);color:var(--cyan)}
+  .nav-item:hover{background:rgba(94,234,212,.06);color:var(--ink)}
+  .nav-item.active{background:linear-gradient(90deg,rgba(94,234,212,.16),rgba(94,234,212,.02));color:#fff}
+  .nav-item.active::before{content:"";position:absolute;left:-16px;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--cyan)}
+  .nav-item.active .idx{background:var(--cyan);color:#06262B}
+  .side-foot{margin-top:auto;border-top:1px solid var(--border);padding-top:14px;display:flex;gap:10px;align-items:center}
+  .avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--teal),var(--cyan));display:grid;place-items:center;font-weight:700;color:#06262B;flex:0 0 auto}
+  .side-foot small{display:block;color:var(--muted-2);font-size:11px}
+  .side-foot b{font-size:13px}
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{display:flex;align-items:center;gap:18px;padding:18px 28px;border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:20;background:rgba(11,38,50,.82);backdrop-filter:blur(10px)}
+  .title h1{font-size:19px;font-weight:700;letter-spacing:.4px}
+  .title p{font-size:12px;color:var(--muted-2);letter-spacing:1.4px;text-transform:uppercase}
+  .search{flex:1;max-width:420px;margin-left:8px;position:relative}
+  .search input{width:100%;padding:10px 14px 10px 38px;border-radius:11px;border:1px solid var(--border);
+    background:rgba(0,0,0,.22);color:var(--ink);font-size:13px;font-family:inherit;outline:none}
+  .search input:focus{border-color:var(--border-2);box-shadow:0 0 0 3px rgba(94,234,212,.1)}
+  .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.5}
+  .top-right{display:flex;align-items:center;gap:12px;margin-left:auto}
+  .pill{font-size:12px;padding:7px 13px;border-radius:999px;background:linear-gradient(135deg,rgba(245,184,65,.22),rgba(245,184,65,.06));
+    color:var(--gold);border:1px solid rgba(245,184,65,.3);font-weight:600}
+  .icon-btn{width:38px;height:38px;border-radius:11px;border:1px solid var(--border);background:rgba(0,0,0,.2);
+    display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+  .icon-btn:hover{color:var(--ink);border-color:var(--border-2)}
+  .content{padding:24px 28px 48px;display:flex;flex-direction:column;gap:18px}
+
+  .toolbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .toolbar h2{font-size:20px;font-weight:750}
+  .toolbar .sub{font-size:12.5px;color:var(--muted-2)}
+  .spacer{flex:1}
+  .btn{padding:11px 20px;border-radius:12px;border:1px solid rgba(245,184,65,.4);cursor:pointer;font-size:14px;font-weight:700;
+    background:linear-gradient(135deg,var(--gold),#E0A02E);color:#3a2a05;font-family:inherit}
+  .btn:hover{filter:brightness(1.06)}
+  .btn.ghost{background:rgba(94,234,212,.08);color:var(--cyan);border-color:var(--border-2)}
+  .sel{padding:11px 14px;border-radius:11px;border:1px solid var(--border);background:rgba(0,0,0,.24);color:var(--ink);font-size:14px;font-family:inherit;outline:none;min-width:280px}
+  .sel:focus{border-color:var(--border-2)}
+
+  .hero{display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center;padding:20px 24px;border-radius:var(--radius);
+    border:1px solid var(--border);background:var(--panel);box-shadow:var(--shadow)}
+  .hero .lg{width:64px;height:64px;border-radius:16px;background:rgba(94,234,212,.1);display:grid;place-items:center;font-size:30px;flex:0 0 auto}
+  .hero h2{font-size:19px;font-weight:750;margin-bottom:4px}
+  .hero .meta{font-size:13px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+  .hero .meta b{color:var(--ink)}
+  .hero .score{text-align:right}
+  .hero .score b{font-size:26px;color:var(--cyan);display:block;font-weight:750}
+  .hero .score small{font-size:11.5px;color:var(--muted-2)}
+
+  .layout{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:18px}
+  .card-h{display:flex;align-items:center;gap:10px;padding:15px 18px;border-bottom:1px solid var(--border)}
+  .card-h .ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto;background:rgba(94,234,212,.1);color:var(--cyan)}
+  .card-h h3{font-size:15px;font-weight:700}
+  .card-h .tag{margin-left:auto;font-size:11px;color:var(--muted-2)}
+  .card-b{padding:16px 18px}
+
+  .profile{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 18px}
+  .pf{display:flex;flex-direction:column;gap:3px}
+  .pf .k{font-size:11.5px;color:var(--muted-2)}
+  .pf .v{font-size:14px;font-weight:650}
+
+  .chain{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .role{border:1px solid var(--border);border-radius:12px;padding:14px;background:rgba(0,0,0,.16);position:relative}
+  .role .rh{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+  .role .rh .rn{font-size:13.5px;font-weight:700}
+  .role .rbadge{font-size:10.5px;padding:2px 8px;border-radius:999px;margin-left:auto;font-weight:700}
+  .rb-dm{background:rgba(245,184,65,.16);color:var(--gold)}
+  .rb-in{background:rgba(94,234,212,.14);color:var(--cyan)}
+  .rb-us{background:rgba(14,154,142,.16);color:#7fe3d2}
+  .rb-gk{background:rgba(126,154,160,.16);color:var(--muted)}
+  .role .ri{font-size:12.3px;color:var(--muted);line-height:1.55}
+  .role .ri b{color:var(--ink)}
+  .role .ra{margin-top:9px;font-size:11.8px;color:var(--cyan);border-top:1px dashed var(--border);padding-top:8px}
+
+  .pains{list-style:none;display:flex;flex-direction:column;gap:10px}
+  .pains li{font-size:12.8px;display:flex;gap:10px;line-height:1.5;align-items:flex-start}
+  .pains li::before{content:"";flex:0 0 auto;width:7px;height:7px;border-radius:50%;margin-top:6px;background:var(--gold);box-shadow:0 0 0 3px rgba(245,184,65,.14)}
+
+  .sb{padding:15px 16px;display:flex;flex-direction:column;gap:12px}
+  .pbar{display:grid;grid-template-columns:96px 1fr 34px;gap:9px;align-items:center;font-size:12.3px}
+  .pbar .bar{height:9px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden}
+  .pbar .bar > i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--teal),var(--cyan))}
+  .pbar.you .bar > i{background:linear-gradient(90deg,#E0A02E,var(--gold))}
+  .pbar b{text-align:right;color:var(--muted)}
+  .tl{display:flex;flex-direction:column;gap:0}
+  .tli{display:grid;grid-template-columns:64px 16px 1fr;gap:10px;padding:9px 0;position:relative}
+  .tli .tt{font-size:11.5px;color:var(--muted-2);padding-top:1px}
+  .tli .td{width:11px;height:11px;border-radius:50%;background:var(--cyan);margin-top:5px;box-shadow:0 0 0 3px rgba(94,234,212,.14);z-index:1}
+  .tli .tx{font-size:12.5px;line-height:1.5}
+  .tli .tx b{color:var(--ink)}
+  .tlline{position:absolute;left:69px;top:16px;bottom:-6px;width:1px;background:var(--border)}
+  .next{list-style:none;display:flex;flex-direction:column;gap:10px}
+  .next li{font-size:12.6px;display:flex;gap:9px;line-height:1.5}
+  .next li .n{width:18px;height:18px;border-radius:6px;background:rgba(94,234,212,.14);color:var(--cyan);display:grid;place-items:center;font-size:10.5px;font-weight:800;flex:0 0 auto;margin-top:1px}
+  .foot{font-size:11.5px;color:var(--muted-2);padding:6px 2px;text-align:center;line-height:1.6}
+
+  /* ---------- 触达时机 · 何时发 ---------- */
+  .tm-top{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:stretch;margin-bottom:14px}
+  .tm-clock{border:1px solid var(--border);border-radius:12px;padding:11px 15px;background:rgba(0,0,0,.18);min-width:168px;display:flex;flex-direction:column;justify-content:center}
+  .tm-clock .cl{font-size:11px;color:var(--muted-2);display:flex;align-items:center;gap:6px}
+  .tm-clock .ct{font-size:22px;font-weight:750;color:var(--cyan);line-height:1.25}
+  .tm-clock .cs{font-size:11.5px;color:var(--muted)}
+  .tm-verdict{border:1px solid rgba(245,184,65,.34);border-radius:12px;padding:12px 15px;
+    background:linear-gradient(135deg,rgba(245,184,65,.11),rgba(245,184,65,.02));display:flex;flex-direction:column;justify-content:center}
+  .tm-verdict .vt{font-size:11px;color:var(--gold);letter-spacing:1.4px;margin-bottom:6px}
+  .tm-verdict .vv{font-size:15px;font-weight:650;line-height:1.55}
+  .tm-verdict .vv b{color:var(--gold)}
+  .tm-verdict .vx{font-size:11.5px;color:var(--muted-2);margin-top:6px}
+  .tm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .tm-f{border:1px solid var(--border);border-radius:11px;padding:11px 13px;background:rgba(0,0,0,.14)}
+  .tm-f .fk{font-size:11px;color:var(--muted-2);display:flex;align-items:center;gap:6px;margin-bottom:5px}
+  .tm-f .fv{font-size:12.6px;line-height:1.55}
+  .tzwk{display:flex;gap:5px;margin-top:8px}
+  .tzwk span{flex:1;text-align:center;font-size:11px;padding:4px 0;border-radius:7px;
+    border:1px solid var(--border);color:var(--muted-2);white-space:nowrap}
+  .tzwk span.best{background:rgba(94,234,212,.15);color:var(--cyan);border-color:rgba(94,234,212,.32);font-weight:700}
+  .tzwk span.off{opacity:.38;text-decoration:line-through}
+  .hol{display:flex;flex-direction:column;gap:6px}
+  .holr{display:flex;align-items:baseline;gap:8px;font-size:12.3px;line-height:1.4}
+  .holr .hd{font-weight:700;color:var(--gold);flex:0 0 auto;white-space:nowrap}
+  .holr .hn{color:var(--muted)}
+  .tm-note{margin-top:12px;font-size:11.8px;color:var(--muted-2);line-height:1.6;
+    border-top:1px dashed var(--border);padding-top:10px}
+
+  @media(max-width:1180px){.layout{grid-template-columns:1fr}.profile{grid-template-columns:1fr 1fr}.chain{grid-template-columns:1fr}.tm-grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:780px){.tm-top{grid-template-columns:1fr}.tm-grid{grid-template-columns:1fr}}
+  @media(max-width:780px){.sidebar{display:none}.topbar{flex-wrap:wrap}.sel{min-width:0;width:100%}.hero{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <img class="brand-mark" src="assets/logo.png" alt="FALCORA" />
+      <div class="brand-txt"><b>获客通AI</b><span>FALCORA</span></div>
+    </div>
+    <div class="nav-label">主导航</div>
+    <a class="nav-item" href="index.html"><span class="idx">⌂</span> 增长总司令驾驶舱</a>
+    <a class="nav-item" href="01_战略_企业战略档案.html"><span class="idx">①</span> 战略 · 企业战略档案</a>
+    <a class="nav-item" href="02_全球线索获取.html"><span class="idx">②</span> 全球线索获取</a>
+    <a class="nav-item" href="03_客户尽调与风险核查.html"><span class="idx">③</span> 客户尽调与风险核查</a>
+    <a class="nav-item" href="04_获客执行与内容.html"><span class="idx">④</span> 获客执行与内容</a>
+    <a class="nav-item active" href="05_客户深挖.html"><span class="idx">⑤</span> 客户深挖</a>
+    <a class="nav-item" href="06_转化率升级.html"><span class="idx">⑥</span> 转化率升级</a>
+    <div class="side-foot">
+      <div class="avatar">CB</div>
+      <div><b>陈邦杰</b><small>首席产品设计官</small></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="title"><h1>客户深挖</h1><p>Customer Deep-dive</p></div>
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        <input placeholder="搜索客户 / 决策人 / 需求关键词…" />
+      </div>
+      <div class="top-right">
+        <span class="pill">演示数据 · 决策链地图</span>
+        <div class="icon-btn">⚙</div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="toolbar">
+        <h2>客户深度档案</h2>
+        <span class="sub">画像 · 采购决策链 · 需求痛点 · 竞品渗透 · 沟通轨迹</span>
+        <div class="spacer"></div>
+        <select class="sel" id="picker"></select>
+        <button class="btn ghost" id="exportBtn">导出深挖档案</button>
+      </div>
+
+      <div class="hero" id="hero"></div>
+
+      <div class="card">
+        <div class="card-h"><div class="ic">◷</div><h3>触达时机 · 何时发</h3><span class="tag">时区 · 当地公共假期 · 采购周期与旺季 · 周内最优窗口</span></div>
+        <div class="card-b" id="timing"></div>
+      </div>
+
+      <div class="layout">
+        <div>
+          <div class="card">
+            <div class="card-h"><div class="ic">▤</div><h3>客户画像深档</h3><span class="tag">来源：公开信息 + 用户补充</span></div>
+            <div class="card-b"><div class="profile" id="profile"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><div class="ic">⛓</div><h3>采购决策链地图</h3><span class="tag">决策者 / 影响者 / 使用者 / 守门人</span></div>
+            <div class="card-b"><div class="chain" id="chain"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><div class="ic">◍</div><h3>需求与痛点</h3><span class="tag">推断 · 待访谈验证</span></div>
+            <div class="card-b"><ul class="pains" id="pains"></ul></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-h"><h3>竞品渗透</h3><span class="tag">该客户当前供应结构</span></div>
+            <div class="sb" id="pen"></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><h3>沟通时间线</h3></div>
+            <div class="sb"><div class="tl" id="tl"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><h3>深挖建议（下一步）</h3></div>
+            <div class="sb"><ul class="next" id="next"></ul></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="foot">演示数据 · 画像、决策链与痛点均为示例推断，需以真实访谈验证；不采集私人沟通内容。</div>
+    </div>
+  </main>
+</div>
+
+<script>
+const DATA = {
+  "northwind-ind.com":{
+    nm:"Northwind Industrial Co.", dm:"northwind-ind.com", flag:"🇺🇸", region:"北美", ind:"工业设备", score:88,
+    profile:{size:"约 480 人（中型）", revenue:"$120M / 年（估）", cycle:"采购周期 6–9 个月", years:"成立 1998 年", site:"美国 俄亥俄州", suppliers:"现有 3 家供应商（2 家本地 + 1 家亚洲）"},
+    chain:[
+      {r:"决策者", cls:"rb-dm", who:"VP of Operations（运营副总裁）", focus:"总成本、交期稳定性、供应中断风险", act:"用「交期 + 双供应源」角度切入，附认证与产能证明"},
+      {r:"影响者", cls:"rb-in", who:"Quality Manager（质量经理）", focus:"认证齐全（UL/ISO）、可追溯性", act:"先给认证包与 QC 流程，赢得技术信任"},
+      {r:"使用者", cls:"rb-us", who:"产线工程师", focus:"规格匹配、安装与售后响应", act:"提供规格书与快速售后承诺"},
+      {r:"守门人", cls:"rb-gk", who:"Procurement Assistant", focus:"流程合规、报价单格式", act:"按标准报价单提交，减少流程摩擦"}
+    ],
+    pains:["现有亚洲供应商交期波动大，曾造成停线","缺乏第二供应源，供应中断风险高","对 UL 认证完整度有硬性要求","采购决策需年度预算窗口，需提前卡位"],
+    pen:[{b:"本地供应商 A",s:45},{b:"本地供应商 B",s:30},{b:"亚洲供应商 C",s:25},{b:"FALCORA（目标）",s:0,you:true}],
+    tl:[{t:"09-28",x:"<b>展会</b> 初步接触，交换名片"}, {t:"10-02",x:"<b>邮件</b> 首触已发送（开发信）"}, {t:"10-05",x:"<b>领英</b> 与质量经理建立连接"}, {t:"10-09",x:"<b>电话</b> 预约 15 分钟介绍（进行中）"}],
+    next:["安排 15 分钟介绍通话，聚焦「第二供应源 + 交期」","发送 UL / ISO 认证包与 QC 流程一页纸","摸清其年度预算窗口（预计 Q1）","争取寄送样品做小批量验证"]
+  },
+  "rheinmasch.de":{
+    nm:"RheinMasch GmbH", dm:"rheinmasch.de", flag:"🇩🇪", region:"欧盟", ind:"工业设备", score:91,
+    profile:{size:"约 260 人（中型）", revenue:"€85M / 年（估）", cycle:"采购周期 4–6 个月", years:"成立 1974 年", site:"德国 巴伐利亚", suppliers:"现有 2 家欧盟供应商"},
+    chain:[
+      {r:"决策者", cls:"rb-dm", who:"Geschäftsführer（总经理）", focus:"长期战略合作、合规与可持续", act:"以「长期伙伴 + CE/可持续」定位切入"},
+      {r:"影响者", cls:"rb-in", who:"Technischer Leiter（技术负责人）", focus:"技术规格、TÜV 认证", act:"提供 TÜV/CE 文件与技术对标表"},
+      {r:"使用者", cls:"rb-us", who:"Produktionsteam", focus:"易集成、维护成本", act:"提供集成指南与维护手册"},
+      {r:"守门人", cls:"rb-gk", who:"Einkauf（采购部）", focus:"供应商准入流程、付款条件", act:"准备标准供应商准入资料包"}
+    ],
+    pains:["欧盟本地供应成本高，寻求性价比方案","对 CE/TÜV 与可持续合规要求严格","供应商准入流程较长，需提前备料","关注供应链地缘风险分散"],
+    pen:[{b:"欧盟供应商 A",s:55},{b:"欧盟供应商 B",s:45},{b:"FALCORA（目标）",s:0,you:true}],
+    tl:[{t:"09-20",x:"<b>邮件</b> 首触已发送（德语）"}, {t:"09-26",x:"<b>回复</b> 技术负责人索取认证包"}, {t:"10-01",x:"<b>邮件</b> 已发送 CE/TÜV 资料"}, {t:"10-08",x:"<b>视频会</b> 技术对标（待安排）"}],
+    next:["按约提供 TÜV/CE 完整文件与技术对标表","推进供应商准入资料包（含付款条件）","安排技术视频会，锁定规格","探询其可持续 / 地缘分散的具体要求"]
+  },
+  "gulftech.ae":{
+    nm:"GulfTech Trading LLC", dm:"gulftech.ae", flag:"🇦🇪", region:"中东", ind:"新能源", score:84,
+    profile:{size:"约 120 人（中型）", revenue:"$40M / 年（估）", cycle:"采购周期 3–5 个月", years:"成立 2011 年", site:"阿联酋 迪拜", suppliers:"现有 2 家供应商（欧洲 + 本地代理）"},
+    chain:[
+      {r:"决策者", cls:"rb-dm", who:"Managing Director", focus:"利润空间、项目交付速度", act:"以「快速交付 + 价格竞争力」切入"},
+      {r:"影响者", cls:"rb-in", who:"Project Engineer", focus:"产品性能与认证", act:"提供性能数据与认证清单"},
+      {r:"使用者", cls:"rb-us", who:"Installation Team", focus:"安装便利性、售后", act:"承诺本地化售后支持"},
+      {r:"守门人", cls:"rb-gk", who:"Admin & Procurement", focus:"合同条款、清关文件", act:"准备清关与合规文件清单"}
+    ],
+    pains:["项目交付周期紧，交期是硬约束","本地代理强制要求，渠道结构复杂","对价格敏感，需有竞争力报价","关联方曾有合同纠纷，需谨慎推进"],
+    pen:[{b:"欧洲供应商",s:50},{b:"本地代理",s:35},{b:"FALCORA（目标）",s:0,you:true}],
+    tl:[{t:"09-25",x:"<b>展会</b> 接触，索取报价"}, {t:"10-03",x:"<b>邮件</b> 报价区间已发送"}, {t:"10-10",x:"<b>尽调</b> 发现关联方合同纠纷，标记复核"}],
+    next:["对关联方合同纠纷要求对方补充说明","确认本地代理合作模式与分成","提供含清关支持的报价方案","推进 UBO 穿透核查后再进入实质谈判"]
+  }
+};
+
+/* ---------- 触达时机配置（时区 / 工作周 / 假期 / 采购节奏） ---------- */
+const TZCFG = {
+  "northwind-ind.com":{
+    tz:"America/New_York", city:"美国 俄亥俄州 · 美东时区",
+    work:[1,2,3,4,5], best:[2,3,4], window:"09:30–11:00",
+    holidays:[{m:1,d:1,n:"元旦"},{m:7,d:4,n:"独立日"},{m:11,d:27,n:"感恩节"},{m:11,d:28,n:"感恩节次日"},{m:12,d:25,n:"圣诞节"}],
+    avoid:[{f:[11,24],t:[12,31],n:"感恩节 → 圣诞假期"},{f:[7,1],t:[7,7],n:"独立日假期"}],
+    cycle:"采购周期 6–9 个月；年度预算窗口在 Q1（1–3 月）",
+    peak:"旺季 1–3 月（新预算释放）／淡季 11 月下旬–12 月",
+    note:"北美买家习惯周二至周四上午处理供应商邮件；周一多用于内部例会，周五下午的邮件最易被搁置。"
+  },
+  "rheinmasch.de":{
+    tz:"Europe/Berlin", city:"德国 巴伐利亚 · 中欧时区",
+    work:[1,2,3,4,5], best:[2,3,4], window:"09:00–11:00",
+    holidays:[{m:1,d:1,n:"元旦"},{m:5,d:1,n:"劳动节"},{m:10,d:3,n:"德国统一日"},{m:12,d:25,n:"圣诞节"},{m:12,d:26,n:"圣诞次日"}],
+    avoid:[{f:[12,20],t:[1,6],n:"圣诞 → 新年假期"},{f:[8,1],t:[8,31],n:"德国夏季休假季"}],
+    cycle:"采购周期 4–6 个月；供应商准入流程较长，需提前备料",
+    peak:"旺季 1–2 月、9–10 月（预算与年度计划节点）／淡季 8 月、12 月下旬",
+    note:"德国买家偏好书面、结构化沟通；周二至周四上午回复率最高，建议正式称谓开场、合规文件先行。"
+  },
+  "gulftech.ae":{
+    tz:"Asia/Dubai", city:"阿联酋 迪拜 · 海湾时区",
+    work:[0,1,2,3,4], best:[1,2,3], window:"09:00–11:00",
+    holidays:[{m:1,d:1,n:"元旦"},{m:12,d:2,n:"阿联酋国庆"},{m:12,d:3,n:"国庆次日"}],
+    avoid:[{f:[6,15],t:[8,31],n:"夏季高温假期 + 斋月前后"}],
+    cycle:"采购周期 3–5 个月；项目制交付，交期为硬约束",
+    peak:"旺季 10 月–次年 3 月（气候适宜、项目启动）／淡季 7–8 月高温休假",
+    note:"中东工作周为周日至周四，周五、周六为周末 —— 与欧美不同，切勿按周五发送。斋月期间白天工作时间缩短，宜整体避开。"
+  }
+};
+
+const WD=["周日","周一","周二","周三","周四","周五","周六"];
+const WD_EN=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+/* ---- 按当前界面语言本地化日期 / 星期 / 相对时间（不走字典，直接由 Intl 生成） ---- */
+const L2L={zh:"zh-CN",en:"en-US",es:"es-ES",ja:"ja-JP",fr:"fr-FR",de:"de-DE",ar:"ar-EG",vi:"vi-VN",hi:"hi-IN"};
+function curLang(){ try{ return (window.__falGetLang&&window.__falGetLang())||"zh"; }catch(e){ return "zh"; } }
+function loc(){ return L2L[curLang()]||"zh-CN"; }
+function fDate(y,m,d){ return new Intl.DateTimeFormat(loc(),{year:"numeric",month:"long",day:"numeric"}).format(new Date(Date.UTC(y,m-1,d,12))); }
+function fWd(dow){ return new Intl.DateTimeFormat(loc(),{weekday:"short"}).format(new Date(Date.UTC(1970,0,4+dow,12))); }
+function fDateWd(y,m,d){
+  const dt=new Date(Date.UTC(y,m-1,d,12));
+  const a=new Intl.DateTimeFormat(loc(),{month:"long",day:"numeric"}).format(dt);
+  const b=new Intl.DateTimeFormat(loc(),{weekday:"long"}).format(dt);
+  return curLang()==="zh" ? a+"（"+b+"）" : a+" ("+b+")";
+}
+function fRel(days){ try{ return new Intl.RelativeTimeFormat(loc(),{numeric:"auto"}).format(days,"day"); }catch(e){ return days+"d"; } }
+const DIFFT={
+  zh:(n,s)=>s>0?("比您快 "+n+" 小时"):("比您慢 "+n+" 小时"),
+  en:(n,s)=>s>0?(n+"h ahead of you"):(n+"h behind you"),
+  es:(n,s)=>s>0?(n+" h por delante"):(n+" h por detrás"),
+  ja:(n,s)=>s>0?("あなたより "+n+" 時間進み"):("あなたより "+n+" 時間遅れ"),
+  fr:(n,s)=>s>0?(n+" h d\u2019avance"):(n+" h de retard"),
+  de:(n,s)=>s>0?(n+" Std. voraus"):(n+" Std. zurück"),
+  ar:(n,s)=>s>0?("متقدّم بـ "+n+" ساعة"):("متأخّر بـ "+n+" ساعة"),
+  vi:(n,s)=>s>0?("nhanh hơn "+n+" giờ"):("chậm hơn "+n+" giờ"),
+  hi:(n,s)=>s>0?(n+" घंटे आगे"):(n+" घंटे पीछे")
+};
+const SKIPT={
+  zh:(n)=>"已自动跳过 "+n+" 天周末或假期", en:(n)=>"skipped "+n+" day(s) of weekend or holiday",
+  es:(n)=>"se omitieron "+n+" día(s) de fin de semana o festivo", ja:(n)=>(n+" 日分の週末・祝日を自動で回避"),
+  fr:(n)=>(n+" jour(s) de week-end ou férié ignoré(s)"), de:(n)=>(n+" Tag(e) Wochenende/Feiertag übersprungen"),
+  ar:(n)=>("تم تخطي "+n+" يوم من نهاية الأسبوع أو العطلة"), vi:(n)=>("đã bỏ qua "+n+" ngày cuối tuần hoặc lễ"),
+  hi:(n)=>(n+" दिन सप्ताहांत या अवकाश छोड़े गए")
+};
+function tpl(map,n){ const f=map[curLang()]||map.zh; return f(n); }
+
+function tzParts(tz, date){
+  const p = new Intl.DateTimeFormat("en-US",{timeZone:tz,year:"numeric",month:"2-digit",day:"2-digit",
+    hour:"2-digit",minute:"2-digit",hour12:false,weekday:"short"}).formatToParts(date).reduce((a,x)=>(a[x.type]=x.value,a),{});
+  return p;
+}
+function tzOffset(tz, date){
+  const p=tzParts(tz,date);
+  let h=+p.hour; if(h===24) h=0;
+  const asUTC=Date.UTC(+p.year,+p.month-1,+p.day,h,+p.minute);
+  return Math.round(((asUTC - Math.floor(date.getTime()/60000)*60000)/3600000)*2)/2;
+}
+function inAvoid(cfg,m,d){
+  const c=m*100+d;
+  return cfg.avoid.find(a=>{const f=a.f[0]*100+a.f[1],t=a.t[0]*100+a.t[1];return f<=t?(c>=f&&c<=t):(c>=f||c<=t);});
+}
+function nextSend(cfg,now){
+  const lp=tzParts(cfg.tz,now);
+  const y=+lp.year,m=+lp.month,d=+lp.day;
+  for(let i=1;i<=21;i++){
+    const t=new Date(Date.UTC(y,m-1,d+i,12));
+    const dow=t.getUTCDay(), mm=t.getUTCMonth()+1, dd=t.getUTCDate();
+    const hol=cfg.holidays.some(h=>h.m===mm&&h.d===dd);
+    const av=inAvoid(cfg,mm,dd);
+    if(cfg.best.includes(dow)&&!hol&&!av) return {y:t.getUTCFullYear(),m:mm,d:dd,dow,skip:i-1};
+  }
+  return null;
+}
+function upcomingHolidays(cfg,now){
+  const lp=tzParts(cfg.tz,now); const y=+lp.year,m=+lp.month,d=+lp.day;
+  const cur=y*10000+m*100+d;
+  return cfg.holidays.map(h=>{
+    let yy=y; let key=yy*10000+h.m*100+h.d;
+    if(key<cur){ yy=y+1; key=yy*10000+h.m*100+h.d; }
+    const t=new Date(Date.UTC(yy,h.m-1,h.d,12));
+    const days=Math.round((Date.UTC(yy,h.m-1,h.d)-Date.UTC(y,m-1,d))/86400000);
+    return {y:yy,m:h.m,d:h.d,dow:t.getUTCDay(),name:h.n,days};
+  }).sort((a,b)=>a.days-b.days).slice(0,3);
+}
+function renderTiming(dm){
+  const c=DATA[dm], cfg=TZCFG[dm], box=document.getElementById("timing");
+  if(!cfg){ box.innerHTML='<div class="tm-note">该客户尚未配置时区与假期资料。</div>'; return; }
+  const now=new Date();
+  const lp=tzParts(cfg.tz,now);
+  let hh=+lp.hour; if(hh===24) hh=0;
+  const clock=`${String(hh).padStart(2,"0")}:${lp.minute}`;
+  const wdIdx=WD_EN.indexOf(lp.weekday);
+  const off=tzOffset(cfg.tz,now);
+  const diff=off-8;
+  const diffTxt=diff===0?"与您同时区":tpl(DIFFT,Math.abs(diff),diff);
+  const nx=nextSend(cfg,now);
+  const hol=upcomingHolidays(cfg,now);
+  const skipTxt=nx&&nx.skip>0?tpl(SKIPT,nx.skip):"";
+
+  const wk=WD.map((w,i)=>{
+    const cls=cfg.best.includes(i)?"best":(cfg.work.includes(i)?"":"off");
+    return `<span class="${cls}">${fWd(i)}</span>`;
+  }).join("");
+
+  box.innerHTML=`
+    <div class="tm-top">
+      <div class="tm-clock">
+        <div class="cl"><span>对方当地时间</span></div>
+        <div class="ct num">${clock}</div>
+        <div class="cs"><span>${fWd(wdIdx)}</span><span> · ${diffTxt}</span></div>
+      </div>
+      <div class="tm-verdict">
+        <div class="vt">建议发送时间</div>
+        <div class="vv">
+          <b>${nx?fDateWd(nx.y,nx.m,nx.d):"—"}</b>
+          <span>对方当地时间</span> <b>${cfg.window}</b>
+        </div>
+        <div class="vx"><span>${cfg.city}</span><span>${nx?skipTxt:"近三周内无合适窗口，请人工判断"}</span></div>
+      </div>
+    </div>
+    <div class="tm-grid">
+      <div class="tm-f">
+        <div class="fk">周内最优窗口</div>
+        <div class="fv">周二至周四上午发送，打开率与回复率最高</div>
+        <div class="tzwk">${wk}</div>
+      </div>
+      <div class="tm-f">
+        <div class="fk">当地公共假期（临近）</div>
+        <div class="hol">${hol.map(h=>`<div class="holr"><span class="hd">${fDate(h.y,h.m,h.d)} · ${fWd(h.dow)}</span><span class="hn"><span>${h.name}</span><span> · ${fRel(h.days)}</span></span></div>`).join("")}</div>
+      </div>
+      <div class="tm-f">
+        <div class="fk">采购周期与旺季</div>
+        <div class="fv">${cfg.cycle}<br><span style="color:var(--muted-2)">${cfg.peak}</span></div>
+      </div>
+    </div>
+    <div class="tm-note">${cfg.note}</div>`;
+}
+
+const RC={dm:"rb-dm",in:"rb-in",us:"rb-us",gk:"rb-gk"};
+const picker=document.getElementById("picker");
+function buildPicker(){
+  picker.innerHTML="";
+  Object.values(DATA).forEach(c=>{const o=document.createElement("option");o.value=c.dm;o.textContent=c.nm+"  ·  "+window.__falVal(c.region);picker.appendChild(o);});
+  if(!picker.value) picker.value=Object.keys(DATA)[0];
+}
+buildPicker();
+picker.onchange=()=>render(picker.value);
+window.__falOnRefresh(function(){buildPicker();render(picker.value);});
+
+function render(dm){
+  const c=DATA[dm];
+  document.getElementById("hero").innerHTML=`
+    <div class="lg">${c.flag}</div>
+    <div><h2>${c.nm}</h2><div class="meta"><span>${c.dm}</span><span>· <span>${c.region}</span> · <span>${c.ind}</span></span><span>· 联系人层级 <b>L2 职能</b></span></div></div>
+    <div class="score"><b>${c.score}</b><small>深挖匹配度 / 100</small></div>`;
+
+  document.getElementById("profile").innerHTML=Object.entries(c.profile).map(([k,v])=>
+    `<div class="pf"><span class="k">${({size:"公司规模",revenue:"年营收（估）",cycle:"采购周期",years:"成立",site:"所在地",suppliers:"现有供应结构"})[k]||k}</span><span class="v">${v}</span></div>`).join("");
+
+  document.getElementById("chain").innerHTML=c.chain.map(r=>
+    `<div class="role"><div class="rh"><span class="rn">${r.who}</span><span class="rbadge ${RC[r.cls.replace('rb-','')]}">${r.r}</span></div>
+     <div class="ri"><b>关注点：</b>${r.focus}</div><div class="ra">触达建议：${r.act}</div></div>`).join("");
+
+  document.getElementById("pains").innerHTML=c.pains.map(p=>`<li>${p}</li>`).join("");
+
+  document.getElementById("pen").innerHTML=c.pen.map(p=>
+    `<div class="pbar ${p.you?'you':''}"><span>${p.b}</span><div class="bar"><i style="width:${p.s}%"></i></div><b>${p.s}%</b></div>`).join("")
+    +`<div style="font-size:11.5px;color:var(--muted-2);border-top:1px dashed var(--border);padding-top:9px">FALCORA 当前份额 0% —— 目标：进入其供应商结构。</div>`;
+
+  document.getElementById("tl").innerHTML=c.tl.map((t,i)=>
+    `<div class="tli">${i<c.tl.length-1?'<span class="tlline"></span>':''}<span class="tt">${t.t}</span><span class="td"></span><span class="tx">${t.x}</span></div>`).join("");
+
+  document.getElementById("next").innerHTML=c.next.map((n,i)=>`<li><span class="n">${i+1}</span><div>${n}</div></li>`).join("");
+
+  renderTiming(dm);
+}
+
+document.getElementById("exportBtn").onclick=()=>{
+  const c=DATA[picker.value];
+  const lines=["FALCORA 客户深挖档案（演示）","公司,"+c.nm,"域名,"+c.dm,"区域,"+c.region,"行业,"+c.ind,"深挖匹配度,"+c.score,"",
+    "【画像】"].concat(Object.entries(c.profile).map(([k,v])=>k+": "+v))
+    .concat(["","【采购决策链】"]).concat(c.chain.map(r=>r.r+" - "+r.who+" | 关注: "+r.focus))
+    .concat(["","【需求与痛点】"]).concat(c.pains.map(p=>"- "+p))
+    .concat(["","【深挖建议】"]).concat(c.next.map((n,i)=>(i+1)+". "+n));
+  const tz=TZCFG[picker.value];
+  if(tz){
+    const nx=nextSend(tz,new Date());
+    lines.push("","【触达时机 · 何时发】");
+    lines.push("时区,"+tz.city);
+    lines.push("建议发送,"+(nx?nx.m+" 月 "+nx.d+" 日（"+WD[nx.dow]+"）对方当地时间 "+tz.window:"近三周无合适窗口"));
+    lines.push("周内最优窗口,周二至周四上午");
+    lines.push("采购周期,"+tz.cycle);
+    lines.push("旺季淡季,"+tz.peak);
+    lines.push("提示,"+tz.note);
+  }
+  const blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/plain;charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="FALCORA_深挖档案_"+c.dm+".txt";a.click();
+};
+render(picker.value);
+</script>
+<script src="app-update.js"></script>
+<script src="app-nav.js"></script>
+<script src="app-i18n-dict.js"></script>
+<script src="app-i18n.js"></script>
+</body>
+</html>
