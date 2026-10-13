@@ -245,6 +245,29 @@
 
   @media(max-width:1180px){.layout{grid-template-columns:1fr}.lhead{display:none}.lrow{grid-template-columns:1fr 1fr;gap:8px}.lrow .co{grid-column:1/-1}}
   @media(max-width:780px){.sidebar{display:none}.topbar{flex-wrap:wrap}}
+
+  /* 范围条：明示当前线索池按什么范围收敛（按档案 / 全部演示池 / 未覆盖） */
+  .scopebar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:13px 18px;border-radius:var(--radius);
+    background:linear-gradient(100deg,rgba(245,184,65,.10),rgba(245,184,65,.03));
+    border:1px solid rgba(245,184,65,.26);font-size:13px}
+  .scopebar .sb-ic{width:28px;height:28px;flex:0 0 auto;border-radius:9px;background:rgba(245,184,65,.16);
+    display:grid;place-items:center;color:var(--gold);font-size:14px}
+  .scopebar .sb-t{font-weight:700;color:var(--gold);white-space:nowrap}
+  .scopebar .sb-d{color:var(--muted);min-width:0;line-height:1.6}
+  .scopebar .sb-d b{color:var(--ink)}
+  .scopebar .sb-acts{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  .scopebar.warn{background:linear-gradient(100deg,rgba(255,107,107,.10),rgba(255,107,107,.03));border-color:rgba(255,107,107,.28)}
+  .scopebar.warn .sb-ic{background:rgba(255,107,107,.16);color:var(--danger)}
+  .scopebar.warn .sb-t{color:var(--danger)}
+  .scopebar .sb-btn{padding:7px 13px;border-radius:10px;border:1px solid var(--border);background:rgba(0,0,0,.22);
+    color:var(--ink);font-size:12.5px;font-weight:650;font-family:inherit;cursor:pointer;transition:.16s;text-decoration:none;white-space:nowrap}
+  .scopebar .sb-btn:hover{border-color:var(--border-2);background:rgba(94,234,212,.08)}
+  .scopebar .sb-btn.pri{border-color:rgba(94,234,212,.4);background:linear-gradient(135deg,rgba(94,234,212,.2),rgba(14,154,142,.24));color:#eafff9}
+  .guidebox{padding:30px 22px;border-radius:var(--radius);border:1px dashed var(--border-2);
+    background:rgba(94,234,212,.04);text-align:center;font-size:13.5px;color:var(--muted);line-height:1.9}
+  .guidebox b{color:var(--ink);display:block;font-size:15px;margin-bottom:8px}
+  .guidebox a{color:var(--cyan);font-weight:650;text-decoration:none}
+  .guidebox a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -286,11 +309,7 @@
         <div class="ic">◎</div>
         <div>
           <div class="t">AI 增长总司令 · 本周采购方洞察</div>
-          <p>
-            <span>依据您 ① 战略档案的主营产品 / 服务关键词，本周从 6 个公开数据源初筛出 312 家「采购方」——即对您主营品类存在实际采购需求的企业（制造商 / 品牌商 / 分销代理 / 工程商 / 公共采购）。</span>
-            <span>已剔除纯同业竞争者、上游供应商与无采购行为的企业；其中 47 家不在制裁名单内且具备目标市场准入资质，建议优先进入核查管线。</span>
-            <span>注意：下方「未覆盖」标记代表该数据源尚未接入，并非无风险。</span>
-          </p>
+          <p id="insightBody"></p>
         </div>
         <div class="go">查看完整报告 →</div>
       </div>
@@ -304,6 +323,8 @@
         <button class="btn ghost" id="resetBtn">重置筛选</button>
         <button class="btn" id="exportBtn">导出管线 CSV</button>
       </div>
+
+      <div class="scopebar" id="scopeBar"></div>
 
       <div class="filters">
         <div class="frow">
@@ -379,11 +400,11 @@
             <div class="card-h"><h3>采购方转化漏斗</h3></div>
             <div class="sb">
               <div class="funnel">
-                <div class="fstep"><span class="fl">发现命中</span><div class="ft s1" id="fn1">312</div></div>
-                <div class="fstep"><span class="fl">已核查通过</span><div class="ft s2" id="fn2">47</div></div>
+                <div class="fstep"><span class="fl">发现命中</span><div class="ft s1" id="fn1">0</div></div>
+                <div class="fstep"><span class="fl">已建尽调档案</span><div class="ft s2" id="fn2">0</div></div>
                 <div class="fstep"><span class="fl">已加入管线</span><div class="ft s3" id="fn3">0</div></div>
               </div>
-              <div class="note" style="font-size:11.5px;color:var(--muted-2)">「已加入管线」随下方操作实时累计；真实环境由后端按数据源校准。</div>
+              <div class="note" style="font-size:11.5px;color:var(--muted-2)">三步均按当前线索池实时统计（「已建尽调档案」读本机 ③ 尽调记录）；真实环境由后端按数据源校准。</div>
             </div>
           </div>
 
@@ -510,6 +531,252 @@ const LEADS = [
 
 const BTYPES = ["制造商 (OEM/ODM)","品牌商","分销商 / 代理","工程商 / 项目方","系统集成商","采购代理 / 贸易","公共采购"];
 
+/* ================= 品类族（② 线索池按 ① 战略档案收敛范围） =================
+   修复：02 页原先写死 16 条演示线索、行业互不相关 —— 使用者填「光学瞄准镜」也会看到
+   医疗器械 / 化工 / 建材。现改为：**先读 ① 战略档案的主营关键词 / 品类 / 行业，
+   匹配到品类族，只生成该族的采购方线索**；匹配不到就明说「未覆盖」，不塞无关行业。
+
+   ⚠️ 生成出来的仍是**演示线索**（公司名 / 联系方式 / 评分均为示例，不对应真实主体），
+      页首范围条与页脚均明标。真实环境由数据源按档案检索后返回。 */
+const FAM = [
+  { id:"optics", lab:"光学 / 光电", ind:"光学光电", cat:["机械设备","五金/工具","其他"],
+    suf:["Optics","Precision Optics","Optical Instruments","Vision Systems"],
+    kw:["光学","瞄准镜","瞄具","观靶","镜头","镜片","望远镜","棱镜","光电","激光","红外","夜视","分划板","镀膜","光学组件"],
+    mk:["北美","欧盟","中东","东南亚","东亚"],
+    b:[["品牌商","光学瞄准镜 · 观靶镜","光学瞄准镜","官网公开产品线含同类光学产品，并设供应商招募入口"],
+       ["分销商 / 代理","光学器材 · 户外光学","光学镜片","公开代理品牌清单含相邻品类"],
+       ["制造商 (OEM/ODM)","精密光学组件 · 镜片","精密光学组件","公开产线扩产新闻，光学件外采比例高"],
+       ["工程商 / 项目方","安防监控 · 光学镜头","光学镜头","公开中标项目清单，镜头为外采件"]]},
+  { id:"electronics", lab:"电子 / 电气", ind:"电子制造", cat:["电子/电气"],
+    suf:["Electronics","Micro Systems","Circuit Components","Electro Devices"],
+    kw:["电子","电气","元器件","PCB","线路板","连接器","电源","线束","半导体","芯片","传感器","模组","电容","电阻","被动元件"],
+    mk:["北美","欧盟","东南亚","东亚","中东"],
+    b:[["制造商 (OEM/ODM)","电子元器件 · 模组代采","电子元器件","海关近 12 个月同类进口记录；采购部门公开"],
+       ["品牌商","电源模组 · 控制板","电源模组","官网公开产品线含同类电子件，设供应商准入页"],
+       ["采购代理 / 贸易","元器件 · 模组代采","OEM 模组","公开为多品牌提供代采服务，采购量稳定"],
+       ["系统集成商","控制板 · 传感模组","传感器模组","公开集成项目案例，模组为外采件"]]},
+  { id:"machinery", lab:"机械设备", ind:"工业设备", cat:["机械设备"],
+    suf:["Machinery","Industrial Systems","Precision Works","Equipment Group"],
+    kw:["机械","设备","机床","泵","阀","传动","轴承","液压","气动","减速机","压缩机","自动化","工装","夹具","成套"],
+    mk:["北美","欧盟","东南亚","中东","拉美"],
+    b:[["制造商 (OEM/ODM)","伺服驱动 · 精密模组","精密模组","公共招标平台发布过同类采购公告；采购部门邮箱公开"],
+       ["工程商 / 项目方","成套设备 · 机电安装","机电设备","客户留资，在建项目需采购机电设备"],
+       ["分销商 / 代理","工业配件 · 传动件","传动件","公开分销品类清单，含相邻品类"],
+       ["制造商 (OEM/ODM)","机床附件 · 工装夹具","工装夹具","公开新建产线环评，需采购成套工装"]]},
+  { id:"hardware", lab:"五金 / 工具", ind:"五金工具", cat:["五金/工具"],
+    suf:["Tools","Hardware Supply","Precision Tools","Tooling Group"],
+    kw:["五金","工具","手工具","电动工具","紧固件","螺丝","锁具","刀具","量具","磨具","弹簧","冲压件","铸件"],
+    mk:["北美","欧盟","中东","拉美","非洲"],
+    b:[["分销商 / 代理","五金工具 · 手工具","五金工具","公开分销品类清单，含相邻品类"],
+       ["零售商/连锁","工具套装 · 量具","工具套装","公开门店品类扩充计划，工具类为增长品线"],
+       ["制造商 (OEM/ODM)","紧固件 · 冲压件","紧固件","公开产线信息，紧固件为外采件"],
+       ["采购代理 / 贸易","工具 · 五金代采","五金工具","公开为多品牌提供代采服务"]]},
+  { id:"chemical", lab:"化工 / 材料", ind:"化工材料", cat:["化工/材料"],
+    suf:["Chemicals","Materials","Polymer Solutions","Chemical Group"],
+    kw:["化工","材料","塑料","橡胶","涂料","助剂","树脂","溶剂","颜料","胶粘","复合","高分子","改性","原料"],
+    mk:["欧盟","东南亚","中东","北美","东亚"],
+    b:[["制造商 (OEM/ODM)","化工设备 · 仪表","工业仪表","公开新建产线环评，需采购仪表与成套设备"],
+       ["分销商 / 代理","化工原料 · 助剂","化工助剂","公开代理品牌清单含相邻品类"],
+       ["制造商 (OEM/ODM)","改性材料 · 复合料","改性材料","公开产能扩张公告，原料外采比例高"],
+       ["采购代理 / 贸易","化工品 · 原料代采","化工原料","公开为多品牌提供代采服务"]]},
+  { id:"medical", lab:"医疗器械", ind:"医疗器械", cat:["医疗器械"],
+    suf:["Med Devices","Medical Systems","HealthTech","Diagnostics"],
+    kw:["医疗","器械","诊断","耗材","监护","影像","手术","康复","检验","体外诊断","生物","医美"],
+    mk:["欧盟","北美","东亚","东南亚"],
+    b:[["品牌商","医疗设备模组 · 传感组件","医疗模组","持 CE/FDA 认证，官网设供应商招募入口"],
+       ["采购代理 / 贸易","冷链设备 · 监测仪表","监测仪表","公开供应商准入页 + 采购部门职能邮箱"],
+       ["制造商 (OEM/ODM)","器械结构件 · 精密注塑","精密注塑件","公开产线信息，结构件为外采件"],
+       ["分销商 / 代理","医用耗材 · 配件","医用耗材","公开分销品类清单，含相邻品类"]]},
+  { id:"newenergy", lab:"新能源", ind:"新能源", cat:["新能源"],
+    suf:["Renewables","Solar Works","Energy Systems","PowerTech"],
+    kw:["新能源","光伏","储能","逆变器","电池","充电桩","风电","锂电","组件","电芯","BMS","太阳能"],
+    mk:["欧盟","中东","非洲","东南亚","拉美"],
+    b:[["工程商 / 项目方","储能系统 · 逆变器","储能逆变器","公开中标项目清单，EPC 采购量大"],
+       ["分销商 / 代理","储能逆变器 · 光伏组件","储能逆变器","主营分销业务，公开代理品牌清单含相邻品类"],
+       ["工程商 / 项目方","光伏 · 储能","光伏组件","公开在建项目，需采购组件与配套"],
+       ["制造商 (OEM/ODM)","电池模组 · BMS","电池模组","公开产能扩张公告，模组为外采件"]]},
+  { id:"auto", lab:"汽车零部件", ind:"汽车零部件", cat:["汽车零部件"],
+    suf:["Auto Parts","Components","Mobility Systems","AutoTech"],
+    kw:["汽车","零部件","车用","线束","内饰","制动","悬架","车载","汽配","总成","轮毂"],
+    mk:["北美","欧盟","拉美","东南亚","东亚"],
+    b:[["制造商 (OEM/ODM)","车用传感器 · 线束","车用传感器","公开产线扩产新闻，配套件外采比例高"],
+       ["制造商 (OEM/ODM)","车用电子 · 传感器","车用电子","海关数据连续进口记录；采购部门公开"],
+       ["分销商 / 代理","汽配 · 易损件","汽配","公开分销品类清单，含相邻品类"],
+       ["系统集成商","车载模组 · 线束总成","线束总成","公开配套项目案例，线束为外采件"]]},
+  { id:"textile", lab:"纺织 / 服装", ind:"纺织服装", cat:["纺织/服装"],
+    suf:["Textiles","Apparel Group","Fabrics","Garment Works"],
+    kw:["纺织","服装","面料","家纺","鞋","辅料","纱线","印染","针织","无纺","皮革"],
+    mk:["欧盟","北美","东南亚","中东","非洲"],
+    b:[["品牌商","成衣 · 面料采购","成衣面料","官网公开供应商准入页，面料为外采件"],
+       ["采购代理 / 贸易","面料 · 辅料代采","纺织辅料","公开为多品牌提供代采服务"],
+       ["零售商/连锁","家纺 · 家居纺织","家纺","公开门店品类扩充计划"],
+       ["制造商 (OEM/ODM)","无纺布 · 工业纺织","无纺布","公开产能扩张公告，原料外采比例高"]]},
+  { id:"packaging", lab:"包装", ind:"包装", cat:["消费品/快消","其他"],
+    suf:["Packaging","Pack Solutions","Containers","Pack Group"],
+    kw:["包装","纸箱","标签","容器","软包","瓶","罐","印刷","缓冲材料","纸盒"],
+    mk:["东南亚","欧盟","北美","中东"],
+    b:[["制造商 (OEM/ODM)","包装机械配件","包装机械配件","展会采购团留资；配件为外采件"],
+       ["品牌商","包装材料 · 标签","包装材料","官网公开供应商准入页"],
+       ["分销商 / 代理","包装耗材 · 容器","包装耗材","公开分销品类清单，含相邻品类"],
+       ["制造商 (OEM/ODM)","软包装 · 复合膜","软包装","公开产线信息，原料外采比例高"]]},
+  { id:"building", lab:"建材", ind:"建材", cat:["其他","五金/工具"],
+    suf:["Build Supplies","Construction","Building Materials","Contracting"],
+    kw:["建材","门窗","瓷砖","管材","石材","玻璃","幕墙","卫浴","防水","保温","水泥"],
+    mk:["中东","非洲","东南亚","拉美"],
+    b:[["分销商 / 代理","建材 · 五金","建材五金","公开分销品类清单，含相邻品类"],
+       ["工程商 / 项目方","建材 · 机电设备","建材机电","客户留资，在建项目需采购机电设备"],
+       ["分销商 / 代理","门窗 · 幕墙","门窗幕墙","公开在建项目与采购公告"],
+       ["工程商 / 项目方","管材 · 卫浴配套","管材卫浴","公开中标项目清单，配套件为外采件"]]},
+  { id:"consumer", lab:"消费品 / 快消", ind:"消费品", cat:["消费品/快消"],
+    suf:["Consumer Goods","Retail Group","Living Products","Daily Brands"],
+    kw:["消费品","快消","日化","食品","饮料","家居","玩具","文具","个护","母婴","宠物"],
+    mk:["北美","欧盟","东南亚","中东","拉美"],
+    b:[["零售商/连锁","家居用品 · 日用百货","家居日用","公开门店品类扩充与供应商招募"],
+       ["分销商 / 代理","快消品 · 日化","快消日化","公开代理品牌清单含相邻品类"],
+       ["采购代理 / 贸易","消费品代采","消费品","公开为多品牌提供代采服务"],
+       ["品牌商","个护 · 家居小电","个护小电","官网公开供应商准入页"]]},
+  { id:"software", lab:"软件 / SaaS", ind:"软件服务", cat:["软件/SaaS"],
+    suf:["Software","Digital Systems","CloudWorks","DataTech"],
+    kw:["软件","SaaS","系统","平台","数字化","云","数据","信息化","ERP","MES","工业软件","小程序"],
+    mk:["北美","欧盟","东亚","东南亚"],
+    b:[["系统集成商","行业软件 · 模块集成","行业软件","公开集成项目案例，软件模块为外采"],
+       ["品牌商","数字化平台 · 模块","数字化平台","官网公开技术合作与供应商入口"],
+       ["分销商 / 代理","软件代理 · 本地化","软件代理","公开代理产品清单"],
+       ["工程商 / 项目方","智慧项目 · 平台集成","平台集成","公开中标项目清单"]]},
+  { id:"service", lab:"专业服务", ind:"专业服务", cat:["专业服务"],
+    suf:["Consulting","Services Group","Advisory","Solutions"],
+    kw:["专业服务","检测","认证","咨询","物流","法律","财税","设计","工程咨询","报关"],
+    mk:["北美","欧盟","东亚","中东"],
+    b:[["品牌商","外包服务 · 项目合作","专业服务","官网公开合作与供应商入口"],
+       ["工程商 / 项目方","项目服务 · 分包","项目服务","公开中标项目，分包为常态"],
+       ["采购代理 / 贸易","服务采购 · 代理","服务采购","公开采购部门职能邮箱"],
+       ["系统集成商","集成服务 · 分包","集成服务","公开集成项目案例"]]}
+];
+
+/* 公司名素材（确定性组合：同一条线索每次刷新都得到同样的域名与公司名，
+   否则「加入管线」的记录在刷新后会错位） */
+const PRE = ["Northwind","Rhein","Gulf","Pacific","Andes","Nordic","BlueOcean","Levant","Mekong",
+  "Cordillera","Atlas","Sahel","HanRiver","Baltic","GulfStar","Aurora","Caspian","Meridian","Kestrel",
+  "Orion","Vega","Summit","Harbor","Ironwood","Silverline","Redwood","Cobalt","Granite","Tundra","Vistula"];
+const REGMAP = {
+  "北美":[["🇺🇸","美国","com","+1 "],["🇨🇦","加拿大","ca","+1 "]],
+  "欧盟":[["🇩🇪","德国","de","+49 "],["🇳🇱","荷兰","nl","+31 "],["🇫🇷","法国","fr","+33 "],["🇮🇹","意大利","it","+39 "]],
+  "中东":[["🇦🇪","阿联酋","ae","+971 "],["🇸🇦","沙特","sa","+966 "],["🇶🇦","卡塔尔","qa","+974 "]],
+  "东南亚":[["🇸🇬","新加坡","sg","+65 "],["🇻🇳","越南","vn","+84 "],["🇹🇭","泰国","th","+66 "]],
+  "东亚":[["🇯🇵","日本","jp","+81 "],["🇰🇷","韩国","kr","+82 "]],
+  "拉美":[["🇦🇷","阿根廷","ar","+54 "],["🇨🇱","智利","cl","+56 "],["🇧🇷","巴西","br","+55 "]],
+  "非洲":[["🇲🇦","摩洛哥","ma","+212 "],["🇿🇦","南非","za","+27 "]],
+  "大洋洲":[["🇦🇺","澳大利亚","au","+61 "]]
+};
+const ROLE = ["采购总监","采购经理","采购主管","采购负责人"];
+
+/* ① 战略档案 → 关键词 / 品类 / 行业 */
+const PROFKEY = "falcora_strategy_profile_v1";
+const PROFKEY_OLD = "falpora_strategy_profile_v1";
+function readProfile(){
+  try {
+    const v = localStorage.getItem(PROFKEY) || localStorage.getItem(PROFKEY_OLD);
+    return v ? JSON.parse(v) : null;
+  } catch(e){ return null; }
+}
+function hasProfile(p){
+  if(!p) return false;
+  const kw = String(p.keywords||"").trim();
+  const cats = Array.isArray(p.ch_productCats) ? p.ch_productCats : [];
+  return !!(kw || cats.length || String(p.industry||"").trim());
+}
+function profileTokens(p){
+  if(!p) return [];
+  return String(p.keywords||"").split(/[、,，\/／|｜;；\s]+/).map(x=>x.trim()).filter(Boolean);
+}
+/* 01 页的目标区域 → 02 页的区域标签 */
+const RMAP = {"北美(美/加)":"北美","欧盟":"欧盟","英国":"欧盟","东南亚":"东南亚","中东":"中东",
+  "拉美":"拉美","非洲":"非洲","日韩":"东亚","澳洲/新西兰":"大洋洲","中国内地":"","中国港澳台":"","其他":""};
+
+function matchFamilies(p){
+  const tokens = profileTokens(p);
+  /* 「其他」是兜底类目，不参与匹配 —— 否则任何填「其他」的档案都会命中一堆无关族 */
+  const cats = (Array.isArray(p.ch_productCats) ? p.ch_productCats : []).filter(c=>c && c!=="其他");
+  const ind = String(p.industry||"").trim();
+  const scored = FAM.map(f=>{
+    let sc = 0;
+    f.kw.forEach(k=>{ tokens.forEach(t=>{ if(t && (t.indexOf(k)!==-1 || k.indexOf(t)!==-1)) sc += 2; }); });
+    f.cat.forEach(c=>{ if(c!=="其他" && cats.indexOf(c)!==-1) sc += 3; });
+    if(ind && (f.ind.indexOf(ind)!==-1 || ind.indexOf(f.ind)!==-1)) sc += 4;
+    return {f:f, sc:sc};
+  }).filter(x=>x.sc>0).sort((a,b)=>b.sc-a.sc);
+  /* 只保留与最高分接近的族（≥70%）。否则填「光学瞄准镜」会连带出「五金工具」
+     与「建材」—— 它们只是共享「五金/工具」这个粗类目，与主营品类其实无关。 */
+  const top = scored.length ? scored[0].sc : 0;
+  const keep = scored.filter(x=>x.sc >= top*0.7);
+  const regions = [];
+  (Array.isArray(p.ch_regions)?p.ch_regions:[]).forEach(r=>{
+    const v = RMAP[r];
+    if(v && regions.indexOf(v)===-1) regions.push(v);
+  });
+  return {fams:keep.map(x=>x.f), tokens:tokens, regions:regions, hit:keep.length>0};
+}
+
+/* 按命中的品类族生成采购方线索
+   每族 4 条采购方画像 × 2 个目标市场 = 8 条 —— 同一品类的采购需求在不同国家都成立，
+   池内才有可操作的数量；公司与域名按索引确定性生成，互不重复。最多取 2 族。 */
+function genLeads(fams, regions){
+  const out = [];
+  fams.slice(0,2).forEach((f,fi)=>{
+    const pool = (regions && regions.length) ? regions : f.mk;
+    f.b.forEach((b,bi)=>{
+      for(let ri=0; ri<2; ri++){
+        const idx = fi*8 + bi*2 + ri;
+        const p = PRE[idx % PRE.length];
+        const suf = f.suf[(bi+ri) % f.suf.length];
+        const rg = pool[(bi*2+ri) % pool.length];
+        const list = REGMAP[rg] || REGMAP["北美"];
+        const cty = list[(fi+bi+ri) % list.length];
+        out.push({
+          nm: p + " " + suf,
+          dm: p.toLowerCase().replace(/[^a-z]/g,"") + "-" + f.id + ri + "." + cty[2],
+          flag: cty[0], region: rg, ind: f.ind,
+          size: ["S","M","L","M"][bi % 4],
+          match: 96 - bi*3 - fi*2 - ri,
+          risk: (bi===3 || (bi===2&&ri===1)) ? "yellow" : "green",
+          contact: "L2", src: "公开企业库 + 官网联系页",
+          btype: b[0], need: b[1], kw: b[2], why: b[3],
+          fam: f.id, lab: f.lab, telcc: cty[3]
+        });
+      }
+    });
+  });
+  return out;
+}
+
+/* 确定性哈希 → 演示联系方式（同域名永远得到同一组值） */
+function hashStr(s){ let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return h; }
+function contactsOf(dm){
+  if(CONTACTS[dm]) return CONTACTS[dm];
+  const l = allLeads().find(x=>x.dm===dm);
+  if(!l) return {};
+  const h = hashStr(dm);
+  return {
+    role: ROLE[h % ROLE.length], person:"",
+    cp: (l.telcc || "+1 ") + "555 " + (1000 + (h % 9000)),
+    ce: "procurement@" + dm,
+    web: dm,
+    li: "linkedin.com/company/" + String(dm).split(".")[0],
+    wa:"", wc:"", tg:"",
+    src: "公开企业库 + 官网联系页"
+  };
+}
+
+/* 当前线索池：按档案生成 / 或全量演示池 */
+function currentPool(){
+  const p = readProfile();
+  if(!hasProfile(p)) return {mode:"empty", leads:[], m:null, p:p};
+  const m = matchFamilies(p);
+  if(!m.hit) return {mode:"nocover", leads:[], m:m, p:p};
+  return {mode:"profile", leads: genLeads(m.fams, m.regions), m:m, p:p};
+}
+
+
 /* ================= 展会名片建档（矩阵独家能力） =================
    名片是 L3 个人联系方式唯一合法来源。建档后进入线索池，风险默认「未核查」，
    必须走 ③ 尽调后才更新——绝不因为「自己录入的」就默认干净。 */
@@ -525,7 +792,11 @@ function importedLeads(){
     card:c
   }));
 }
-function allLeads(){ return LEADS.concat(importedLeads()); }
+/* 当前范围内的线索 + 展会名片（名片永远并入，与范围无关） */
+function allLeads(){
+  const base = (state.scope === "all") ? LEADS : currentPool().leads;
+  return base.concat(importedLeads());
+}
 
 /* 联系方式（合规分层 · 演示数据，不对应真实主体）
    · role        = 联系窗口人「岗位」——公开职能 / 职位信息（L2）
@@ -553,16 +824,25 @@ const CONTACTS = {
   "gulfstar.qa":{role:"采购经理",person:"",cp:"+974 4 555 7788",ce:"purchasing@gulfstar.qa",web:"gulfstar.qa",li:"linkedin.com/company/gulfstar-contracting",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
 };
 
-const REGIONS = ["北美","欧盟","中东","东南亚","拉美","非洲","东亚"];
+const REGIONS = ["北美","欧盟","中东","东南亚","拉美","非洲","东亚","大洋洲"];
 const INDUSTRIES = ["工业设备","电子制造","医疗器械","新能源","建材","化工","汽车零部件","包装"];
 
-const state = {region:new Set(), industry:"", btype:"", size:"", contact:"", match:0, risk:new Set(["green","yellow","red","na"]), q:"", added:new Set()};
+const state = {scope:"profile", region:new Set(), industry:"", btype:"", size:"", contact:"", match:0, risk:new Set(["green","yellow","red","na"]), q:"", added:new Set()};
 
 // build filter chips
 const fRegion = document.getElementById("fRegion");
 REGIONS.forEach(r=>{const c=document.createElement("span");c.className="chip";c.textContent=r;c.onclick=()=>{c.classList.toggle("active");state.region.has(r)?state.region.delete(r):state.region.add(r);render();};fRegion.appendChild(c);});
 const fIndustry=document.getElementById("fIndustry");
-INDUSTRIES.forEach(i=>{const o=document.createElement("option");o.value=i;o.textContent=i;fIndustry.appendChild(o);});
+/* 行业下拉从「当前线索池实际出现的行业」动态生成 —— 写死 8 个行业在按档案收敛后会对不上 */
+function fillIndustry(){
+  const inds=[...new Set(allLeads().map(l=>l.ind).filter(Boolean))].sort();
+  const sig=inds.join("|");
+  if(fIndustry.dataset.sig===sig) return;
+  fIndustry.dataset.sig=sig;
+  fIndustry.innerHTML='<option value="">全部行业</option>'+inds.map(i=>'<option value="'+esc(i)+'">'+esc(i)+'</option>').join("");
+  if(state.industry && inds.indexOf(state.industry)===-1) state.industry="";
+  fIndustry.value=state.industry;
+}
 fIndustry.onchange=()=>{state.industry=fIndustry.value;render();};
 const fBtype=document.getElementById("fBtype");
 BTYPES.forEach(i=>{const o=document.createElement("option");o.value=i;o.textContent=i;fBtype.appendChild(o);});
@@ -587,15 +867,36 @@ function pass(l){
   return true;
 }
 
+/* 本地 i18n 取值：整句作 key，变量用 {x} 占位符 —— 绝不把一句话拆成多个文本节点，
+   否则反查字典匹配不上（拼串铁律）。T() 取译文，Tv() 再把占位符替换成高亮片段。 */
+function T(zh){ try{ return (window.__falT && window.__falT(zh)) || zh; }catch(e){ return zh; } }
+function Tv(zh,vars){ var s=T(zh); if(vars) for(var k in vars) s=s.split("{"+k+"}").join(vars[k]); return s; }
+
 function render(){
+  fillIndustry();
+  renderScopeBar();
+  renderInsight();
   const list=document.getElementById("list");
+  const pool=currentPool();
   const view=allLeads().filter(pass);
-  document.getElementById("count").innerHTML="<span>共</span> <b>"+view.length+"</b> <span>家</span>";
-  if(!view.length){list.innerHTML='<div class="empty">没有符合当前筛选条件的线索，试试放宽匹配度或区域。</div>';}
+  document.getElementById("count").innerHTML="<span>"+T("共")+"</span> <b>"+view.length+"</b> <span>"+T("家")+"</span>";
+  if(state.scope==="profile" && pool.mode==="empty"){
+    list.innerHTML='<div class="guidebox"><b>'+T("尚未填写 ① 战略档案")+'</b>'
+      +'<span>'+T("线索池要按你的主营品类与目标区域收敛，必须先有档案。填好后这里会自动只出与你主营相关的采购方，不会混入无关行业。")+'</span>'
+      +'<div style="margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
+      +'<a class="sb-btn pri" href="01_战略_企业战略档案.html" style="text-decoration:none">'+T("前往填写战略档案")+'</a>'
+      +'<button class="sb-btn" id="guideAll">'+T("先看全部演示池")+'</button></div></div>';
+  } else if(state.scope==="profile" && pool.mode==="nocover"){
+    list.innerHTML='<div class="guidebox"><b>'+T("你的主营品类在当前演示库中未覆盖")+'</b>'
+      +'<span>'+T("已按档案匹配，但没有命中任何品类族 —— 为了不塞给你无关行业，这里保持为空。真实环境会由数据源按关键词检索后返回结果；原型阶段可先看全部演示池，或回档案补充更具体的关键词。")+'</span>'
+      +'<div style="margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
+      +'<a class="sb-btn pri" href="01_战略_企业战略档案.html" style="text-decoration:none">'+T("回档案补充关键词")+'</a>'
+      +'<button class="sb-btn" id="guideAll">'+T("先看全部演示池")+'</button></div></div>';
+  } else if(!view.length){list.innerHTML='<div class="empty">'+T("没有符合当前筛选条件的线索，试试放宽匹配度或区域。")+'</div>';}
   else{
     list.innerHTML=view.map((l,i)=>{
       const added=state.added.has(l.dm);
-      const c=CONTACTS[l.dm]||{}; const own=loadOwn()[l.dm]||{};
+      const c=contactsOf(l.dm); const own=loadOwn()[l.dm]||{};
       const card=l.card||{};
       const hasPerson=(own.person||card.person||c.person||'').trim();
       const hasPhone=(own.phone||card.tel||c.cp||'').trim();
@@ -618,10 +919,96 @@ function render(){
     list.querySelectorAll("[data-dd]").forEach(b=>{b.onclick=()=>{location.href="03_客户尽调与风险核查.html?co="+encodeURIComponent(b.dataset.dd)+"&nm="+encodeURIComponent(b.dataset.nm)+"&rg="+encodeURIComponent(b.dataset.rg||"")+"&ind="+encodeURIComponent(b.dataset.ind||"");};});
     list.querySelectorAll("[data-card]").forEach(b=>{b.onclick=()=>openCM(b.dataset.card, (allLeads().find(x=>x.dm===b.dataset.card)||{}).nm||"");});
   }
+  const gb=document.getElementById("guideAll");
+  if(gb) gb.onclick=()=>{state.scope="all";state.industry="";render();};
   renderRegionDist(view);
+  updateFunnel();
 }
 
-function updateFunnel(){document.getElementById("fn3").textContent=state.added.size;}
+/* 范围条：明示当前按什么范围出线索 */
+function renderScopeBar(){
+  const el=document.getElementById("scopeBar");
+  if(!el) return;
+  const pool=currentPool();
+  const p=pool.p;
+  const kws=esc(profileTokens(p).join(" / ")||"—");
+  let h="";
+  if(state.scope==="all"){
+    el.className="scopebar warn";
+    h='<div class="sb-ic">◎</div><div class="sb-t"><span>'+T("当前范围")+'</span></div>'
+      +'<div class="sb-d">'+Tv("全部演示池 —— {n} 家跨品类演示线索，与你填写的档案无关，仅用于预览界面能力。",{n:"<b>"+LEADS.length+"</b>"})+'</div>'
+      +'<div class="sb-acts"><button class="sb-btn pri" id="sbProfile">'+T("按我的档案筛选")+'</button></div>';
+  } else if(pool.mode==="empty"){
+    el.className="scopebar warn";
+    h='<div class="sb-ic">!</div><div class="sb-t"><span>'+T("范围未定")+'</span></div>'
+      +'<div class="sb-d"><span>'+T("尚未填写 ① 战略档案，线索池无法按你的主营品类收敛。")+'</span></div>'
+      +'<div class="sb-acts"><a class="sb-btn pri" href="01_战略_企业战略档案.html" style="text-decoration:none">'+T("前往填写档案")+'</a>'
+      +'<button class="sb-btn" id="sbAll">'+T("看全部演示池")+'</button></div>';
+  } else if(pool.mode==="nocover"){
+    el.className="scopebar warn";
+    h='<div class="sb-ic">!</div><div class="sb-t"><span>'+T("品类未覆盖")+'</span></div>'
+      +'<div class="sb-d">'+Tv("档案关键词「{kw}」未命中任何品类族。为不塞给你无关行业，此处保持为空。",{kw:"<b>"+kws+"</b>"})+'</div>'
+      +'<div class="sb-acts"><a class="sb-btn pri" href="01_战略_企业战略档案.html" style="text-decoration:none">'+T("补充关键词")+'</a>'
+      +'<button class="sb-btn" id="sbAll">'+T("看全部演示池")+'</button></div>';
+  } else {
+    const fams=esc(pool.m.fams.slice(0,3).map(f=>T(f.lab)).join(" / "));
+    el.className="scopebar";
+    const tpl = pool.m.regions.length
+      ? "按 ① 战略档案收敛 —— 关键词「{kw}」 · 命中品类族 {fams} · 目标区域 {rg}。池内仅含这些品类的采购方，不含无关行业。"
+      : "按 ① 战略档案收敛 —— 关键词「{kw}」 · 命中品类族 {fams}。池内仅含这些品类的采购方，不含无关行业。";
+    const vars = {kw:"<b>"+kws+"</b>", fams:"<b>"+fams+"</b>"};
+    if(pool.m.regions.length) vars.rg="<b>"+esc(pool.m.regions.map(r=>T(r)).join(" / "))+"</b>";
+    h='<div class="sb-ic">◎</div><div class="sb-t"><span>'+T("当前范围")+'</span></div>'
+      +'<div class="sb-d">'+Tv(tpl,vars)+'</div>'
+      +'<div class="sb-acts"><button class="sb-btn" id="sbAll">'+T("看全部演示池")+'</button></div>';
+  }
+  el.innerHTML=h;
+  const a=document.getElementById("sbAll");
+  if(a) a.onclick=()=>{state.scope="all";state.industry="";render();};
+  const b=document.getElementById("sbProfile");
+  if(b) b.onclick=()=>{state.scope="profile";state.industry="";render();};
+}
+
+/* insight 正文：只描述真实发生的事，不编造「312 家 / 47 家」这类数字 */
+function renderInsight(){
+  const el=document.getElementById("insightBody");
+  if(!el) return;
+  const pool=currentPool();
+  let h="";
+  if(state.scope==="all"){
+    h='<span>'+T("当前展示的是全部演示池，与你的档案无关。点上方「按我的档案筛选」可按 ① 战略档案的主营关键词与目标区域收敛范围。")+'</span>'
+     +'<span>'+T("池内公司、联系方式与评分均为示例，不对应真实主体。")+'</span>';
+  } else if(pool.mode==="empty"){
+    h='<span>'+T("尚未填写 ① 战略档案，线索池无法判断你的主营品类，因此暂不生成任何采购方 —— 避免混入与你无关的行业。")+'</span>'
+     +'<span>'+T("填好档案后，这里会按关键词与目标区域收敛，只出对你有实际采购需求的企业。")+'</span>';
+  } else if(pool.mode==="nocover"){
+    h='<span>'+T("档案关键词在当前演示库中没有对应的品类族，因此这里保持为空，而不是塞给你无关行业的线索。")+'</span>'
+     +'<span>'+T("真实环境会由数据源按关键词检索后返回；原型阶段可先看全部演示池。")+'</span>';
+  } else {
+    const fams=esc(pool.m.fams.slice(0,3).map(f=>T(f.lab)).join(" / "));
+    h='<span>'+Tv("依据 ① 战略档案的主营关键词，已收敛到 {fams} 品类族，生成 {n} 家采购方 —— 即对这些品类存在实际采购需求的企业。",{fams:"<b>"+fams+"</b>",n:"<b>"+pool.leads.length+"</b>"})+'</span>'
+     +'<span>'+T("已剔除纯同业竞争者、上游供应商与无采购行为的企业。")+'</span>'
+     +'<span>'+T("池内公司与联系方式为演示数据，不对应真实主体；下方「未覆盖」标记代表该数据源尚未接入，并非无风险。")+'</span>';
+  }
+  el.innerHTML=h;
+}
+
+/* 漏斗三步一律按当前线索池实时统计 —— 不写死「发现命中 312 / 已核查通过 47」这类
+   与列表对不上的数字（否则列表 8 家、漏斗 312 家，自相矛盾）。 */
+const DDKEY = "falcora_dd_manual_v1";
+function ddArchived(pool){
+  let m = {};
+  try { m = JSON.parse(localStorage.getItem(DDKEY) || "{}") || {}; } catch (e) { m = {}; }
+  const keys = Object.keys(m);
+  return pool.filter(l => keys.indexOf(l.dm) !== -1 || keys.indexOf(l.nm) !== -1).length;
+}
+function updateFunnel(){
+  const pool = allLeads();
+  const f1 = document.getElementById("fn1"), f2 = document.getElementById("fn2"), f3 = document.getElementById("fn3");
+  if (f1) f1.textContent = pool.length;
+  if (f2) f2.textContent = ddArchived(pool);
+  if (f3) f3.textContent = state.added.size;
+}
 function showSaved(){const t=document.getElementById("savedTip");t.style.display="inline-flex";setTimeout(()=>t.style.display="none",1600);}
 
 function renderRegionDist(view){
@@ -635,7 +1022,7 @@ document.getElementById("exportBtn").onclick=()=>{
   const rows=allLeads().filter(l=>state.added.has(l.dm));
   const q=x=>'"'+String(x==null?"":x).replace(/"/g,'""')+'"';
   const head=["公司","域名","区域","行业","规模","采购方类型","采购需求品类","命中关键词","命中依据","匹配度","风险","联系可用性","窗口人岗位","企业电话","部门邮箱","人名","WhatsApp","WeChat","Telegram","来源"];
-  const body=rows.map(l=>{const c=CONTACTS[l.dm]||{};const o=loadOwn()[l.dm]||{};
+  const body=rows.map(l=>{const c=contactsOf(l.dm);const o=loadOwn()[l.dm]||{};
     return [l.nm,l.dm,l.region,l.ind,l.size,l.btype||"",l.need||"",l.kw||"",l.why||"",l.match,l.risk,l.contact,c.role||"",o.phone||c.cp||"",o.email||c.ce||"",o.person||c.person||"",o.whatsapp||c.wa||"",o.wechat||c.wc||"",o.telegram||c.tg||"",c.src||l.src].map(q).join(",");});
   const csv="\ufeff"+[head.map(q).join(",")].concat(body).join("\n");
   const blob=new Blob([csv],{type:"text/csv"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="FALCORA_管线线索_演示.csv";a.click();
@@ -653,7 +1040,7 @@ function cRow(k,v,layer,naTxt){const has=v&&String(v).trim();
 function cval(id){const e=document.getElementById(id);return e?e.value.trim():""}
 function openCM(dm,nm){
   const l=allLeads().find(x=>x.dm===dm)||{nm:nm||dm,dm:dm,region:"",ind:"",contact:"none"};
-  const c=CONTACTS[dm]||{}; const own=loadOwn()[dm]||{};
+  const c=contactsOf(dm); const own=loadOwn()[dm]||{};
   document.getElementById("cmName").textContent=l.nm;
   document.getElementById("cmDom").innerHTML=[l.dm,l.region,l.ind,l.btype].filter(Boolean).map(function(x){return "<span>"+esc(x)+"</span>";}).join(" · ");
   const role=c.role||"";
@@ -742,7 +1129,7 @@ function runVerify(){
 
   /* 2) 邮箱有效性 */
   let mN=0,mBad=0,mFree=0,mOk=0;
-  all.forEach(l=>{const c=CONTACTS[l.dm]||{},o=own[l.dm]||{},k=l.card||{};
+  all.forEach(l=>{const c=contactsOf(l.dm),o=own[l.dm]||{},k=l.card||{};
     const m=String(o.email||k.email||c.ce||"").trim(); if(!m) return; mN++;
     if(!MAIL_RE.test(m)){mBad++;return;}
     const host=m.split("@")[1].toLowerCase(), base=normDm(l.dm).split(".")[0];
@@ -752,7 +1139,7 @@ function runVerify(){
 
   /* 3) 电话 E.164 */
   let tN=0,tOk=0;
-  all.forEach(l=>{const c=CONTACTS[l.dm]||{},o=own[l.dm]||{},k=l.card||{};
+  all.forEach(l=>{const c=contactsOf(l.dm),o=own[l.dm]||{},k=l.card||{};
     const t=String(o.phone||k.tel||c.cp||"").trim(); if(!t) return; tN++; if(TEL_RE.test(t.replace(/[\s-]/g,""))) tOk++;});
 
   /* 4) 联系可用性分层 */
