@@ -1,7 +1,9 @@
-/* FALCORA 获客通AI — Service Worker v19
+/* FALCORA 获客通AI — Service Worker v20
    · HTML / 导航：网络优先（在线时永远取最新），离线回退缓存
    · 静态资源：缓存优先 + 后台更新（stale-while-revalidate，兜底防「改了没生效」）
    · 支持页面主动发 SKIP_WAITING 立即切换新版本
+   · v20：8 个页面 `<head>` 统一加 `<meta name="robots" content="noindex,nofollow">` ——
+         应用原型含定价与路线图，不应被搜索引擎收录（配合仓库根目录 robots.txt 的 Disallow: /）。
    · v19：驾驶舱「套餐与价格」新增「席位」定义说明块（用户 2026-10-13 问「席位是什么意思」）；
          旗舰版 CTA「联系顾问」改为打开顾问联系弹窗（Ryan Chen · 电话 / 邮箱 / WhatsApp · WeChat，
          每行带复制按钮 + tel: / mailto: / wa.me 直达）；另三档 CTA 补轻提示
@@ -47,7 +49,7 @@
          L3 补录表单不再用演示值预填；新增 07 账号与成员管理页（界面骨架）；
          侧栏由 app-nav.js 统一注入「账号与成员」入口；字典扩至 1112 条。
          升版强制刷新旧缓存。 */
-const CACHE = 'falcora-v19';
+const CACHE = 'falcora-v20';
 const PRECACHE = [
   './',
   './index.html',
