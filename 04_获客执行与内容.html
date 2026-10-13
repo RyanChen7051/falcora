@@ -357,7 +357,7 @@
 
 <script>
 /* ---------- 客户与「对方资料」（L1/L2 公开职能 · L3 仅用户自备） ---------- */
-const COS = [
+const COS_BASE = [
   {dm:"northwind-ind.com", nm:"Northwind Industrial Co.", ind:"工业设备", region:"北美", role:"采购总监",
    web:"northwind-ind.com", email:"procurement@northwind-ind.com", tel:"+1 312 555 0148",
    src:"公开企业库 + 官网联系页", L:"L2"},
@@ -374,6 +374,24 @@ const COS = [
    web:"mekongpkg.vn", email:"purchasing@mekongpkg.vn", tel:"+84 28 5555 1234",
    src:"公开企业库 + 官网联系页", L:"L2"}
 ];
+
+/* ---------- 跨页商机状态：② 线索池「加入管线」的公司并入发信对象 ----------
+   读 ② 页写的 falcora_pipeline_v1（按域名索引）。这样在 ② 点过「加入管线」的公司，
+   切到 ④ 就能直接选中发信，不必重新录入。
+   ⚠️ 只并入 L1–L2 主体信息；role / email / tel 一律留空 ——
+      部门邮箱与岗位是 L2（须标来源，由 ② 的 contactsOf 提供），
+      这里不复制、不推断，避免系统预设冒充成使用者自有数据。 */
+function pipeCustomers(){
+  let m = {};
+  try { m = JSON.parse(localStorage.getItem("falcora_pipeline_v1") || "{}") || {}; } catch (e) { m = {}; }
+  return Object.keys(m).map(function (k) {
+    const p = m[k] || {};
+    return { dm: p.dm || k, nm: p.nm || k, ind: p.ind || "", region: p.region || "",
+             role: "", web: p.dm || k, email: "", tel: "",
+             src: "② 线索池 · 已加入管线", L: "L2", fromPipe: true };
+  }).filter(function (x) { return !COS_BASE.some(function (c) { return c.dm === x.dm; }); });
+}
+const COS = COS_BASE.concat(pipeCustomers());
 
 /* ---------- 本地存储：L3 补录 / 草稿编辑 / 序列手动标记 ---------- */
 const OKEY="falcora_outreach_own_v1", DKEY="falcora_drafts_v1", SKEY="falcora_seq_v1";
@@ -499,6 +517,21 @@ const V={
   "包装":{en:"packaging",de:"Verpackung",ar:"التغليف",es:"embalaje",zh:"包装"},
   "采购总监":{en:"Head of Procurement",de:"Einkaufsleiter",ar:"مدير المشتريات",es:"Director de Compras",zh:"采购总监"},
   "采购经理":{en:"Procurement Manager",de:"Einkaufsmanager",ar:"مدير المشتريات",es:"Gerente de Compras",zh:"采购经理"},
+  "光学光电":{en:"optical and photonics products",de:"Optik- und Photonikprodukte",ar:"منتجات البصريات والفوتونيات",es:"productos ópticos y fotónicos",zh:"光学光电"},
+  "五金工具":{en:"hardware and tools",de:"Eisenwaren und Werkzeuge",ar:"العدد والأدوات",es:"ferretería y herramientas",zh:"五金工具"},
+  "化工材料":{en:"chemical materials",de:"Chemiewerkstoffe",ar:"المواد الكيميائية",es:"materiales químicos",zh:"化工材料"},
+  "医疗器械":{en:"medical devices",de:"Medizinprodukte",ar:"الأجهزة الطبية",es:"dispositivos médicos",zh:"医疗器械"},
+  "汽车零部件":{en:"auto parts",de:"Automobilteile",ar:"قطع غيار السيارات",es:"autopartes",zh:"汽车零部件"},
+  "纺织服装":{en:"textiles and apparel",de:"Textilien und Bekleidung",ar:"المنسوجات والملابس",es:"textiles y confección",zh:"纺织服装"},
+  "建材":{en:"building materials",de:"Baumaterialien",ar:"مواد البناء",es:"materiales de construcción",zh:"建材"},
+  "消费品":{en:"consumer goods",de:"Konsumgüter",ar:"السلع الاستهلاكية",es:"bienes de consumo",zh:"消费品"},
+  "软件服务":{en:"software services",de:"Software-Dienste",ar:"خدمات البرمجيات",es:"servicios de software",zh:"软件服务"},
+  "专业服务":{en:"professional services",de:"professionelle Dienstleistungen",ar:"الخدمات المهنية",es:"servicios profesionales",zh:"专业服务"},
+  "拉美":{en:"Latin America",de:"Lateinamerika",ar:"أمريكا اللاتينية",es:"América Latina",zh:"拉美"},
+  "非洲":{en:"Africa",de:"Afrika",ar:"أفريقيا",es:"África",zh:"非洲"},
+  "东亚":{en:"East Asia",de:"Ostasien",ar:"شرق آسيا",es:"Asia Oriental",zh:"东亚"},
+  "大洋洲":{en:"Oceania",de:"Ozeanien",ar:"أوقيانوسيا",es:"Oceanía",zh:"大洋洲"},
+  "采购主管":{en:"Procurement Supervisor",de:"Beschaffungsleiter",ar:"مشرف المشتريات",es:"Supervisor de Compras",zh:"采购主管"},
   "采购负责人":{en:"Procurement Lead",de:"Leiter Beschaffung",ar:"مسؤول المشتريات",es:"Responsable de Compras",zh:"采购负责人"}
 };
 const lv=(v,lang)=>(V[v]&&V[v][lang])||v;
@@ -518,7 +551,10 @@ function renderDraft(){
   const raw=cur();
   const lang=curLang();
   const o=ownOf(raw.dm);
-  const whoRaw=o.person||raw.role;
+  /* ② 线索池「加入管线」带来的公司没有岗位字段（② 的岗位是 L2 公开职能、只在其弹窗展示，
+     不写进管线）。若留空会生成「Dear ,」这种破损称呼 → 用中性职能称呼兜底。
+     ② 池只收录「采购方」，称呼其采购职能是合理推断，也不会把个人信息冒认成已核实数据。 */
+  const whoRaw=o.person||raw.role||"采购负责人";
   const c=Object.assign({},raw,{ind:lv(raw.ind,lang),region:lv(raw.region,lang),who:lv(whoRaw,lang),
     cosRaw:companyOf(lang), cos:(companyOf(lang)||COS_FALLBACK[lang]||"our company")});
   const [subj,body]=T[chan][lang](c);
