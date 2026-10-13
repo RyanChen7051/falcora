@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<script src="app-vals.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0B2632" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="assets/favicon.ico" />
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+<title>获客通AI · 账号与成员</title>
+<style>
+  :root{
+    --bg:#0B2632; --bg-2:#0A2E38; --side:#0A2A33;
+    --panel:rgba(13,46,54,.72); --panel-2:rgba(16,58,68,.55);
+    --border:rgba(126,154,160,.16); --border-2:rgba(94,234,212,.14);
+    --cyan:#5EEAD4; --teal:#0E9A8E; --gold:#F5B841;
+    --ink:#E9F3F4; --muted:#8AA3A8; --muted-2:#6E878C;
+    --good:#34D399; --danger:#FF6B6B; --warn:#F5B841;
+    --radius:16px; --shadow:0 18px 48px rgba(0,0,0,.35);
+    --font:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);
+    background-image:radial-gradient(1100px 520px at 78% -8%,rgba(14,154,142,.16),transparent 60%),
+      radial-gradient(820px 460px at 8% 108%,rgba(245,184,65,.08),transparent 60%);
+    -webkit-font-smoothing:antialiased;line-height:1.5}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:.2px}
+  .app{display:flex;min-height:100vh}
+  .sidebar{width:248px;flex:0 0 248px;background:linear-gradient(180deg,var(--side),#08222A);
+    border-right:1px solid var(--border);padding:20px 16px;position:sticky;top:0;height:100vh;
+    display:flex;flex-direction:column;gap:6px}
+  .brand{display:flex;align-items:center;gap:11px;padding:6px 8px 18px}
+  .brand-mark{width:34px;height:34px;border-radius:10px;flex:0 0 auto;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+  .brand-txt b{font-size:17px;letter-spacing:.5px;display:block}
+  .brand-txt span{font-size:11px;color:var(--muted-2);letter-spacing:1.5px}
+  .nav-label{font-size:11px;color:var(--muted-2);letter-spacing:1.5px;padding:14px 10px 6px}
+  .nav-item{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:11px;
+    color:var(--muted);font-size:14px;cursor:pointer;transition:.18s;position:relative;text-decoration:none}
+  .nav-item .idx{width:22px;height:22px;flex:0 0 auto;border-radius:7px;display:grid;place-items:center;
+    font-size:11px;font-weight:700;background:rgba(94,234,212,.08);color:var(--cyan)}
+  .nav-item:hover{background:rgba(94,234,212,.06);color:var(--ink)}
+  .nav-item.active{background:linear-gradient(90deg,rgba(94,234,212,.16),rgba(94,234,212,.02));color:#fff}
+  .nav-item.active::before{content:"";position:absolute;left:-16px;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--cyan)}
+  .nav-item.active .idx{background:var(--cyan);color:#06262B}
+  .side-foot{margin-top:auto;border-top:1px solid var(--border);padding-top:14px;display:flex;gap:10px;align-items:center}
+  .avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--teal),var(--cyan));display:grid;place-items:center;font-weight:700;color:#06262B;flex:0 0 auto}
+  .side-foot small{display:block;color:var(--muted-2);font-size:11px}
+  .side-foot b{font-size:13px}
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{display:flex;align-items:center;gap:18px;padding:18px 28px;border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:20;background:rgba(11,38,50,.82);backdrop-filter:blur(10px)}
+  .title h1{font-size:19px;font-weight:700;letter-spacing:.4px}
+  .title p{font-size:12px;color:var(--muted-2);letter-spacing:1.4px;text-transform:uppercase}
+  .search{flex:1;max-width:420px;margin-left:8px;position:relative}
+  .search input{width:100%;padding:10px 14px 10px 38px;border-radius:11px;border:1px solid var(--border);
+    background:rgba(0,0,0,.22);color:var(--ink);font-size:13px;font-family:inherit;outline:none}
+  .search input:focus{border-color:var(--border-2);box-shadow:0 0 0 3px rgba(94,234,212,.1)}
+  .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.5}
+  .top-right{display:flex;align-items:center;gap:12px;margin-left:auto}
+  .pill{font-size:12px;padding:7px 13px;border-radius:999px;background:linear-gradient(135deg,rgba(245,184,65,.22),rgba(245,184,65,.06));
+    color:var(--gold);border:1px solid rgba(245,184,65,.3);font-weight:600}
+  .icon-btn{width:38px;height:38px;border-radius:11px;border:1px solid var(--border);background:rgba(0,0,0,.2);
+    display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+  .icon-btn:hover{color:var(--ink);border-color:var(--border-2)}
+  .content{padding:24px 28px 48px;display:flex;flex-direction:column;gap:18px}
+
+  .toolbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .toolbar h2{font-size:20px;font-weight:750}
+  .toolbar .sub{font-size:12.5px;color:var(--muted-2)}
+  .spacer{flex:1}
+  .btn{padding:11px 20px;border-radius:12px;border:1px solid rgba(245,184,65,.4);cursor:pointer;font-size:14px;font-weight:700;
+    background:linear-gradient(135deg,var(--gold),#E0A02E);color:#3a2a05;font-family:inherit}
+  .btn:hover{filter:brightness(1.06)}
+  .btn.ghost{background:rgba(94,234,212,.08);color:var(--cyan);border-color:var(--border-2)}
+  .btn[disabled]{opacity:.5;cursor:not-allowed;filter:none}
+  .sel{padding:11px 14px;border-radius:11px;border:1px solid var(--border);background:rgba(0,0,0,.24);color:var(--ink);font-size:14px;font-family:inherit;outline:none}
+  .sel:focus{border-color:var(--border-2)}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:18px}
+  .card-h{display:flex;align-items:center;gap:10px;padding:15px 18px;border-bottom:1px solid var(--border)}
+  .card-h .ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto;background:rgba(245,184,65,.16);color:var(--gold);font-weight:800;font-size:14px}
+  .card-h h3{font-size:15px;font-weight:700}
+  .card-h .tag{margin-left:auto;font-size:11px;color:var(--muted-2)}
+  .card-b{padding:16px 18px}
+  .note{font-size:11.5px;color:var(--muted-2);line-height:1.55}
+  .foot{font-size:11.5px;color:var(--muted-2);padding:6px 2px;text-align:center;line-height:1.6}
+
+  /* 骨架提示条 */
+  .skel{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:13px;
+    border:1px solid rgba(245,184,65,.34);background:linear-gradient(135deg,rgba(245,184,65,.13),rgba(245,184,65,.04))}
+  .skel .si{width:26px;height:26px;flex:0 0 auto;border-radius:8px;display:grid;place-items:center;
+    background:rgba(245,184,65,.2);color:var(--gold);font-weight:800;font-size:13px}
+  .skel b{color:var(--gold)}
+  .skel p{font-size:12.5px;color:#D8E6E7;line-height:1.6}
+
+  /* 登录 / 注册 */
+  .auth-wrap{display:grid;grid-template-columns:minmax(0,460px) minmax(0,1fr);gap:18px;align-items:start}
+  .auth-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .auth-h{padding:20px 22px 0}
+  .auth-h h3{font-size:18px;font-weight:750}
+  .auth-h p{font-size:12.5px;color:var(--muted-2);margin-top:4px}
+  .tabs{display:flex;gap:8px;padding:16px 22px 0}
+  .tab{padding:9px 18px;border-radius:10px;border:1px solid var(--border);background:rgba(0,0,0,.2);
+    color:var(--muted);font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:.18s}
+  .tab:hover{color:var(--ink);border-color:var(--border-2)}
+  .tab.on{background:linear-gradient(135deg,rgba(94,234,212,.2),rgba(14,154,142,.24));color:#EAFBF7;border-color:rgba(94,234,212,.38)}
+  .auth-b{padding:18px 22px 22px;display:flex;flex-direction:column;gap:14px}
+  .fld{display:flex;flex-direction:column;gap:7px}
+  .fld label{font-size:12.5px;color:var(--muted);font-weight:600}
+  .fld label .hint{color:var(--muted-2);font-weight:400}
+  .fld input{padding:12px 14px;border-radius:11px;border:1px solid var(--border);background:rgba(0,0,0,.24);
+    color:var(--ink);font-size:14px;font-family:inherit;outline:none;width:100%}
+  .fld input:focus{border-color:var(--border-2);box-shadow:0 0 0 3px rgba(94,234,212,.1)}
+  .fld input::placeholder{color:var(--muted-2)}
+  .authrow{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted-2)}
+  .authrow .link{margin-left:auto;color:var(--cyan);cursor:pointer;font-weight:600}
+  .autherr{font-size:12.5px;color:var(--danger);min-height:18px}
+  .auth-note{font-size:11.5px;color:var(--muted-2);line-height:1.6;border-top:1px solid var(--border);padding-top:12px}
+  .preview-box{border:1px dashed rgba(94,234,212,.3);border-radius:13px;padding:16px 18px;background:rgba(94,234,212,.04)}
+  .preview-box h4{font-size:13.5px;font-weight:700;margin-bottom:6px}
+  .preview-box p{font-size:12px;color:var(--muted-2);line-height:1.6;margin-bottom:12px}
+  .preview-box .row{display:flex;gap:10px;flex-wrap:wrap}
+
+  /* 已登入：账号卡 */
+  .acct{display:flex;align-items:center;gap:16px;padding:18px}
+  .acct .big-av{width:56px;height:56px;flex:0 0 auto;border-radius:15px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--teal),var(--cyan));color:#06262B;font-weight:800;font-size:20px}
+  .acct .who b{font-size:16px;display:block}
+  .acct .who small{font-size:12px;color:var(--muted-2)}
+  .acct .meta{margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+
+  .badge{font-size:11px;padding:5px 10px;border-radius:999px;font-weight:700;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+  .b-admin{background:rgba(245,184,65,.18);color:var(--gold);border:1px solid rgba(245,184,65,.34)}
+  .b-member{background:rgba(94,234,212,.12);color:var(--cyan);border:1px solid rgba(94,234,212,.26)}
+  .b-on{background:rgba(52,211,153,.16);color:var(--good);border:1px solid rgba(52,211,153,.32)}
+  .b-off{background:rgba(255,107,107,.14);color:var(--danger);border:1px solid rgba(255,107,107,.3)}
+  .b-online{background:rgba(52,211,153,.14);color:var(--good)}
+  .b-offline{background:rgba(126,154,160,.14);color:var(--muted)}
+
+  /* 统计条 */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .stat{border:1px solid var(--border);border-radius:12px;padding:14px;background:rgba(0,0,0,.16)}
+  .stat .k{font-size:11.5px;color:var(--muted-2);letter-spacing:.4px}
+  .stat .v{font-size:22px;font-weight:750;margin-top:4px}
+  .stat .v.cy{color:var(--cyan)} .stat .v.gd{color:var(--gold)} .stat .v.gn{color:var(--good)} .stat .v.dg{color:var(--danger)}
+
+  /* 成员表 */
+  .mwrap{overflow-x:auto}
+  .mt{width:100%;border-collapse:collapse;min-width:760px}
+  .mt th{text-align:left;font-size:11.5px;color:var(--muted-2);font-weight:600;letter-spacing:.4px;
+    padding:11px 14px;border-bottom:1px solid var(--border);white-space:nowrap}
+  .mt td{padding:13px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+  .mt tr:last-child td{border-bottom:none}
+  .mt tr:hover td{background:rgba(94,234,212,.035)}
+  .mt .em{font-weight:650;word-break:break-all}
+  .mt .ops{display:flex;gap:8px;flex-wrap:wrap}
+  .mt .self{font-size:12px;color:var(--muted-2)}
+  .mini{padding:7px 13px;border-radius:9px;border:1px solid var(--border-2);background:rgba(94,234,212,.08);
+    color:var(--cyan);font-size:12px;cursor:pointer;font-weight:700;font-family:inherit;white-space:nowrap}
+  .mini:hover{background:rgba(94,234,212,.16)}
+  .mini.stop{border-color:rgba(255,107,107,.34);background:rgba(255,107,107,.1);color:var(--danger)}
+  .mini.stop:hover{background:rgba(255,107,107,.18)}
+  .mini[disabled]{opacity:.45;cursor:not-allowed}
+
+  .toast{position:fixed;left:50%;bottom:34px;transform:translate(-50%,20px);z-index:120;
+    padding:13px 20px;border-radius:13px;border:1px solid var(--border-2);
+    background:rgba(9,38,46,.96);color:var(--ink);font-size:13.5px;box-shadow:0 18px 44px rgba(0,0,0,.5);
+    opacity:0;pointer-events:none;transition:.26s;max-width:min(560px,88vw)}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast b{color:var(--cyan)}
+
+  @media(max-width:1180px){.auth-wrap{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:780px){.sidebar{display:none}.topbar{flex-wrap:wrap}.stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <img class="brand-mark" src="assets/logo.png" alt="FALCORA" />
+      <div class="brand-txt"><b>获客通AI</b><span>FALCORA</span></div>
+    </div>
+    <div class="nav-label">主导航</div>
+    <a class="nav-item" href="index.html"><span class="idx">⌂</span> 增长总司令驾驶舱</a>
+    <a class="nav-item" href="01_战略_企业战略档案.html"><span class="idx">①</span> 战略 · 企业战略档案</a>
+    <a class="nav-item" href="02_全球线索获取.html"><span class="idx">②</span> 全球线索获取</a>
+    <a class="nav-item" href="03_客户尽调与风险核查.html"><span class="idx">③</span> 客户尽调与风险核查</a>
+    <a class="nav-item" href="04_获客执行与内容.html"><span class="idx">④</span> 获客执行与内容</a>
+    <a class="nav-item" href="05_客户深挖.html"><span class="idx">⑤</span> 客户深挖</a>
+    <a class="nav-item" href="06_转化率升级.html"><span class="idx">⑥</span> 转化率升级</a>
+    <a class="nav-item active" href="07_账号与成员管理.html"><span class="idx">⚙</span> 账号与成员</a>
+    <div class="side-foot">
+      <div class="avatar">CB</div>
+      <div><b>陈邦杰</b><small>首席产品设计官</small></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="title"><h1>账号与成员</h1><p>Accounts &amp; Members</p></div>
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        <input placeholder="搜索成员邮箱 / 姓名…" />
+      </div>
+      <div class="top-right">
+        <span class="pill">界面骨架 · 未接后端</span>
+        <div class="icon-btn">⚙</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <div class="skel">
+        <div class="si">!</div>
+        <p><b>本页目前只是界面骨架。</b>登录、注册与「停止 / 启用」按钮都能点击并看到界面反馈，但<b>不会真的保存任何数据</b>，刷新页面即恢复初始状态。真实的多使用者账号体系需要后端支持——云端服务开通后，我会把这一页接到真实后端，届时注册的账号、成员状态与登入记录才会真正留存。</p>
+      </div>
+
+      <!-- ============ 未登入：登录 / 注册 ============ -->
+      <div class="auth-wrap" id="authView">
+        <div class="auth-card">
+          <div class="auth-h">
+            <h3>登入获客通AI</h3>
+            <p>使用邮箱与密码登入；尚未有账号可直接注册。</p>
+          </div>
+          <div class="tabs">
+            <button class="tab on" id="tabLogin" type="button">登录</button>
+            <button class="tab" id="tabReg" type="button">注册</button>
+          </div>
+          <div class="auth-b">
+            <div class="fld">
+              <label>邮箱 <span class="hint">（作为登入账号）</span></label>
+              <input id="email" type="email" autocomplete="username" placeholder="name@company.com" />
+            </div>
+            <div class="fld">
+              <label>密码 <span class="hint">（至少 6 位）</span></label>
+              <input id="pwd" type="password" autocomplete="current-password" placeholder="请输入密码" />
+            </div>
+            <div class="fld" id="pwd2Wrap" style="display:none">
+              <label>确认密码</label>
+              <input id="pwd2" type="password" autocomplete="new-password" placeholder="请再次输入密码" />
+            </div>
+            <div class="authrow" id="loginRow">
+              <span>登入即表示同意平台的使用条款与隐私政策。</span>
+              <span class="link">忘记密码？</span>
+            </div>
+            <div class="autherr" id="authErr"></div>
+            <button class="btn" id="authBtn" type="button" style="width:100%">登入</button>
+            <div class="auth-note" id="authNote">
+              注册须知：本平台第一个完成注册的账号将自动成为<b>总管理人</b>，可管理全部成员；其后注册的账号为普通成员。
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="preview-box">
+            <h4>界面预览（骨架用）</h4>
+            <p>真实登录尚未接通。下面两个按钮可直接预览「总管理人」与「普通成员」两种界面，方便先看版式与操作逻辑。</p>
+            <div class="row">
+              <button class="btn ghost" id="pvAdmin" type="button">预览 · 总管理人界面</button>
+              <button class="btn ghost" id="pvMember" type="button">预览 · 普通成员界面</button>
+            </div>
+          </div>
+          <div class="card" style="margin-top:18px">
+            <div class="card-h"><div class="ic">◇</div><h3>这套账号体系打算怎么设计</h3></div>
+            <div class="card-b">
+              <ul class="note" style="list-style:none;display:flex;flex-direction:column;gap:10px">
+                <li><b style="color:var(--cyan)">1 · 登入方式</b>　邮箱 + 密码，不强制手机号；后续可加「忘记密码 / 邮件验证」。</li>
+                <li><b style="color:var(--cyan)">2 · 角色只有两级</b>　总管理人（唯一，可管理成员）与成员（可使用业务功能，不能看成员管理）。</li>
+                <li><b style="color:var(--cyan)">3 · 总管理人专属界面</b>　列出全部成员、谁已登入、最近登入时间，并对每位成员提供「停止」/「启用」。</li>
+                <li><b style="color:var(--cyan)">4 · 「停止」的含义</b>　停止后该账号无法登入，但<b>其历史数据保留</b>，随时可再启用；总管理人自己的账号不可停止。</li>
+                <li><b style="color:var(--cyan)">5 · 数据隔离</b>　同一企业下的成员共用一份企业档案与线索池；成员管理只对总管理人开放。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 已登入 ============ -->
+      <div id="appView" style="display:none">
+
+        <div class="card">
+          <div class="acct">
+            <div class="big-av" id="acctAv">CB</div>
+            <div class="who">
+              <b id="acctName">—</b>
+              <small id="acctEmail">—</small>
+            </div>
+            <div class="meta">
+              <span class="badge" id="acctRole">—</span>
+              <span class="badge" id="acctStatus">—</span>
+              <button class="btn ghost" id="logoutBtn" type="button">登出</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 总管理人专属 -->
+        <div id="adminOnly">
+          <div class="toolbar">
+            <h2>成员管理</h2>
+            <span class="sub">仅总管理人可见 · 查看谁已登入 · 可停止 / 启用任一成员</span>
+            <div class="spacer"></div>
+            <button class="btn ghost" id="refreshBtn" type="button">刷新登入状态</button>
+          </div>
+
+          <div class="stats" style="margin:16px 0 18px">
+            <div class="stat"><div class="k">成员总数</div><div class="v num" id="stTotal">0</div></div>
+            <div class="stat"><div class="k">使用中</div><div class="v gn num" id="stOn">0</div></div>
+            <div class="stat"><div class="k">已停止</div><div class="v dg num" id="stOff">0</div></div>
+            <div class="stat"><div class="k">今日已登入</div><div class="v cy num" id="stToday">0</div></div>
+          </div>
+
+          <div class="card">
+            <div class="card-h"><div class="ic">☰</div><h3>成员列表</h3><span class="tag">演示数据 · 后端接通后为真实成员</span></div>
+            <div class="card-b" style="padding:0">
+              <div class="mwrap">
+                <table class="mt">
+                  <thead>
+                    <tr>
+                      <th>成员邮箱</th><th>姓名</th><th>角色</th><th>账号状态</th><th>登入状态</th><th>最近登入</th><th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="mBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="note">「停止」后该成员无法登入，但其历史数据与已建立的客户档案全部保留，随时可再「启用」。总管理人自己的账号不可被停止，以避免无人可管理系统。</div>
+        </div>
+
+        <!-- 普通成员视角 -->
+        <div id="memberOnly" style="display:none">
+          <div class="card">
+            <div class="card-h"><div class="ic">◇</div><h3>你的账号</h3><span class="tag">普通成员</span></div>
+            <div class="card-b">
+              <ul class="note" style="list-style:none;display:flex;flex-direction:column;gap:10px">
+                <li>你当前以<b>普通成员</b>身份登入，可以正常使用①–⑥ 全部业务功能。</li>
+                <li><b>成员管理界面仅对总管理人开放</b>——成员名单、登入记录与「停止 / 启用」操作不会显示给普通成员。</li>
+                <li>如需新增成员或调整权限，请联系贵司的<b>总管理人</b>。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="foot">
+        <span>本页为界面骨架：所有账号、成员与登入记录均为演示内容，不会保存、也不会外发。真实账号体系将在云端服务开通后接入。</span><br />
+        <span>合规说明：成员邮箱属企业内部账号信息，仅用于登入与本企业成员管理，平台不用于任何营销用途。</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(s){ return document.querySelector(s); };
+
+  /* ---------- 成员数据（演示：后端接通后改为真实数据） ---------- */
+  /* last 一律用「MM-DD HH:MM」数字时间戳，避免数据里混入中文而无法随界面语言切换 */
+  var ADMIN_EMAIL = "cb@falcora.ai";
+  var members = [
+    {email:ADMIN_EMAIL,        name:"陈邦杰", role:"admin",  on:true,  online:true,  last:"10-13 09:12", today:true},
+    {email:"li@falcora.ai",    name:"李经理", role:"member", on:true,  online:true,  last:"10-13 08:40", today:true},
+    {email:"wang@falcora.ai",  name:"王工",   role:"member", on:true,  online:false, last:"10-12 18:05", today:false},
+    {email:"zhao@falcora.ai",  name:"赵主管", role:"member", on:false, online:false, last:"10-10 11:22", today:false}
+  ];
+
+  function nowStamp(){
+    var d=new Date(), p=function(n){ return String(n).padStart(2,"0"); };
+    return p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes());
+  }
+
+  var mode = "login";   // login | reg
+  var me = null;        // 当前登入者（骨架：仅存在内存里）
+
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){
+    return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]; }); }
+
+  function toast(html){
+    var t=document.getElementById("falToast");
+    if(!t){ t=document.createElement("div"); t.id="falToast"; t.className="toast"; document.body.appendChild(t); }
+    t.innerHTML=html; t.classList.add("show");
+    clearTimeout(t._tm); t._tm=setTimeout(function(){ t.classList.remove("show"); },2800);
+  }
+
+  /* ---------- 登录 / 注册 表单 ---------- */
+  function setMode(m){
+    mode=m;
+    $("#tabLogin").classList.toggle("on", m==="login");
+    $("#tabReg").classList.toggle("on", m==="reg");
+    $("#pwd2Wrap").style.display = m==="reg" ? "" : "none";
+    $("#loginRow").style.display = m==="login" ? "" : "none";
+    $("#authBtn").textContent = m==="login" ? "登入" : "注册并登入";
+    $("#pwd").setAttribute("autocomplete", m==="login" ? "current-password" : "new-password");
+    $("#authNote").innerHTML = m==="login"
+      ? '登入须知：账号由总管理人在本页开通，或由成员自行注册。<b>总管理人的账号不可被停止。</b>'
+      : '注册须知：本平台第一个完成注册的账号将自动成为<b>总管理人</b>，可管理全部成员；其后注册的账号为普通成员。';
+    $("#authErr").textContent = "";
+  }
+  $("#tabLogin").addEventListener("click", function(){ setMode("login"); });
+  $("#tabReg").addEventListener("click", function(){ setMode("reg"); });
+
+  function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v); }
+
+  $("#authBtn").addEventListener("click", function(){
+    var em=($("#email").value||"").trim(), pw=$("#pwd").value||"", pw2=$("#pwd2").value||"";
+    var err=$("#authErr"); err.textContent="";
+    if(!validEmail(em)){ err.textContent="请输入有效的邮箱地址。"; $("#email").focus(); return; }
+    if(pw.length<6){ err.textContent="密码至少 6 位。"; $("#pwd").focus(); return; }
+    if(mode==="reg" && pw!==pw2){ err.textContent="两次输入的密码不一致。"; $("#pwd2").focus(); return; }
+
+    if(mode==="reg"){
+      var dup = members.some(function(m){ return m.email.toLowerCase()===em.toLowerCase(); });
+      if(dup){ err.textContent="该邮箱已注册，请直接登入。"; return; }
+      var isFirst = members.length===0;
+      members.push({email:em, name:em.split("@")[0], role:isFirst?"admin":"member",
+        on:true, online:true, last:nowStamp(), today:true});
+      me = members[members.length-1];
+      /* 提示文案一律拆成独立 <span> 文本节点，否则整串反查不到字典 = 不翻译 */
+      toast('<b>✓</b><span>注册成功（界面演示，未真实保存）</span><span>'+(isFirst?"总管理人":"普通成员")+'</span>');
+    } else {
+      var hit = members.filter(function(m){ return m.email.toLowerCase()===em.toLowerCase(); })[0];
+      if(hit){
+        if(!hit.on){ err.textContent="该账号已被总管理人停止使用，请联系总管理人启用。"; return; }
+        hit.online=true; hit.last=nowStamp(); hit.today=true; me=hit;
+        toast('<b>✓</b><span>登入成功（界面演示，未真实保存）</span><span>'+esc(hit.name)+'</span>');
+      } else {
+        /* 未在演示名单中的邮箱：按总管理人处理（使用者本人） */
+        me = {email:em, name:em.split("@")[0], role:"admin", on:true, online:true, last:nowStamp(), today:true};
+        toast('<b>✓</b><span>登入成功（界面演示，未真实保存）</span><span>总管理人</span>');
+      }
+    }
+    $("#pwd").value=""; $("#pwd2").value="";
+    renderApp();
+  });
+
+  /* 骨架预览：不走表单，直接以指定角色看界面 */
+  $("#pvAdmin").addEventListener("click", function(){
+    me = {email:ADMIN_EMAIL, name:"陈邦杰", role:"admin", on:true, online:true, last:nowStamp(), today:true};
+    renderApp(); toast('<b>✓</b><span>已切换到总管理人界面（预览）</span>');
+  });
+  $("#pvMember").addEventListener("click", function(){
+    me = {email:"li@falcora.ai", name:"李经理", role:"member", on:true, online:true, last:nowStamp(), today:true};
+    renderApp(); toast('<b>✓</b><span>已切换到普通成员界面（预览）</span>');
+  });
+
+  $("#logoutBtn").addEventListener("click", function(){
+    if(me){ me.online=false; }
+    me=null; $("#email").value=""; $("#pwd").value=""; $("#pwd2").value="";
+    renderApp(); toast('<b>✓</b><span>已登出（界面演示）</span>');
+  });
+
+  $("#refreshBtn").addEventListener("click", function(){
+    renderMembers();
+    toast('<b>✓</b><span>已刷新登入状态（界面演示）</span>');
+  });
+
+  /* ---------- 渲染 ---------- */
+  function initials(name){
+    if(!name) return "?";
+    var n=name.trim();
+    if(/^[\u4e00-\u9fa5]/.test(n)) return n.slice(0,2);
+    var p=n.split(/[\s._-]+/);
+    return ((p[0]||"")[0]||"").toUpperCase()+((p[1]||"")[0]||"").toUpperCase();
+  }
+
+  function renderMembers(){
+    var on=members.filter(function(m){ return m.on; }).length;
+    var off=members.length-on;
+    var today=members.filter(function(m){ return !!m.today; }).length;
+    $("#stTotal").textContent=members.length;
+    $("#stOn").textContent=on;
+    $("#stOff").textContent=off;
+    $("#stToday").textContent=today;
+
+    $("#mBody").innerHTML = members.map(function(m){
+      var isSelf = me && m.email.toLowerCase()===(me.email||"").toLowerCase();
+      var isAdmin = m.role==="admin";
+      var ops;
+      if(isAdmin){
+        ops = '<span class="self">总管理人 · 不可停止</span>';
+      } else if(m.on){
+        ops = '<button class="mini stop" data-act="stop" data-em="'+esc(m.email)+'" type="button">停止</button>';
+      } else {
+        ops = '<button class="mini" data-act="start" data-em="'+esc(m.email)+'" type="button">启用</button>';
+      }
+      return '<tr>'
+        + '<td><span class="em">'+esc(m.email)+'</span>'+(isSelf?' <span class="badge b-member">这是你</span>':'')+'</td>'
+        + '<td>'+esc(m.name)+'</td>'
+        + '<td><span class="badge '+(isAdmin?'b-admin">总管理人':'b-member">成员')+'</span></td>'
+        + '<td><span class="badge '+(m.on?'b-on">使用中':'b-off">已停止')+'</span></td>'
+        + '<td><span class="badge '+(m.online?'b-online">在线':'b-offline">离线')+'</span></td>'
+        + '<td class="num">'+esc(m.last||"—")+'</td>'
+        + '<td><div class="ops">'+ops+'</div></td>'
+        + '</tr>';
+    }).join("");
+
+    $("#mBody").querySelectorAll("[data-act]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var em=b.dataset.em, act=b.dataset.act;
+        var t=members.filter(function(x){ return x.email===em; })[0];
+        if(!t) return;
+        if(act==="stop"){
+          t.on=false; t.online=false;
+          toast('<b>✓</b><span>已停止：</span><span>'+esc(t.name)+'</span><span>（该账号将无法登入，历史数据保留）</span>');
+        } else {
+          t.on=true;
+          toast('<b>✓</b><span>已启用：</span><span>'+esc(t.name)+'</span><span>（该账号可正常登入）</span>');
+        }
+        renderMembers();
+      });
+    });
+  }
+
+  function renderApp(){
+    var logged = !!me;
+    $("#authView").style.display = logged ? "none" : "";
+    $("#appView").style.display  = logged ? "" : "none";
+    if(!logged) return;
+
+    var isAdmin = me.role==="admin";
+    $("#acctAv").textContent = initials(me.name);
+    $("#acctName").textContent = me.name;
+    $("#acctEmail").textContent = me.email;
+    $("#acctRole").innerHTML = isAdmin
+      ? '<span class="badge b-admin">总管理人</span>'
+      : '<span class="badge b-member">普通成员</span>';
+    $("#acctStatus").innerHTML = '<span class="badge b-on">使用中</span>';
+
+    $("#adminOnly").style.display  = isAdmin ? "" : "none";
+    $("#memberOnly").style.display = isAdmin ? "none" : "";
+    if(isAdmin) renderMembers();
+  }
+
+  setMode("login");
+  renderApp();
+})();
+</script>
+<script src="app-update.js"></script>
+<script src="app-nav.js"></script>
+<script src="app-i18n-dict.js"></script>
+<script src="app-i18n.js"></script>
+</body>
+</html>
