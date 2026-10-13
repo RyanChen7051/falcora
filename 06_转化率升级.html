@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<script src="app-vals.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0B2632" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="assets/favicon.ico" />
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+<title>获客通AI · 转化率升级</title>
+<style>
+  :root{
+    --bg:#0B2632; --bg-2:#0A2E38; --side:#0A2A33;
+    --panel:rgba(13,46,54,.72); --panel-2:rgba(16,58,68,.55);
+    --border:rgba(126,154,160,.16); --border-2:rgba(94,234,212,.14);
+    --cyan:#5EEAD4; --teal:#0E9A8E; --gold:#F5B841;
+    --ink:#E9F3F4; --muted:#8AA3A8; --muted-2:#6E878C;
+    --good:#34D399; --danger:#FF6B6B; --warn:#F5B841;
+    --radius:16px; --shadow:0 18px 48px rgba(0,0,0,.35);
+    --font:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);
+    background-image:radial-gradient(1100px 520px at 78% -8%,rgba(14,154,142,.16),transparent 60%),
+      radial-gradient(820px 460px at 8% 108%,rgba(245,184,65,.08),transparent 60%);
+    -webkit-font-smoothing:antialiased;line-height:1.5}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:.2px}
+  .app{display:flex;min-height:100vh}
+  .sidebar{width:248px;flex:0 0 248px;background:linear-gradient(180deg,var(--side),#08222A);
+    border-right:1px solid var(--border);padding:20px 16px;position:sticky;top:0;height:100vh;
+    display:flex;flex-direction:column;gap:6px}
+  .brand{display:flex;align-items:center;gap:11px;padding:6px 8px 18px}
+  .brand-mark{width:34px;height:34px;border-radius:10px;flex:0 0 auto;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+  .brand-txt b{font-size:17px;letter-spacing:.5px;display:block}
+  .brand-txt span{font-size:11px;color:var(--muted-2);letter-spacing:1.5px}
+  .nav-label{font-size:11px;color:var(--muted-2);letter-spacing:1.5px;padding:14px 10px 6px}
+  .nav-item{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:11px;
+    color:var(--muted);font-size:14px;cursor:pointer;transition:.18s;position:relative;text-decoration:none}
+  .nav-item .idx{width:22px;height:22px;flex:0 0 auto;border-radius:7px;display:grid;place-items:center;
+    font-size:11px;font-weight:700;background:rgba(94,234,212,.08);color:var(--cyan)}
+  .nav-item:hover{background:rgba(94,234,212,.06);color:var(--ink)}
+  .nav-item.active{background:linear-gradient(90deg,rgba(94,234,212,.16),rgba(94,234,212,.02));color:#fff}
+  .nav-item.active::before{content:"";position:absolute;left:-16px;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--cyan)}
+  .nav-item.active .idx{background:var(--cyan);color:#06262B}
+  .side-foot{margin-top:auto;border-top:1px solid var(--border);padding-top:14px;display:flex;gap:10px;align-items:center}
+  .avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--teal),var(--cyan));display:grid;place-items:center;font-weight:700;color:#06262B;flex:0 0 auto}
+  .side-foot small{display:block;color:var(--muted-2);font-size:11px}
+  .side-foot b{font-size:13px}
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{display:flex;align-items:center;gap:18px;padding:18px 28px;border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:20;background:rgba(11,38,50,.82);backdrop-filter:blur(10px)}
+  .title h1{font-size:19px;font-weight:700;letter-spacing:.4px}
+  .title p{font-size:12px;color:var(--muted-2);letter-spacing:1.4px;text-transform:uppercase}
+  .search{flex:1;max-width:420px;margin-left:8px;position:relative}
+  .search input{width:100%;padding:10px 14px 10px 38px;border-radius:11px;border:1px solid var(--border);
+    background:rgba(0,0,0,.22);color:var(--ink);font-size:13px;font-family:inherit;outline:none}
+  .search input:focus{border-color:var(--border-2);box-shadow:0 0 0 3px rgba(94,234,212,.1)}
+  .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.5}
+  .top-right{display:flex;align-items:center;gap:12px;margin-left:auto}
+  .pill{font-size:12px;padding:7px 13px;border-radius:999px;background:linear-gradient(135deg,rgba(245,184,65,.22),rgba(245,184,65,.06));
+    color:var(--gold);border:1px solid rgba(245,184,65,.3);font-weight:600}
+  .icon-btn{width:38px;height:38px;border-radius:11px;border:1px solid var(--border);background:rgba(0,0,0,.2);
+    display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+  .icon-btn:hover{color:var(--ink);border-color:var(--border-2)}
+  .content{padding:24px 28px 48px;display:flex;flex-direction:column;gap:18px}
+
+  .toolbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .toolbar h2{font-size:20px;font-weight:750}
+  .toolbar .sub{font-size:12.5px;color:var(--muted-2)}
+  .spacer{flex:1}
+  .btn{padding:11px 20px;border-radius:12px;border:1px solid rgba(245,184,65,.4);cursor:pointer;font-size:14px;font-weight:700;
+    background:linear-gradient(135deg,var(--gold),#E0A02E);color:#3a2a05;font-family:inherit}
+  .btn:hover{filter:brightness(1.06)}
+  .btn.ghost{background:rgba(94,234,212,.08);color:var(--cyan);border-color:var(--border-2)}
+  .sel{padding:11px 14px;border-radius:11px;border:1px solid var(--border);background:rgba(0,0,0,.24);color:var(--ink);font-size:14px;font-family:inherit;outline:none}
+  .sel:focus{border-color:var(--border-2)}
+
+  .layout{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:18px}
+  .card-h{display:flex;align-items:center;gap:10px;padding:15px 18px;border-bottom:1px solid var(--border)}
+  .card-h .ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto;background:rgba(245,184,65,.16);color:var(--gold)}
+  .card-h h3{font-size:15px;font-weight:700}
+  .card-h .tag{margin-left:auto;font-size:11px;color:var(--muted-2)}
+  .card-b{padding:16px 18px}
+
+  .funnel{display:flex;flex-direction:column;gap:10px}
+  .fstage{display:grid;grid-template-columns:96px 1fr 88px 74px;gap:14px;align-items:center}
+  .fstage .fn{font-size:13px;font-weight:650}
+  .fstage .fb{height:34px;border-radius:9px;display:flex;align-items:center;padding:0 12px;font-size:12.5px;font-weight:700;color:#06262B;transition:.4s}
+  .fstage .fv{font-size:16px;font-weight:750;text-align:right}
+  .fstage .fc{font-size:12px;text-align:right;color:var(--muted)}
+  .fstage .fc .d{font-weight:700}
+  .d.up{color:var(--good)} .d.down{color:var(--danger)}
+
+  .wl{display:flex;flex-direction:column;gap:10px}
+  .wlrow{display:grid;grid-template-columns:110px 1fr 40px;gap:10px;align-items:center;font-size:12.5px}
+  .wlrow .bar{height:9px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden}
+  .wlrow .bar > i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#c8504a,var(--danger))}
+  .wlrow b{text-align:right;color:var(--muted)}
+
+  .ab{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .abv{border:1px solid var(--border);border-radius:12px;padding:14px;background:rgba(0,0,0,.16)}
+  .abv .ah{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin-bottom:8px}
+  .abv .abig{font-size:24px;font-weight:750}
+  .abv.win{border-color:rgba(52,211,153,.34);background:rgba(52,211,153,.07)}
+  .abv.win .abig{color:var(--good)}
+  .abv .alab{font-size:11.5px;color:var(--muted-2);margin-top:6px}
+
+  .sb{padding:15px 16px;display:flex;flex-direction:column;gap:12px}
+  .kpi{display:flex;align-items:center;justify-content:space-between;font-size:13px}
+  .kpi .k{color:var(--muted)}
+  .kpi .v{font-weight:750;font-size:19px}
+  .kpi .v.cy{color:var(--cyan)} .kpi .v.gd{color:var(--gold)} .kpi .v.gn{color:var(--good)}
+  .next{list-style:none;display:flex;flex-direction:column;gap:10px}
+  .next li{font-size:12.6px;display:flex;gap:9px;line-height:1.5}
+  .next li .n{width:18px;height:18px;border-radius:6px;background:rgba(94,234,212,.14);color:var(--cyan);display:grid;place-items:center;font-size:10.5px;font-weight:800;flex:0 0 auto;margin-top:1px}
+  .next li b{color:var(--gold)}
+  .note{font-size:11.5px;color:var(--muted-2);line-height:1.55}
+  .foot{font-size:11.5px;color:var(--muted-2);padding:6px 2px;text-align:center;line-height:1.6}
+
+  /* ---------- 全球触达时机矩阵 ---------- */
+  .tmreg{display:flex;flex-direction:column}
+  .tmrr{display:grid;grid-template-columns:118px 104px 96px 1fr;gap:12px;align-items:center;
+    font-size:12.5px;padding:10px 0;border-bottom:1px dashed var(--border)}
+  .tmrr:last-child{border-bottom:none}
+  .tmrr .rg{font-weight:700}
+  .tmrr .rg small{display:block;color:var(--muted-2);font-size:11px;font-weight:400}
+  .tmrr .rwk{color:var(--muted)}
+  .tmrr .rgt{color:var(--cyan);font-weight:700;white-space:nowrap}
+  .tmrr .rgn{color:var(--muted-2);line-height:1.45}
+  .tmhead{display:grid;grid-template-columns:118px 104px 96px 1fr;gap:12px;
+    font-size:11px;color:var(--muted-2);letter-spacing:.6px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+
+  @media(max-width:1180px){.layout{grid-template-columns:1fr}}
+  @media(max-width:780px){.sidebar{display:none}.topbar{flex-wrap:wrap}.fstage{grid-template-columns:70px 1fr 60px}.fstage .fc{display:none}.tmrr,.tmhead{grid-template-columns:1fr 1fr;gap:4px 10px}.tmrr .rgn{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <img class="brand-mark" src="assets/logo.png" alt="FALCORA" />
+      <div class="brand-txt"><b>获客通AI</b><span>FALCORA</span></div>
+    </div>
+    <div class="nav-label">主导航</div>
+    <a class="nav-item" href="index.html"><span class="idx">⌂</span> 增长总司令驾驶舱</a>
+    <a class="nav-item" href="01_战略_企业战略档案.html"><span class="idx">①</span> 战略 · 企业战略档案</a>
+    <a class="nav-item" href="02_全球线索获取.html"><span class="idx">②</span> 全球线索获取</a>
+    <a class="nav-item" href="03_客户尽调与风险核查.html"><span class="idx">③</span> 客户尽调与风险核查</a>
+    <a class="nav-item" href="04_获客执行与内容.html"><span class="idx">④</span> 获客执行与内容</a>
+    <a class="nav-item" href="05_客户深挖.html"><span class="idx">⑤</span> 客户深挖</a>
+    <a class="nav-item active" href="06_转化率升级.html"><span class="idx">⑥</span> 转化率升级</a>
+    <div class="side-foot">
+      <div class="avatar">CB</div>
+      <div><b>陈邦杰</b><small>首席产品设计官</small></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="title"><h1>转化率升级</h1><p>Conversion Upgrade</p></div>
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        <input placeholder="搜索阶段 / 丢单原因 / 动作…" />
+      </div>
+      <div class="top-right">
+        <span class="pill">演示数据 · 环比口径</span>
+        <div class="icon-btn">⚙</div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="toolbar">
+        <h2>转化漏斗与优化</h2>
+        <span class="sub">漏斗诊断 · 丢单归因 · 下一步最佳动作 · A/B 测试</span>
+        <div class="spacer"></div>
+        <select class="sel" id="period">
+          <option value="month">本月</option>
+          <option value="quarter">本季</option>
+          <option value="year">本年</option>
+        </select>
+        <button class="btn ghost" id="exportBtn">导出转化报告</button>
+      </div>
+
+      <div class="layout">
+        <div>
+          <div class="card">
+            <div class="card-h"><div class="ic">▽</div><h3>转化漏斗</h3><span class="tag" id="funnelTag">本月 · 环比上周</span></div>
+            <div class="card-b"><div class="funnel" id="funnel"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><div class="ic">✕</div><h3>丢单归因</h3><span class="tag">近 90 天 · 已成交/已丢单</span></div>
+            <div class="card-b"><div class="wl" id="wl"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><div class="ic">⇄</div><h3>A/B 测试</h3><span class="tag">进行中</span></div>
+            <div class="card-b"><div class="ab" id="ab"></div>
+              <div class="note" style="margin-top:12px">测试达到统计显著后自动推送获胜版本到「④ 获客执行与内容」的内容工坊。</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-h"><div class="ic">◷</div><h3>全球触达时机矩阵</h3><span class="tag">时区 · 工作周 · 最优窗口</span></div>
+            <div class="card-b">
+              <div class="tmhead"><span>区域</span><span>当地工作周</span><span>最优发送窗口</span><span>需避开</span></div>
+              <div class="tmreg" id="tmreg"></div>
+              <div class="note" style="margin-top:12px">「有效触达」环节的最大隐形损耗来自时机错配 —— 按对方当地工作周与上午时段发送，可显著降低「发出即被埋没」的比例。单一客户的具体建议见「⑤ 客户深挖 → 触达时机」。</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-h"><h3>关键指标</h3><span class="tag" id="kpiTag">本月</span></div>
+            <div class="sb" id="kpi"></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><h3>下一步最佳动作</h3><span class="tag">AI 推荐</span></div>
+            <div class="sb"><ul class="next" id="next"></ul></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="foot">演示数据 · 所有指标、归因与建议均为示例，用于展示分析框架；真实数据接入后由后端按数据源校准。</div>
+    </div>
+  </main>
+</div>
+
+<script>
+const PERIODS = {
+  month:{ label:"本月", tag:"本月 · 环比上周",
+    stages:[
+      {s:"线索发现", v:3120, conv:null, d:null},
+      {s:"有效触达", v:1284, conv:41.2, d:+3.1},
+      {s:"获得回复", v:159,  conv:12.4, d:+1.6},
+      {s:"进入商机", v:64,   conv:40.3, d:-2.4},
+      {s:"成交",     v:18,   conv:28.1, d:+4.7}
+    ],
+    kpi:[["整体转化率","0.58%","cy"],["平均成交周期","68 天","gd"],["平均客单价","$42,000","gn"],["商机→成交","28.1%","cy"]],
+    next:[
+      "<b>47 家</b>「已核查通过但尚未触达」的线索发起首触（预计可增 12 家商机）",
+      "<b>12 家</b>「已回复未推进」客户发送案例 + 报价区间",
+      "<b>3 家</b>高风险客户暂停触达并复核（关联方纠纷）",
+      "在「商机→成交」环节补一次技术视频会（该环节环比 -2.4%）"
+    ]},
+  quarter:{ label:"本季", tag:"本季 · 环比上季",
+    stages:[
+      {s:"线索发现", v:8940, conv:null, d:null},
+      {s:"有效触达", v:3610, conv:40.4, d:+2.2},
+      {s:"获得回复", v:432,  conv:12.0, d:+0.9},
+      {s:"进入商机", v:181,  conv:41.9, d:+3.6},
+      {s:"成交",     v:52,   conv:28.7, d:+2.1}
+    ],
+    kpi:[["整体转化率","0.58%","cy"],["平均成交周期","71 天","gd"],["平均客单价","$40,500","gn"],["商机→成交","28.7%","cy"]],
+    next:[
+      "复制本季表现最好的 2 条触达序列到新区域（中东 / 东南亚）",
+      "对 <b>31 家</b>「回复未推进」客户做一次集中跟进",
+      "优化「有效触达」环节的时区适配（打开率可再提 3–5%）"
+    ]},
+  year:{ label:"本年", tag:"本年 · 环比去年",
+    stages:[
+      {s:"线索发现", v:32600, conv:null, d:null},
+      {s:"有效触达", v:12980, conv:39.8, d:+5.4},
+      {s:"获得回复", v:1520,  conv:11.7, d:+1.1},
+      {s:"进入商机", v:610,   conv:40.1, d:+1.9},
+      {s:"成交",     v:171,   conv:28.0, d:+3.2}
+    ],
+    kpi:[["整体转化率","0.52%","cy"],["平均成交周期","73 天","gd"],["平均客单价","$38,900","gn"],["商机→成交","28.0%","cy"]],
+    next:[
+      "把「认证资质」作为内容主线（丢单归因中「认证不足」占比 16%）",
+      "对全年前 20 大客户启动「⑤ 客户深挖」专项",
+      "建立季度 A/B 测试节奏，沉淀高转化话术库"
+    ]}
+};
+
+const WL=[{r:"价格偏高",p:32},{r:"交期不符",p:24},{r:"认证不足",p:16},{r:"响应太慢",p:12},{r:"竞品关系",p:10},{r:"其他",p:6}];
+const AB=[
+  {t:"邮件标题",a:{lab:"A · 产品导向",v:"18.2%",unit:"打开率"},b:{lab:"B · 痛点导向",v:"24.6%",unit:"打开率"},win:"b"},
+  {t:"报价呈现",a:{lab:"A · 单价列表",v:"9.1%",unit:"回复率"},b:{lab:"B · 区间+案例",v:"13.7%",unit:"回复率"},win:"b"}
+];
+
+const COLORS=["linear-gradient(90deg,#0E9A8E,#5EEAD4)","linear-gradient(90deg,#0E9A8E,#5EEAD4)","linear-gradient(90deg,#2f9e7e,#34D399)","linear-gradient(90deg,#E0A02E,#F5B841)","linear-gradient(90deg,#E0A02E,#F5B841)"];
+
+/* ---------- 全球触达时机矩阵 ---------- */
+const TMREG=[
+  {rg:"北美",sub:"美东 / 美西",wk:"周一 – 周五",win:"09:30 – 11:00",av:"感恩节 → 圣诞假期（11 月下旬 – 12 月）"},
+  {rg:"欧盟",sub:"中欧 / 西欧",wk:"周一 – 周五",win:"09:00 – 11:00",av:"8 月夏季休假季 · 圣诞 → 新年"},
+  {rg:"中东",sub:"海湾国家",wk:"周日 – 周四",win:"09:00 – 11:00",av:"周五、周六为周末 · 斋月期间"},
+  {rg:"东南亚",sub:"新加坡 / 越南",wk:"周一 – 周五",win:"09:30 – 11:30",av:"开斋节 · 农历新年 · 泼水节"},
+  {rg:"拉美",sub:"巴西 / 墨西哥",wk:"周一 – 周五",win:"10:00 – 12:00",av:"狂欢节 · 圣诞 → 新年"},
+];
+document.getElementById("tmreg").innerHTML=TMREG.map(r=>
+  `<div class="tmrr"><span class="rg">${r.rg}<small>${r.sub}</small></span><span class="rwk">${r.wk}</span><span class="rgt">${r.win}</span><span class="rgn">${r.av}</span></div>`).join("");
+
+function render(){
+  const P=PERIODS[document.getElementById("period").value];
+  const max=P.stages[0].v;
+  document.getElementById("funnelTag").textContent=P.tag;
+  document.getElementById("kpiTag").textContent=P.label;
+  document.getElementById("funnel").innerHTML=P.stages.map((st,i)=>{
+    const w=Math.max(8,Math.round(st.v/max*100));
+    const cv=st.conv==null?"—":st.conv.toFixed(1)+"%";
+    const dd=st.d==null?"":`<span class="d ${st.d>0?'up':'down'}">${st.d>0?'▲':'▼'}${Math.abs(st.d)}%</span>`;
+    return `<div class="fstage"><span class="fn">${st.s}</span><div class="fb" style="width:${w}%;background:${COLORS[i]}">${st.v.toLocaleString()}</div><span class="fv num">${cv}</span><span class="fc">${dd}</span></div>`;
+  }).join("");
+  document.getElementById("kpi").innerHTML=P.kpi.map(([k,v,c])=>`<div class="kpi"><span class="k">${k}</span><span class="v ${c} num">${v}</span></div>`).join("");
+  document.getElementById("next").innerHTML=P.next.map((n,i)=>`<li><span class="n">${i+1}</span><div>${n}</div></li>`).join("");
+}
+document.getElementById("period").onchange=render;
+
+document.getElementById("wl").innerHTML=WL.map(w=>
+  `<div class="wlrow"><span>${w.r}</span><div class="bar"><i style="width:${w.p/32*100}%"></i></div><b>${w.p}%</b></div>`).join("");
+document.getElementById("ab").innerHTML=AB.map(t=>{
+  const aW=t.win==="a", bW=t.win==="b";
+  return `<div class="abv ${aW?'win':''}"><div class="ah">${t.t} · ${t.a.lab}</div><div class="abig num">${t.a.v}</div><div class="alab">${t.a.unit}</div></div>
+          <div class="abv ${bW?'win':''}"><div class="ah">${t.t} · ${t.b.lab}</div><div class="abig num">${t.b.v}</div><div class="alab">${t.b.unit}${bW?' · 领先':''}</div></div>`;
+}).join("");
+
+document.getElementById("exportBtn").onclick=()=>{
+  const P=PERIODS[document.getElementById("period").value];
+  const lines=["FALCORA 转化率报告（演示）","周期,"+P.label,""];
+  P.stages.forEach(s=>lines.push(s.s+","+s.v+(s.conv==null?"":","+s.conv+"%")));
+  lines.push("","【丢单归因】");WL.forEach(w=>lines.push(w.r+","+w.p+"%"));
+  lines.push("","【下一步最佳动作】");P.next.forEach((n,i)=>lines.push((i+1)+". "+n.replace(/<[^>]+>/g,"")));
+  const blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/plain;charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="FALCORA_转化报告_演示.txt";a.click();
+};
+render();
+</script>
+<script src="app-update.js"></script>
+<script src="app-nav.js"></script>
+<script src="app-i18n-dict.js"></script>
+<script src="app-i18n.js"></script>
+</body>
+</html>
