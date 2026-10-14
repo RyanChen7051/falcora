@@ -77,7 +77,7 @@
     tr.appendChild(a);
   }
 
-  function inject() { injectBack(); injectHome(); injectAccount(); }
+  function inject() { injectBack(); injectHome(); injectAccount(); injectCalc(); }
 
   // ---------- 注入「账号与成员」（排在侧栏「当前分页」之后、用户卡之前） ----------
   // 各分页的侧栏导航是各自硬写的，故统一由本脚本补上第 8 栏，避免逐页改动。
@@ -89,6 +89,21 @@
     a.className = 'nav-item nav-account';
     a.href = '07_账号与成员管理.html';
     a.innerHTML = '<span class="idx">⚙</span> <span>账号与成员</span>';
+    var foot = sb.querySelector('.side-foot');
+    if (foot) sb.insertBefore(a, foot); else sb.appendChild(a);
+  }
+
+  // ---------- 注入「成本与报价测算」（用户 2026-10-14：「放在『账号与成员』这个按钮的下方」） ----------
+  // 必须在 injectAccount() 之后调用：两者都 insertBefore(.side-foot)，
+  // 先插 07、再插 08，DOM 顺序即为「账号与成员 → 成本与报价测算」。
+  function injectCalc() {
+    var sb = document.querySelector('.sidebar');
+    if (!sb) return;
+    if (sb.querySelector('a[href^="08_"]')) return;   // 08 页自身已写好，不重复注入
+    var a = document.createElement('a');
+    a.className = 'nav-item nav-calc';
+    a.href = '08_成本与报价测算.html';
+    a.innerHTML = '<span class="idx">🧮</span> <span>成本与报价测算</span>';
     var foot = sb.querySelector('.side-foot');
     if (foot) sb.insertBefore(a, foot); else sb.appendChild(a);
   }
