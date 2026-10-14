@@ -338,7 +338,7 @@ const WD=["周日","周一","周二","周三","周四","周五","周六"];
 const WD_EN=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 
 /* ---- 按当前界面语言本地化日期 / 星期 / 相对时间（不走字典，直接由 Intl 生成） ---- */
-const L2L={zh:"zh-CN",en:"en-US",es:"es-ES",ja:"ja-JP",fr:"fr-FR",de:"de-DE",ar:"ar-EG",vi:"vi-VN",hi:"hi-IN"};
+const L2L={zh:"zh-CN","zh-Hant":"zh-Hant-TW",en:"en-US",es:"es-ES",ja:"ja-JP",fr:"fr-FR",de:"de-DE",ar:"ar-EG",vi:"vi-VN",hi:"hi-IN"};
 function curLang(){ try{ return (window.__falGetLang&&window.__falGetLang())||"zh"; }catch(e){ return "zh"; } }
 function loc(){ return L2L[curLang()]||"zh-CN"; }
 function fDate(y,m,d){ return new Intl.DateTimeFormat(loc(),{year:"numeric",month:"long",day:"numeric"}).format(new Date(Date.UTC(y,m-1,d,12))); }
@@ -347,11 +347,12 @@ function fDateWd(y,m,d){
   const dt=new Date(Date.UTC(y,m-1,d,12));
   const a=new Intl.DateTimeFormat(loc(),{month:"long",day:"numeric"}).format(dt);
   const b=new Intl.DateTimeFormat(loc(),{weekday:"long"}).format(dt);
-  return curLang()==="zh" ? a+"（"+b+"）" : a+" ("+b+")";
+  const cl=curLang(); return (cl==="zh"||cl==="zh-Hant") ? a+"（"+b+"）" : a+" ("+b+")";
 }
 function fRel(days){ try{ return new Intl.RelativeTimeFormat(loc(),{numeric:"auto"}).format(days,"day"); }catch(e){ return days+"d"; } }
 const DIFFT={
   zh:(n,s)=>s>0?("比您快 "+n+" 小时"):("比您慢 "+n+" 小时"),
+  "zh-Hant":(n,s)=>s>0?("比您快 "+n+" 小時"):("比您慢 "+n+" 小時"),
   en:(n,s)=>s>0?(n+"h ahead of you"):(n+"h behind you"),
   es:(n,s)=>s>0?(n+" h por delante"):(n+" h por detrás"),
   ja:(n,s)=>s>0?("あなたより "+n+" 時間進み"):("あなたより "+n+" 時間遅れ"),
@@ -362,7 +363,8 @@ const DIFFT={
   hi:(n,s)=>s>0?(n+" घंटे आगे"):(n+" घंटे पीछे")
 };
 const SKIPT={
-  zh:(n)=>"已自动跳过 "+n+" 天周末或假期", en:(n)=>"skipped "+n+" day(s) of weekend or holiday",
+  zh:(n)=>"已自动跳过 "+n+" 天周末或假期", "zh-Hant":(n)=>"已自動跳過 "+n+" 天週末或假期",
+  en:(n)=>"skipped "+n+" day(s) of weekend or holiday",
   es:(n)=>"se omitieron "+n+" día(s) de fin de semana o festivo", ja:(n)=>(n+" 日分の週末・祝日を自動で回避"),
   fr:(n)=>(n+" jour(s) de week-end ou férié ignoré(s)"), de:(n)=>(n+" Tag(e) Wochenende/Feiertag übersprungen"),
   ar:(n)=>("تم تخطي "+n+" يوم من نهاية الأسبوع أو العطلة"), vi:(n)=>("đã bỏ qua "+n+" ngày cuối tuần hoặc lễ"),
@@ -528,6 +530,7 @@ render(picker.value);
 <script src="app-nav.js"></script>
 <script src="app-panel.js"></script>
 <script src="app-i18n-dict.js"></script>
+<script src="app-i18n-zht.js"></script>
 <script src="app-i18n.js"></script>
 </body>
 </html>
