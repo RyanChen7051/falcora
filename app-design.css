@@ -295,3 +295,15 @@ small,.micro{font-size:12px;color:var(--muted)}
   .toolbar h2{font-size:19px}
   .toolbar .sub{font-size:12.5px}
 }
+
+/* ===== 15. Sidebar 可滚动（v3 新增，2026-10-14） =====
+   侧栏顶部新增「每日汇率」组件（app-fx.js）后，矮屏（≤900px 视口高）会装不下。
+   矮屏侧栏整体可滚动，保证最底部的用户卡与导航项永不被裁掉。
+   ⚠️ 只在桌面宽度生效：≤860px 时侧栏已改为横向滚动条，不要再叠一条纵向滚动。 */
+@media (min-width:861px){
+  .sidebar{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(126,170,178,.28) transparent}
+  .sidebar::-webkit-scrollbar{width:6px}
+  .sidebar::-webkit-scrollbar-track{background:transparent}
+  .sidebar::-webkit-scrollbar-thumb{background:rgba(126,170,178,.24);border-radius:3px}
+  .sidebar::-webkit-scrollbar-thumb:hover{background:rgba(94,234,212,.36)}
+}
