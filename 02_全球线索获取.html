@@ -140,6 +140,20 @@
   .link-co:hover{text-decoration:underline}
   .co .nm{cursor:pointer}
   .mini{padding:6px 9px;border-radius:9px;border:1px solid var(--border-2);background:rgba(94,234,212,.08);color:var(--cyan);font-size:11px;cursor:pointer;font-weight:600;font-family:inherit;white-space:nowrap}
+  .btn.small{padding:7px 13px;font-size:12.5px;font-weight:600;border-radius:10px}
+  .btn.danger{border-color:rgba(255,107,107,.5);color:#FF9B9B;background:rgba(255,107,107,.12)}
+  .btn.danger:hover{background:rgba(255,107,107,.2)}
+  .pipe-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+  .pipe-list{display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow:auto;margin:14px 0 10px}
+  .prow{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.02)}
+  .pchk{width:16px;height:16px;flex:0 0 auto;accent-color:var(--cyan);cursor:pointer}
+  .pinfo{flex:1;min-width:0}
+  .pnm{font-weight:600;font-size:13.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .psub{font-size:11.5px;color:var(--muted-2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .psub .psrc{opacity:.85}
+  .pact{display:flex;gap:6px;flex:0 0 auto}
+  .pempty{padding:26px 16px;text-align:center;color:var(--muted-2);font-size:13px;line-height:1.7}
+  .pipe-badge{display:inline-block;min-width:18px;padding:0 6px;margin-left:6px;border-radius:9px;background:rgba(94,234,212,.18);color:var(--cyan);font-size:12px;font-weight:700;text-align:center}
   .mini:hover{background:rgba(94,234,212,.16)}
   .mini.added{background:rgba(52,211,153,.16);color:var(--good);border-color:rgba(52,211,153,.34);cursor:default}
   .mini.ghost{border-color:var(--border);background:rgba(0,0,0,.18);color:var(--muted)}
@@ -322,6 +336,7 @@
         <button class="btn ghost" id="cardBtn">＋ 名片建档</button>
         <button class="btn ghost" id="resetBtn">重置筛选</button>
         <button class="btn" id="exportBtn">导出管线 CSV</button>
+        <button class="btn ghost" id="pipeBtn">管理管线<span id="pipeN" class="pipe-badge">0</span></button>
       </div>
 
       <div class="scopebar" id="scopeBar"></div>
@@ -482,6 +497,56 @@
       <div style="display:flex;gap:10px;justify-content:flex-end">
         <button class="btn ghost" data-card-close>取消</button>
         <button class="btn" id="kSave">建档并加入线索池</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 我的管线 · 管理面板 -->
+<div class="modal" id="pipeModal" hidden>
+  <div class="modal-mask" data-pipe-close></div>
+  <div class="modal-box" role="dialog" aria-modal="true" style="max-width:680px">
+    <div class="modal-h">
+      <div><b id="pipeTitle">我的管线</b><span class="mh-s" id="pipeCount"></span></div>
+      <button class="modal-x" data-pipe-close aria-label="关闭">✕</button>
+    </div>
+    <div class="modal-b">
+      <div class="pipe-bar">
+        <button class="btn small" id="pipeAdd">＋ 新增商机</button>
+        <button class="btn ghost small" id="pipeDelSel">删除选中 <span id="pipeSelN" class="pipe-badge">0</span></button>
+        <button class="btn danger small" id="pipeClear">清空管线</button>
+      </div>
+      <div id="pipeList" class="pipe-list"></div>
+      <div class="cnote2">管线只存 L1 / L2 主体标识（公司 / 域名 / 区域 / 行业 / 采购类型 / 需求 / 关键词 / 来源），绝不存 L3 个人联系方式。删除与清空为不可逆操作，需二次确认。</div>
+    </div>
+  </div>
+</div>
+
+<!-- 管线商机 · 新增 / 编辑 -->
+<div class="modal" id="pipeEditModal" hidden>
+  <div class="modal-mask" data-pipeedit-close></div>
+  <div class="modal-box" role="dialog" aria-modal="true">
+    <div class="modal-h">
+      <div><b id="pipeEditTitle">新增商机</b><span class="mh-s" id="pipeEditSub">手动加入一条管线商机</span></div>
+      <button class="modal-x" data-pipeedit-close aria-label="关闭">✕</button>
+    </div>
+    <div class="modal-b">
+      <div class="field"><label>公司名称</label><input class="inp" id="peNm" placeholder="例：Acme Machinery Co., Ltd." /></div>
+      <div class="f2">
+        <div class="field"><label>官网域名（索引键，新增后不可改）</label><input class="inp" id="peDm" placeholder="例：acme-machinery.com" /></div>
+        <div class="field"><label>所在区域</label><select class="inp" id="peRegion"></select></div>
+      </div>
+      <div class="f2">
+        <div class="field"><label>行业</label><input class="inp" id="peInd" placeholder="例：工业设备" /></div>
+        <div class="field"><label>采购方类型</label><select class="inp" id="peBtype"></select></div>
+      </div>
+      <div class="field"><label>采购需求品类</label><input class="inp" id="peNeed" placeholder="例：工业传感器 · OEM 模组" /></div>
+      <div class="field"><label>命中关键词</label><input class="inp" id="peKw" placeholder="例：工业传感器" /></div>
+      <div class="field"><label>来源</label><input class="inp" id="peSrc" placeholder="例：手动新增" /></div>
+      <div class="cnote2">仅 L1 / L2 字段，不收集任何 L3 个人联系方式。</div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn ghost" data-pipeedit-close>取消</button>
+        <button class="btn" id="peSave">保存</button>
       </div>
     </div>
   </div>
@@ -845,6 +910,94 @@ function addToPipe(l){
   state.added.add(l.dm);
   updateFunnel(); render(); showSaved();
 }
+
+/* 管线增删改：upsert / remove / clear + 列表渲染（点选 / 新增 / 编辑 / 删减 / 修正）
+   ⚠️ 仍只存 L1/L2 主体标识，绝不碰 L3 —— 编辑表单里根本没有 L3 输入框。 */
+function upsertPipe(rec){
+  if(!rec || !rec.dm) return false;
+  const m = loadPipe();
+  m[rec.dm] = { dm:rec.dm, nm:rec.nm||rec.dm, region:rec.region||"", ind:rec.ind||"",
+                btype:rec.btype||"", need:rec.need||"", kw:rec.kw||"",
+                contact:rec.contact||"", src:rec.src||"手动新增", at:Date.now() };
+  savePipe(m);
+  state.added.add(rec.dm);
+  return true;
+}
+function removePipe(dm){ if(!dm) return; const m = loadPipe(); delete m[dm]; savePipe(m); state.added.delete(dm); }
+function clearPipe(){ savePipe({}); state.added.clear(); }
+
+/* 整句作 key 带占位符，给 window.confirm 这类脱离 DOM 的文案用（i18n 扫不到 confirm） */
+function Tf(zh, vars){ var s=(window.__falT && window.__falT(zh))||zh; if(vars) for(var k in vars) s=s.split("{"+k+"}").join(vars[k]); return s; }
+
+function updatePipeSelN(){
+  const n = document.querySelectorAll("#pipeList .pchk:checked").length;
+  const s = document.getElementById("pipeSelN"); if (s) s.textContent = n;
+}
+function afterPipeChange(msg){
+  renderPipeList(); updateFunnel(); render(); showSaved(); toast(T(msg));
+}
+function renderPipeList(){
+  const m = loadPipe();
+  const keys = Object.keys(m).sort(function(a,b){ return (m[b].at||0) - (m[a].at||0); });
+  const cnt = document.getElementById("pipeCount"); if (cnt) cnt.textContent = Tv("{n} 家", { n: keys.length });
+  const pn = document.getElementById("pipeN"); if (pn) pn.textContent = keys.length;
+  const list = document.getElementById("pipeList"); if (!list) return;
+  if (!keys.length){
+    list.innerHTML = '<div class="pempty">'+T("管线还是空的。点「＋ 新增商机」手动加入，或在上方线索列表点「加入管线」把采购方加进来。")+'</div>';
+    updatePipeSelN();
+    return;
+  }
+  list.innerHTML = keys.map(function(dm){
+    const r = m[dm];
+    return '<div class="prow" data-dm="'+esc(dm)+'">'
+      + '<input type="checkbox" class="pchk" data-dm="'+esc(dm)+'">'
+      + '<div class="pinfo"><div class="pnm">'+esc(r.nm||dm)+'</div>'
+      + '<div class="psub"><span>'+esc(r.region||"—")+'</span> · <span>'+esc(r.ind||"—")+'</span> · <span>'+esc(r.btype||"—")+'</span> · <span class="psrc">'+esc(T(r.src||""))+'</span></div></div>'
+      + '<div class="pact"><button class="mini" data-edit="'+esc(dm)+'">'+T("✎ 编辑")+'</button><button class="mini ghost" data-del="'+esc(dm)+'">'+T("删除")+'</button></div>'
+      + '</div>';
+  }).join("");
+  list.querySelectorAll(".pchk").forEach(function(c){ c.onchange = updatePipeSelN; });
+  list.querySelectorAll("[data-edit]").forEach(function(b){ b.onclick = function(){ openPipeEdit(b.dataset.edit); }; });
+  list.querySelectorAll("[data-del]").forEach(function(b){ b.onclick = function(){
+    if (window.confirm(Tf("确定删除这条管线商机吗？此操作不可撤销，④ 获客执行页也将立即看不到它。")))
+      { removePipe(b.dataset.del); afterPipeChange("已删除该管线商机"); }
+  }; });
+  updatePipeSelN();
+}
+function openPipe(){
+  renderPipeList();
+  document.getElementById("pipeModal").hidden = false;
+  document.body.style.overflow = "hidden";
+}
+function closePipe(){ document.getElementById("pipeModal").hidden = true; document.body.style.overflow = ""; }
+/* 深链：从 04 页「管线管理」跳转 02#pipe 时自动打开管理面板（复用 02 的 modal，不重复代码） */
+if (location.hash === "#pipe") openPipe();
+window.addEventListener("hashchange", function(){ if (location.hash === "#pipe") openPipe(); });
+let pipeEditDm = null;
+function openPipeEdit(dm){
+  const pr = document.getElementById("peRegion");
+  if (!pr.dataset.built){ REGIONS.forEach(function(r){ const o=document.createElement("option"); o.value=r; o.textContent=r; pr.appendChild(o); }); pr.dataset.built="1"; }
+  const pb = document.getElementById("peBtype");
+  if (!pb.dataset.built){ BTYPES.forEach(function(r){ const o=document.createElement("option"); o.value=r; o.textContent=r; pb.appendChild(o); }); pb.dataset.built="1"; }
+  pipeEditDm = dm || null;
+  const m = loadPipe();
+  const r = dm ? m[dm] : null;
+  document.getElementById("peNm").value = r ? r.nm : "";
+  document.getElementById("peDm").value = r ? r.dm : "";
+  document.getElementById("peDm").disabled = !!dm;
+  document.getElementById("peRegion").value = r ? r.region : "";
+  document.getElementById("peInd").value = r ? r.ind : "";
+  document.getElementById("peBtype").value = r ? r.btype : "";
+  document.getElementById("peNeed").value = r ? r.need : "";
+  document.getElementById("peKw").value = r ? r.kw : "";
+  document.getElementById("peSrc").value = r ? r.src : "";
+  document.getElementById("pipeEditTitle").textContent = dm ? T("编辑商机") : T("新增商机");
+  document.getElementById("pipeEditSub").textContent = dm ? T("修改这条管线商机的 L1/L2 主体标识") : T("手动加入一条管线商机");
+  document.getElementById("pipeEditModal").hidden = false;
+  document.body.style.overflow = "hidden";
+  document.getElementById("peNm").focus();
+}
+function closePipeEdit(){ document.getElementById("pipeEditModal").hidden = true; document.body.style.overflow = ""; }
 
 const state = {scope:"profile", region:new Set(), industry:"", btype:"", size:"", contact:"", match:0, risk:new Set(["green","yellow","red","na"]), q:"", added:new Set(Object.keys(loadPipe()))};
 
@@ -1263,6 +1416,41 @@ if(window.__falOnRefresh) window.__falOnRefresh(function(){runVerify();render();
 loadCards().forEach(c=>{if(c.dm)state.added.add(c.dm);});
 runVerify();
 render();updateFunnel();
+
+/* 管线管理面板事件（新增 / 编辑 / 删除 / 批量 / 清空，均在 L1/L2 范围内，无 L3 输入框） */
+document.getElementById("pipeBtn").onclick = openPipe;
+document.getElementById("pipeModal").addEventListener("click", function(e){ if (e.target.hasAttribute("data-pipe-close")) closePipe(); });
+document.getElementById("pipeEditModal").addEventListener("click", function(e){ if (e.target.hasAttribute("data-pipeedit-close")) closePipeEdit(); });
+document.getElementById("pipeAdd").onclick = function(){ openPipeEdit(null); };
+document.getElementById("pipeDelSel").onclick = function(){
+  const dms = [].slice.call(document.querySelectorAll("#pipeList .pchk:checked")).map(function(c){ return c.dataset.dm; });
+  if (!dms.length){ toast("请先勾选要删除的商机"); return; }
+  if (window.confirm(Tf("确定删除选中的 {n} 条管线商机吗？此操作不可撤销。", {n:dms.length}))){
+    dms.forEach(removePipe);
+    afterPipeChange("已删除选中商机");
+  }
+};
+document.getElementById("pipeClear").onclick = function(){
+  if (!Object.keys(loadPipe()).length){ toast("管线已经是空的"); return; }
+  if (window.confirm(Tf("确定清空整个管线吗？所有商机将被删除且不可恢复，④ 获客执行页也将一并清空。"))){
+    clearPipe(); afterPipeChange("已清空管线");
+  }
+};
+document.getElementById("peSave").onclick = function(){
+  const dm = normDm(document.getElementById("peDm").value);
+  const nm = document.getElementById("peNm").value.trim() || dm;
+  if (!dm){ document.getElementById("peDm").focus(); toast("请填写官网域名"); return; }
+  const m = loadPipe();
+  if (!pipeEditDm && m[dm]){
+    if (!window.confirm(Tf("该域名已存在于管线，保存将覆盖原记录。确定继续？"))) return;
+  }
+  upsertPipe({ dm:dm, nm:nm, region:document.getElementById("peRegion").value,
+    ind:document.getElementById("peInd").value.trim(), btype:document.getElementById("peBtype").value,
+    need:document.getElementById("peNeed").value.trim(), kw:document.getElementById("peKw").value.trim(),
+    src:document.getElementById("peSrc").value.trim()||"手动新增", contact:"" });
+  closePipeEdit();
+  afterPipeChange(pipeEditDm ? "已更新管线商机" : "已新增管线商机");
+};
 </script>
 <script src="app-update.js"></script>
 <script src="app-nav.js"></script>
