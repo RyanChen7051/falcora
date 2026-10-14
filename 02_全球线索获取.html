@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8" />
+<script src="app-stats.js"></script>
 <script src="app-vals.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#0B2632" />
@@ -283,7 +284,7 @@
   .guidebox a{color:var(--cyan);font-weight:650;text-decoration:none}
   .guidebox a:hover{text-decoration:underline}
 </style>
-  <link rel="stylesheet" href="app-design.css?v=2">
+  <link rel="stylesheet" href="app-design.css?v=3">
 </head>
 <body>
 <div class="app">
@@ -1100,6 +1101,7 @@ function render(){
   if(gb) gb.onclick=()=>{state.scope="all";state.industry="";render();};
   renderRegionDist(view);
   updateFunnel();
+  reportStats();   /* 池子规模/范围变化 → 同步给驾驶舱 KPI（签名不变则不写盘） */
 }
 
 /* 范围条：明示当前按什么范围出线索 */
@@ -1418,6 +1420,38 @@ loadCards().forEach(c=>{if(c.dm)state.added.add(c.dm);});
 runVerify();
 render();updateFunnel();
 
+/* 跨页统计上报（app-stats.js）：把**当前范围线索池的真实规模**告诉驾驶舱 KPI。
+   2026-10-14 之前驾驶舱把「今日新线索 326 / 覆盖国家 76」写死在 index.html 里，
+   与本页实际严重不符 —— 现在一律以这里上报的实数计算。
+
+   ⚠️ 上报口径（2026-10-14 二次修正）：报**当前范围池**（scope + 档案收敛之后、
+   页面筛选之前），不是静态演示池全集 LEADS。理由：默认范围是「按档案筛选」，
+   档案没填时页面显示 0 家，若这里仍报 LEADS 的 16 家，驾驶舱就又变成虚报。
+     · scope=profile 且档案为空  → n=0，驾驶舱显示 0，与页面一致
+     · scope=profile 且已收敛     → n=按档案生成的采购方条数
+     · scope=all                  → n=LEADS.length（16 家演示池），scope 字段标明
+     · 展会名片建档后并入池子     → 同样实时反映（名片国家/区域待确认的计入 n、不计入国家数）
+   仅签名变化时写 localStorage，避免每次筛选/输入都写盘。 */
+var __statsSig = "";
+function reportStats(){
+  if(!window.__falStats) return;
+  const pool = allLeads();
+  const cp = currentPool();
+  const d = {
+    scope: state.scope,
+    mode: state.scope === "all" ? "all" : cp.mode,      /* empty | nocover | profile | all */
+    n: pool.length,
+    countries: new Set(pool.map(l=>l.flag).filter(f=>f && f!=="🏳")).size,
+    regions: new Set(pool.map(l=>l.region).filter(Boolean)).size,
+    regionList: Array.from(new Set(pool.map(l=>l.region).filter(r=>r && r!=="待确认")))
+  };
+  const sig = JSON.stringify(d);
+  if(sig === __statsSig) return;
+  __statsSig = sig;
+  window.__falStats.set("leads", d);
+}
+reportStats();
+
 /* 管线管理面板事件（新增 / 编辑 / 删除 / 批量 / 清空，均在 L1/L2 范围内，无 L3 输入框） */
 document.getElementById("pipeBtn").onclick = openPipe;
 document.getElementById("pipeModal").addEventListener("click", function(e){ if (e.target.hasAttribute("data-pipe-close")) closePipe(); });
@@ -1459,5 +1493,6 @@ document.getElementById("peSave").onclick = function(){
 <script src="app-i18n-dict.js"></script>
 <script src="app-i18n-zht.js"></script>
 <script src="app-i18n.js"></script>
+<script src="app-fx.js"></script>
 </body>
 </html>
