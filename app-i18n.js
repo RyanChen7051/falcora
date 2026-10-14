@@ -1,5 +1,6 @@
 /* FALCORA 获客通AI — 语言选择器 + 反查字典式 i18n 引擎
-   9 语言：zh / en / es / ja / fr / de / ar / vi / hi
+   10 语言：zh / zh-Hant / en / es / ja / fr / de / ar / vi / hi
+   （zh-Hant 繁體中文 由 OpenCC s2twp 从简体原文生成，随字典一并维护）
    机制：扫描文本节点，按「中文原文」反查 app-i18n-dict.js 的 FAL_DICT（对齐 PMApp / PWA 家族 DICT 思路）。
    · 记忆：localStorage 'falcora_lang'
    · 动态内容：MutationObserver 监听，页面 JS 新渲染的文案同样被翻译
@@ -9,6 +10,7 @@
 (function () {
   var LANGS = [
     { code: 'zh', label: '简体中文' },
+    { code: 'zh-Hant', label: '繁體中文' },
     { code: 'en', label: 'English' },
     { code: 'es', label: 'Español' },
     { code: 'ja', label: '日本語' },
@@ -31,6 +33,21 @@
 
   function norm(s) { return String(s).replace(/\s+/g, ' ').trim(); }
 
+  /* 繁體兜底：主字典只收「静态界面文案」，页面上还有一批运行时拼接的中文
+     （① 战略页分析结论、② 页占位符、⑤ 页下拉选项……）整句不在字典里。
+     此时若语言是 zh-Hant，交给 app-i18n-zht.js 的 __falZHT() 做
+     「词组优先 + 单字兜底 + 回修」的简→繁转换，保证繁体界面不残留简体。
+     其它语言不做兜底（保持原样，与既有行为一致）。 */
+  function resolve(key, e, lang) {
+    if (lang === 'zh') return key;
+    var v = (e && e[IDX[lang]]) || '';
+    if (v) return v;
+    if (lang === 'zh-Hant' && typeof window.__falZHT === 'function') {
+      return window.__falZHT(key);
+    }
+    return key;
+  }
+
   function getLang() {
     try { var v = localStorage.getItem(STORE); if (v && IDX[v] !== undefined) return v; } catch (e) {}
     return 'zh';
@@ -40,9 +57,7 @@
   /* 翻译单个字符串（供 app-update.js 等调用） */
   function T(zh) {
     var lang = getLang();
-    if (lang === 'zh') return zh;
-    var e = DICT[norm(zh)];
-    return (e && e[IDX[lang]]) || zh;
+    return resolve(norm(zh), DICT[norm(zh)], lang);
   }
   window.__falT = T;
   window.__falGetLang = getLang;
@@ -80,7 +95,7 @@
       var key = norm(n.__src);
       if (!key) continue;
       var e = DICT[key];
-      var val = (lang === 'zh') ? key : ((e && e[IDX[lang]]) || key);
+      var val = resolve(key, e, lang);
       var lead = n.__src.match(/^\s*/)[0], trail = n.__src.match(/\s*$/)[0];
       var out = lead + val + trail;
       if (n.nodeValue !== out) n.nodeValue = out;
@@ -100,7 +115,7 @@
         var key = norm(el[prop]);
         if (!key) return;
         var e = DICT[key];
-        var val = (lang === 'zh') ? key : ((e && e[IDX[lang]]) || key);
+        var val = resolve(key, e, lang);
         if (cur !== val) el.setAttribute(a, val);
       });
     });
