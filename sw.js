@@ -37,6 +37,18 @@
    · v25：④ 获客执行页新增「管理管线」入口（按钮深链到 `02_全球线索获取.html#pipe`，自动打开 02 的管线管理面板）。
          复用同一套 L1/L2-only CRUD，不重复代码、不引入 L3 字段；② 页监听 `location.hash`，`#pipe` 时自动 `openPipe()`。
          ②/④ 页静态文件有改动 → 升 CACHE 版本确保发版后用户拿到新文件。
+   · v29：**新增第 10 种语言「繁體中文（zh-Hant）」** —— 用户 2026-10-14：「系统帮我多加一个语言：繁体中文。」
+         · 主字典 `app-i18n-dict.js` 1831 条每条追加 zh-Hant 值（OpenCC `s2twp` 生成），`FAL_ORDER` 加 `"zh-Hant"`。
+         · `app-vals.js`：`ORDER` 加 `zh-Hant`，47 条业务数据值（行业 / 区域 / 角色）同步补齐第 2 位。
+         · 新增 `app-i18n-zht.js` —— **繁体兜底转换器**。主字典只收「静态界面文案」，页面上还有一批
+           **运行时拼接**的中文（① 页战略分析结论、② 页联系人占位符、⑤ 页下拉选项、`__falVal` 拼串等），
+           整句不在字典里、反查不到，会残留简体。兜底器按「词组优先 → 单字兜底 → 回修表」转换，
+           表以 OpenCC s2twp 为参照、用本 App 全部源码语料标定，在 2146 段真实渲染文本上校验
+           2143/2146 完全一致（余 3 处为台湾用字偏好差异：準入 / 帳號）。
+         · `app-i18n.js` 抽出 `resolve(key, entry, lang)`：仅当语言为 `zh-Hant` 且字典未命中时才走兜底，
+           其它语言行为完全不变（未命中即回退中文原文，与既有版本一致）。
+         · 8 个页面 `<head>` 在 `app-i18n-dict.js` 与 `app-i18n.js` 之间插入 `<script src="app-i18n-zht.js">`。
+         · 静态文件有改动 → 升 CACHE 版本；`PRECACHE` 增列 `./app-i18n-zht.js`。
    · v28：**直立屏（手机）顶栏修复 + CSS 缓存失效修正** —— 用户 2026-10-14：「手机版的直立式界面没改」。
          · 真因：`app-nav.js` 注入的 `.back-btn/.home-btn` 带 `min-width:88px`，设计系统只改了高/圆角、
            没覆盖 min-width → 手机端「上一页/首页」变成 88px 宽的空白大按钮，顶栏控件换行错乱，看着像「没改」。
@@ -140,7 +152,7 @@
          L3 补录表单不再用演示值预填；新增 07 账号与成员管理页（界面骨架）；
          侧栏由 app-nav.js 统一注入「账号与成员」入口；字典扩至 1112 条。
          升版强制刷新旧缓存。 */
-const CACHE = 'falcora-v28';
+const CACHE = 'falcora-v29';
 const PRECACHE = [
   './',
   './app-design.css?v=2',
@@ -157,6 +169,7 @@ const PRECACHE = [
   './app-nav.js',
   './app-panel.js',
   './app-i18n-dict.js',
+  './app-i18n-zht.js',
   './app-i18n.js',
   './app-vals.js',
   './manifest.webmanifest',
