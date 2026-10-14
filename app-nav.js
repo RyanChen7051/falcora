@@ -29,40 +29,9 @@
     + '.home-btn:hover{border-color:var(--cyan);background:linear-gradient(180deg,rgba(94,234,212,.30),rgba(14,154,142,.36));'
     + 'color:#fff;transform:translateY(-1px);box-shadow:0 6px 16px rgba(14,154,142,.28)}'
     + '.home-btn:active{transform:translateY(0);box-shadow:none}'
-    + '.home-btn svg{flex:0 0 auto;color:var(--cyan)}'
-    // 直立屏 / 窄屏适配：顶栏控件（上一页·首页·铃铛·齿轮·演示标）过多，桌面一行排不下会溢出右侧
-    + '@media (max-width:860px){'
-    + '.topbar{flex-wrap:wrap;gap:10px;padding:12px 14px}'
-    + '.title{flex:1 1 auto;min-width:0}'
-    + '.title p{display:none}'
-    + '.title h1{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
-    + '.search{order:9;flex:1 1 100%;max-width:none;margin-left:0}'
-    + '.top-right{order:5;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;gap:8px}'
-    + '.back-btn span,.home-btn span{display:none}'
-    + '.back-btn,.home-btn{min-width:0;padding:8px}'
-    + '.pill{display:none}'
-    // 直立屏：侧栏固定 248px + 内容 .layout 的 320px 副栏会把页面撑到 ~428px 宽 → 横向溢出。
-    // 折叠侧栏到顶部整宽、内容改为单列，铃铛/齿轮已在上一条规则里确保留在可视区。
-    + '.app{flex-direction:column}'
-    + '.sidebar{width:100%;flex:0 0 auto;height:auto;position:static;flex-direction:column;padding:12px 14px;gap:8px}'
-    + '.sidebar .nav-label{display:none}'
-    + '.main{width:100%}'
-    + '.content{padding:16px 14px 40px}'
-    + '.layout{grid-template-columns:1fr}'
-    + '.layout .sb{order:2}'
-    // 关键：.content 是 flex column，.card 为 flex item，默认 min-width:auto=min-content，
-    // 内部多列网格（sggrid/ctgrid/ctrow）会把 min-content 撑到 ~400px，
-    // 导致卡片拒绝收缩、横向溢出视口。给所有直接子项 min-width:0 解除自动最小宽，
-    // 再让内部两列网格在手机屏堆叠为单列，内容才真正能收窄。
-    + '.content>*{min-width:0;max-width:100%}'
-    + '.layout>*{min-width:0}'
-    + '.card{min-width:0}'
-    + '.sidebar>*{min-width:0}'
-    + '.sggrid,.ctgrid{grid-template-columns:1fr}'
-    + '.ctrow{grid-template-columns:1fr}'
-    + '.card,.sb,.content{overflow-x:hidden}'
-    + '.side-foot{margin-top:12px}'
-    + '}';
+    + '.home-btn svg{flex:0 0 auto;color:var(--cyan)}';
+  // 注：直立屏 / 窄屏（≤860px）适配已统一收进 app-design.css（单一规范源），
+  // 本文件不再重复定义 media query，避免两份规则因 cascade 顺序打架。
   var st = document.createElement('style');
   st.textContent = css;
   document.head.appendChild(st);
