@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8" />
+<script src="app-stats.js"></script>
 <script src="app-vals.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#0B2632" />
@@ -119,7 +120,10 @@
   .insight .go{margin-left:auto; flex:0 0 auto; align-self:center; font-size:13px; color:var(--cyan); cursor:pointer; font-weight:600; white-space:nowrap}
 
   /* ---------- KPI cards ---------- */
-  .kpis{display:grid; grid-template-columns:repeat(5,1fr); gap:14px}
+  /* 6 张卡，2026-10-14 起**全部由系统内真实数据实时计算**（此前是 326/1,842/76/47/312
+     这类硬编码常量，与实际 16 家线索池、2 份尽调档案、0 家管线严重不符）。
+     ≥1481px 一行 6 张；更窄回落到 3 列 ×2 行 —— 6 列时英文标签会换行，故设此断点。 */
+  .kpis{display:grid; grid-template-columns:repeat(6,1fr); gap:14px}
   .kpi{
     background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:16px 16px 14px;
     position:relative; overflow:hidden; backdrop-filter:blur(4px);
@@ -129,10 +133,14 @@
   .kpi .lab{font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:7px}
   .kpi .val{font-size:28px; font-weight:750; margin-top:8px; line-height:1}
   .kpi.gold .val{color:var(--gold)}
-  .kpi .sub{font-size:12px; margin-top:8px; color:var(--muted-2); display:flex; align-items:center; gap:6px}
-  .delta{font-weight:700}
-  .delta.up{color:var(--good)} .delta.down{color:var(--danger)}
-  .spark{position:absolute; right:12px; bottom:10px; opacity:.5}
+  /* 副文案：数据来源标签 + 单位。窄卡下允许换行，绝不横向溢出 */
+  .kpi .sub{font-size:12px; margin-top:8px; color:var(--muted-2); display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+  .kpi .sub .tag{opacity:.85}
+  /* 「尚未统计」空态：用弱化色，避免看起来像个很小的真数字 */
+  .kpi .val.dim{font-size:15px; font-weight:600; color:var(--muted-2); opacity:.9}
+  .kpi .val .na{font-size:15px}
+  /* KPI 排下方的来源说明：明说哪些是演示集、哪些实时、哪些还没统计到 */
+  .kpi-note{font-size:11.5px; color:var(--muted-2); margin:10px 2px 0; line-height:1.6}
 
   /* ---------- Map + Leads ---------- */
   .row2{display:grid; grid-template-columns:1.62fr 1fr; gap:18px}
@@ -284,10 +292,12 @@
     box-shadow:0 18px 50px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .22s,transform .22s}
   #ctaToast.on{opacity:1;transform:translate(-50%,0)}
 
+  /* 6 张卡在 1480px 以下回落到 3 列（否则英文标签会换行、单卡过挤） */
+  @media (max-width:1480px){ .kpis{grid-template-columns:repeat(3,1fr)} }
   @media (max-width:1180px){ .kpis{grid-template-columns:repeat(3,1fr)} .row2{grid-template-columns:1fr} }
   @media (max-width:780px){ .sidebar{display:none} .kpis{grid-template-columns:repeat(2,1fr)} .topbar{flex-wrap:wrap} }
 </style>
-  <link rel="stylesheet" href="app-design.css?v=2">
+  <link rel="stylesheet" href="app-design.css?v=3">
 </head>
 <body>
 <div class="app">
@@ -355,13 +365,17 @@
         </div>
         <div>
           <div class="t">AI 增长总司令 · 即时洞察</div>
-          <p>基于您的行业画像，我们发现 <b>3 个高匹配度市场</b>（中东工业采购、东南亚电子制造、北美新能源）尚未被覆盖，预计可释放约 <b>1,200 条</b>优质线索，建议优先启动 ②全球线索获取。</p>
+          <!-- 2026-10-14 前这里写死「3 个高匹配市场」「1,200 条优质线索」——
+               与 ② 页演示池实际覆盖 7 个区域矛盾，且 ① 档案未填时说「基于您的行业画像」也是假的。
+               现改为按 ① 战略档案 + ② 演示池真实状态计算（见 renderInsightBanner）。 -->
+          <p id="insightBody"></p>
         </div>
-        <div class="go">查看策略 →</div>
+        <div class="go" id="insightGo">查看策略 →</div>
       </section>
 
       <!-- KPIs -->
       <section class="kpis" id="kpis"></section>
+      <p class="kpi-note" id="kpiNote"></p>
 
       <!-- 能力覆盖面板 -->
       <section class="panel">
@@ -481,43 +495,11 @@
   const M = window.WORLD_MAP;
   function proj(lon,lat){ return [ (lon-M.lonMin)/(M.lonMax-M.lonMin)*M.W, (M.latMax-lat)/(M.latMax-M.latMin)*M.H ]; }
 
-  /* ---------- KPI cards ---------- */
-  const kpis = [
-    {lab:"今日新线索", val:326, fmt:v=>v, unit:"条", delta:"+18.4%", up:true, gold:false},
-    {lab:"已锁定客户", val:1842, fmt:v=>v.toLocaleString(), unit:"家", delta:"+9.2%", up:true, gold:true},
-    {lab:"覆盖国家/地区", val:76, fmt:v=>v, unit:"个", delta:"近30天 +5", up:true, gold:false},
-    {lab:"本周拦截风险", val:47, fmt:v=>v, unit:"条", delta:"-12%", up:true, gold:false},
-    {lab:"节省尽调工时", val:312, fmt:v=>v, unit:"h", delta:"+24%", up:true, gold:false},
-  ];
-  const kpiBox = document.getElementById("kpis");
-  kpis.forEach(k=>{
-    const el=document.createElement("div");
-    el.className="kpi"+(k.gold?" gold":"");
-    el.innerHTML=`<div class="lab">${k.lab}</div>
-      <div class="val num" data-t="${k.val}">0</div>
-      <div class="sub"><span class="delta ${k.up?'up':'down'}">${k.delta}</span><span>较上周 · ${k.unit}</span></div>`;
-    kpiBox.appendChild(el);
-  });
-  // count-up
-  document.querySelectorAll(".kpi .val").forEach(el=>{
-    const target=+el.dataset.t; const dur=1100; const t0=performance.now();
-    function step(t){ const p=Math.min(1,(t-t0)/dur); const e=1-Math.pow(1-p,3);
-      el.textContent=Math.round(target*e).toLocaleString(); if(p<1) requestAnimationFrame(step); }
-    requestAnimationFrame(step);
-  });
-
-  /* ---------- World map ---------- */
-  const svg=document.getElementById("map");
-  const NS="http://www.w3.org/2000/svg";
-  // graticule
-  for(let lon=-150;lon<=150;lon+=30){ const [x]=proj(lon,0); const l=document.createElementNS(NS,"line");
-    l.setAttribute("x1",x);l.setAttribute("y1",0);l.setAttribute("x2",x);l.setAttribute("y2",M.H);l.setAttribute("class","grat");svg.appendChild(l);}
-  for(let lat=-30;lat<=60;lat+=30){ const [,y]=proj(0,lat); const l=document.createElementNS(NS,"line");
-    l.setAttribute("x1",0);l.setAttribute("y1",y);l.setAttribute("x2",M.W);l.setAttribute("y2",y);l.setAttribute("class","grat");svg.appendChild(l);}
-  // land
-  const land=document.createElementNS(NS,"path"); land.setAttribute("d",M.path); land.setAttribute("class","land"); svg.appendChild(land);
-
-  // clients
+  /* ---------- 地图客户演示集（数据声明提前到 KPI 之前） ---------- */
+  /* ⚠️ 2026-10-14 修复：KPI 段的 kpiRead() 要读 clients.length，而 const 有暂时性死区，
+     原先把声明放在下面的「World map」段 → kpiRender() 一执行就
+     ReferenceError: Cannot access 'clients' before initialization → **整段 KPI 脚本中断**
+     → 页面保留旧 HTML（#kpis 空、横幅静态文案在）。故把纯数据声明提到此处。 */
   const clients=[
     {n:"Helios Industrial", c:"德国", lon:9.5, lat:51.2, v:4.8},
     {n:"Meridian Components", c:"美国", lon:-98, lat:39, v:3.6},
@@ -534,6 +516,219 @@
     {n:"Alpine Robotics", c:"瑞士", lon:8.5, lat:47.4, v:2.1},
     {n:"Norske Energy", c:"挪威", lon:10.7, lat:59.9, v:1.5},
   ];
+
+  /* ---------- KPI cards（2026-10-14 起**全部实时计算**，不再硬编码） ---------- */
+  /* 背景（用户 2026-10-14：「检查这排数字的真实性，不要虚报」）：
+     原先这排是 index.html 里的字面量常量 —— 326 / 1,842 / 76 / 47 / 312 / 34.1%，
+     与系统真实状态严重不符：② 页演示池实际 16 家、③ 页尽调档案 2 份、管线默认 0 家，
+     「节省尽调工时」在产品里根本没有对应功能。② 页 changelog 里早就立过
+     「不编造 312 家 / 47 家」的铁律，这里却是同一组数字的漏网之鱼。
+
+     现在的取值口径（全部可验）：
+       · 线索池企业 / 覆盖国家 / 覆盖区域 ← ② 页经 app-stats.js 上报的**演示池实数**
+       · 已锁定客户 ← 本页地图 clients 数组（演示集，就在下方地图上，可逐个点开核对）
+       · 尽调档案 ← ③ 页上报的 DOSSIERS 实数
+       · 加入管线 ← localStorage 'falcora_pipeline_v1'（使用者在 ② 页的真实操作）
+       · 管线启动沟通率 ← 'falcora_seq_v1' 已标记步数 ÷ 加入管线；分母 0 → 诚实空态
+     ⚠️ 某个模块还没打开过时，app-stats 里没有对应命名空间 → 显示「尚未统计」，
+        **绝不回退任何预设数字**；切回本页（visibilitychange / focus）会重新统计。 */
+
+  /* 数字走 Intl（按界面语言本地化，如 de 用逗号小数）；文案走 i18n 字典。
+     ⚠️ 本脚本在 app-i18n.js 之前执行，故 __falOnRefresh 用 onLangRefresh() 延后注册。 */
+  let kpiAnimating=true;
+  function kpiLoc(){ const l=(window.__falGetLang&&window.__falGetLang())||"zh"; return l==="zh"?"zh-CN":l; }
+  function kpiNum(v,dec){ dec=dec||0;
+    try{ return new Intl.NumberFormat(kpiLoc(),{minimumFractionDigits:dec,maximumFractionDigits:dec}).format(v); }
+    catch(e){ return dec? v.toFixed(dec) : String(Math.round(v)); } }
+  function onLangRefresh(fn){
+    if(window.__falOnRefresh){ window.__falOnRefresh(fn); return; }
+    if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",function(){ if(window.__falOnRefresh) window.__falOnRefresh(fn); });
+    else setTimeout(function(){ if(window.__falOnRefresh) window.__falOnRefresh(fn); },0);
+  }
+  /* ⚠️ 统计标签（演示数据 / 实时统计 / 尚未统计）与标签名都是**字典条目**，
+     数字本身是运行时值 —— 所以「值」永远单独成节点，不与中文拼串。 */
+  function kpiRead(){
+    const S = window.__falStats ? __falStats.get() : {};
+    let pipeN=0; try{ pipeN=Object.keys(JSON.parse(localStorage.getItem("falcora_pipeline_v1")||"{}")||{}).length; }catch(e){}
+    /* 已启动沟通 = ④ 页 seq 里至少有 1 个已勾选步骤的客户数 */
+    let started=0; try{ const sq=JSON.parse(localStorage.getItem("falcora_seq_v1")||"{}")||{};
+      started=Object.keys(sq).filter(dm=>Object.keys(sq[dm]||{}).length>0).length; }catch(e){}
+    return {
+      leads: S.leads||null,                 /* {n, countries, regions, regionList} */
+      dd: S.dd||null,                       /* {n} */
+      mapN: clients.length,
+      mapCountries: new Set(clients.map(c=>c.c)).size,
+      pipeN: pipeN, started: started
+    };
+  }
+  function kpiModel(){
+    const R=kpiRead();
+    /* v=null → 尚未统计；ratio 且分母 0 → 暂无数据 */
+    return [
+      {lab:"线索池企业",   v:R.leads?R.leads.n:null,            unit:"家", tag:R.leads?"演示数据":"尚未统计"},
+      {lab:"覆盖国家/地区", v:R.leads?R.leads.countries:null,   unit:"个", tag:R.leads?"演示数据":"尚未统计"},
+      {lab:"已锁定客户",   v:R.mapN,                             unit:"家", tag:"演示数据", gold:true},
+      {lab:"尽调档案",     v:R.dd?R.dd.n:null,                  unit:"份", tag:R.dd?"演示数据":"尚未统计"},
+      {lab:"加入管线",     v:R.pipeN,                            unit:"家", tag:"实时统计"},
+      /* 口径：与客户启动沟通家数 ÷ 加入管线家数。分母 0 时不编造百分比。
+         ⚠️ 乘 100 才是百分数（0.333 → 33.3%）；title 文案必须与字典 key 完全一致。 */
+      {lab:"管线启动沟通率", v:(R.pipeN>0 ? R.started/R.pipeN*100 : null), dec:1, suffix:"%",
+       tag:"实时统计", title:"口径：加入管线 → 与客户启动沟通"},
+    ];
+  }
+  const kpiBox = document.getElementById("kpis");
+  function kpiRender(){
+    const kpis=kpiModel();
+    kpiBox.innerHTML="";
+    kpis.forEach(k=>{
+      const el=document.createElement("div");
+      el.className="kpi"+(k.gold?" gold":"");
+      if(k.title) el.title=k.title;
+      const empty = (k.v===null);
+      /* 值：空态用字典文案，否则 Intl 数字（含 % 后缀） */
+      const valTxt = empty ? "尚未统计" : (k.dec===undefined ? kpiNum(k.v,0) : kpiNum(k.v,k.dec)+(k.suffix||""));
+      /* 副行：来源标签 + 单位（单位与标签都是独立文本节点，各自命中字典） */
+      el.innerHTML='<div class="lab">'+k.lab+'</div>'
+        + '<div class="val num'+(empty?" dim":"")+'" data-t="'+(empty?"":k.v)+'" data-dec="'+(k.dec||0)+'" data-suf="'+(k.suffix||"")+'" data-empty="'+(empty?1:0)+'">'
+        + (empty ? '<span class="na">尚未统计</span>' : "0") + '</div>'
+        + '<div class="sub"><span class="tag">'+k.tag+'</span>'
+        + (empty ? "" : '<span class="num u">'+k.unit+'</span>')
+        + '</div>';
+      kpiBox.appendChild(el);
+    });
+    return kpiBox.querySelectorAll(".kpi .val");
+  }
+  function paintKpi(el,v){ el.textContent=kpiNum(v,+el.dataset.dec||0)+(el.dataset.suf||""); }
+  const kpiVals=kpiRender();
+  // count-up（仅首屏跑一次，逐帧按当前 locale 格式化）
+  kpiVals.forEach(el=>{
+    if(el.dataset.empty==="1") return;
+    const target=+el.dataset.t, dur=1100, t0=performance.now();
+    function step(t){ const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,3);
+      paintKpi(el,target*e);
+      if(p<1) requestAnimationFrame(step);
+      else { paintKpi(el,target); if(el===kpiVals[kpiVals.length-1]) kpiAnimating=false; } }
+    requestAnimationFrame(step);
+  });
+  // 切语言：数字按新 locale 重绘（.val 的 textContent 会替换文本节点，i18n 缓存自然刷新）
+  onLangRefresh(function(){
+    if(kpiAnimating) return;   // 首屏动画未结束，动画自身会用新 locale 收敛到终值
+    kpiBox.querySelectorAll(".kpi .val").forEach(el=>{
+      if(el.dataset.empty==="1") return;
+      paintKpi(el,+el.dataset.t);
+    });
+  });
+  /* 从 ② / ③ / ④ 页回来时重新统计 —— 否则「刚加入管线的 3 家」不会反映到驾驶舱 */
+  function kpiRepaint(){
+    if(kpiAnimating) return;
+    const fresh=kpiRender();
+    fresh.forEach(el=>{ if(el.dataset.empty!=="1") paintKpi(el,+el.dataset.t); });
+  }
+  document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="visible") kpiRepaint(); });
+  window.addEventListener("focus", kpiRepaint);
+
+  /* KPI 注脚：口径声明（诚实标注，不用「演示中」糊弄） */
+  (function(){
+    const note=document.getElementById("kpiNote");
+    if(note) note.textContent=T("以上数字均由本机可验证的数据实时计算：不使用任何预设值；对应模块尚未打开时显示「尚未统计」，绝不回退默认数字。");
+  })();
+
+  /* ---------- AI 洞察横幅（2026-10-14 起按真实状态计算，不再写死） ---------- */
+  /* 原文案：「基于您的行业画像，我们发现 3 个高匹配度市场（中东工业采购、东南亚
+     电子制造、北美新能源）尚未被覆盖，预计可释放约 1,200 条优质线索」——
+     三个数字全是编的：② 页演示池实际 16 家、覆盖 7 个区域（与「3 个尚未覆盖」
+     矛盾），且 ① 档案没填时说「基于您的行业画像」本身就是假的。
+     现按四态真实计算，每句一个字典条目、动态值走 {x} 占位符（拼串铁律）。 */
+  const IKEY="falcora_strategy_profile_v1", IKEY_OLD="falpora_strategy_profile_v1";
+  /* ① 目标区域 → ② 页区域桶（与 02 页 RMAP 一致）。中国内地/中国港澳台/其他
+     在 ② 页没有对应区域桶 → 映射为 ""，不参与覆盖对比（不硬凑）。 */
+  const RMAP={"北美(美/加)":"北美","欧盟":"欧盟","英国":"欧盟","东南亚":"东南亚","中东":"中东",
+    "拉美":"拉美","非洲":"非洲","日韩":"东亚","澳洲/新西兰":"大洋洲","中国内地":"","中国港澳台":"","其他":""};
+  function readProfile(){ try{ const v=localStorage.getItem(IKEY)||localStorage.getItem(IKEY_OLD); return v?JSON.parse(v):null; }catch(e){ return null; } }
+  function profileFilled(p){
+    if(!p) return false;
+    const kw=String(p.keywords||"").trim();
+    const cats=Array.isArray(p.ch_productCats)?p.ch_productCats:[];
+    return !!(kw||cats.length||String(p.industry||"").trim());
+  }
+  function targetRegions(p){
+    const out=[];
+    (Array.isArray(p&&p.ch_regions)?p.ch_regions:[]).forEach(r=>{
+      const v=RMAP[r]; if(v && out.indexOf(v)===-1) out.push(v);
+    });
+    return out;
+  }
+  /* 整句作 key + {x} 占位符（与 02 页 Tv 同规）：绝不把一句话拆成多个文本节点 */
+  function T(zh){ try{ return (window.__falT && window.__falT(zh)) || zh; }catch(e){ return zh; } }
+  function Tv(zh,vars){ var s=T(zh); if(vars) for(var k in vars) s=s.split("{"+k+"}").join(vars[k]); return s; }
+  /* 区域名是「数据值」→ 走 app-vals.js 的 __falVal 本地化（与 ② 页一致）；
+     没有收录的值（如大洋洲）保持中文原文，绝不编造译名。 */
+  function rv(r){ try{ return (window.__falVal && window.__falVal(r)) || r; }catch(e){ return r; } }
+  function rjoin(list){
+    const zh=((window.__falGetLang&&window.__falGetLang())||"zh")==="zh";
+    return list.map(rv).join(zh?"、":", ");
+  }
+  const ibox=document.getElementById("insightBody"), igo=document.getElementById("insightGo");
+  function renderInsightBanner(){
+    if(!ibox) return;
+    const p=readProfile();
+    const L=window.__falStats?__falStats.get("leads"):null;
+    let parts=[], cta="", href="index.html";
+    if(!profileFilled(p)){
+      parts.push(T("尚未填写 ① 战略档案 —— 在此之前，系统不对市场做任何判断。"));
+      parts.push(T("填写目标市场与主营品类后，这里会按真实数据提示哪些区域值得优先进入。"));
+      cta=T("去填 ① 战略档案 →"); href="01_战略_企业战略档案.html";
+    } else if(!L){
+      parts.push(T("① 战略档案已填写，但尚未统计到 ② 页线索池。"));
+      parts.push(T("打开 ② 全球线索获取生成线索后，这里会按你的目标区域显示真实覆盖情况。"));
+      cta=T("打开 ② 全球线索获取 →"); href="02_全球线索获取.html";
+    } else if(!L.n){
+      const reason = L.mode==="nocover"
+        ? T("档案关键词未命中任何品类族，为不塞入无关行业，此处保持为空")
+        : T("档案尚未让线索池收敛出采购方");
+      parts.push(Tv("② 页当前范围还没有线索：{reason}。",{reason:"<b>"+reason+"</b>"}));
+      parts.push(T("打开 ② 页，按页面引导补充关键词，或先看全部演示池。"));
+      cta=T("打开 ② 查看引导 →"); href="02_全球线索获取.html";
+    } else {
+      const rl=Array.isArray(L.regionList)?L.regionList:[];
+      parts.push(Tv("当前范围共 {n} 家线索、覆盖 {r} 个区域。",{n:"<b>"+L.n+"</b>",r:"<b>"+rl.length+"</b>"}));
+      parts.push(L.scope==="all"
+        ? T("当前范围是全部演示池，与你的档案无关，仅用于预览界面能力。")
+        : T("线索按 ① 战略档案的主营品类与目标区域收敛。"));
+      const t=targetRegions(p);
+      const miss=t.filter(r=>rl.indexOf(r)===-1);
+      if(!t.length){
+        parts.push(T("档案尚未选择目标区域，暂不做覆盖对比。"));
+      } else if(!miss.length){
+        parts.push(Tv("你的目标区域 {t} 个均已有数据覆盖。",{t:"<b>"+t.length+"</b>"}));
+      } else {
+        parts.push(Tv("你的目标区域 {t} 个，其中 {m} 个尚未覆盖：{miss}。",
+          {t:"<b>"+t.length+"</b>",m:"<b>"+miss.length+"</b>",miss:"<b>"+rjoin(miss)+"</b>"}));
+      }
+      parts.push(T("以上为原型演示数据；真实覆盖随数据源接入更新。"));
+      cta=T("打开 ② 全球线索获取 →"); href="02_全球线索获取.html";
+    }
+    ibox.innerHTML=parts.join("");
+    if(igo){
+      igo.textContent=cta;
+      igo.style.cursor="pointer";
+      igo.onclick=function(){ location.href=href; };
+    }
+  }
+  renderInsightBanner();
+  onLangRefresh(function(){ renderInsightBanner(); });
+
+  /* ---------- World map ---------- */
+  const svg=document.getElementById("map");
+  const NS="http://www.w3.org/2000/svg";
+  // graticule
+  for(let lon=-150;lon<=150;lon+=30){ const [x]=proj(lon,0); const l=document.createElementNS(NS,"line");
+    l.setAttribute("x1",x);l.setAttribute("y1",0);l.setAttribute("x2",x);l.setAttribute("y2",M.H);l.setAttribute("class","grat");svg.appendChild(l);}
+  for(let lat=-30;lat<=60;lat+=30){ const [,y]=proj(0,lat); const l=document.createElementNS(NS,"line");
+    l.setAttribute("x1",0);l.setAttribute("y1",y);l.setAttribute("x2",M.W);l.setAttribute("y2",y);l.setAttribute("class","grat");svg.appendChild(l);}
+  // land
+  const land=document.createElementNS(NS,"path"); land.setAttribute("d",M.path); land.setAttribute("class","land"); svg.appendChild(land);
+
   const hub=[M.W/2, M.H-18];
   const tip=document.getElementById("mapTip"); const wrap=document.getElementById("mapWrap");
   clients.forEach(cl=>{
@@ -706,5 +901,6 @@
 <script src="app-i18n-dict.js"></script>
 <script src="app-i18n-zht.js"></script>
 <script src="app-i18n.js"></script>
+<script src="app-fx.js"></script>
 </body>
 </html>
