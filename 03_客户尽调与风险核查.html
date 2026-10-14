@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8" />
+<script src="app-stats.js"></script>
 <script src="app-vals.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#0B2632" />
@@ -187,7 +188,7 @@
   @media(max-width:1180px){.layout{grid-template-columns:1fr}.checks{grid-template-columns:1fr}.idgrid{grid-template-columns:1fr 1fr}}
   @media(max-width:780px){.sidebar{display:none}.topbar{flex-wrap:wrap}.sel{min-width:0;width:100%}.verdict{grid-template-columns:1fr}.idgrid{grid-template-columns:1fr}.row2{grid-template-columns:1fr}}
 </style>
-  <link rel="stylesheet" href="app-design.css?v=2">
+  <link rel="stylesheet" href="app-design.css?v=3">
 </head>
 <body>
 <div class="app">
@@ -559,6 +560,12 @@ const manual = loadManual();
 Object.keys(manual).forEach(k => { if (!DOSSIERS[k]) DOSSIERS[k] = manual[k]; });
 if (qco && !DOSSIERS[qco]) DOSSIERS[qco] = naDossier(QP.get("nm") || qco, qco, QP.get("rg") || "", QP.get("ind") || "", "");
 
+/* 跨页统计上报（app-stats.js）：尽调档案真实条数 → 驾驶舱 KPI 实时计算，不硬编码。
+   2026-10-14 之前驾驶舱写死「本周拦截风险 47 条」，与本页实际档案数严重不符。
+   建档/新增档案后都要重报，否则从 ② 页带参数跳进来时驾驶舱还是旧数。 */
+function reportDD(){ if(window.__falStats) window.__falStats.set("dd", {n: Object.keys(DOSSIERS).length}); }
+reportDD();
+
 /* ---------- 渲染 ---------- */
 const picker = document.getElementById("picker");
 function buildPicker(){
@@ -731,6 +738,7 @@ document.getElementById("addOk").onclick = () => {
   const m = loadManual(); m[key] = d; saveManual(m);
   closeAdd();
   buildPicker(); picker.value = key; render(key);
+  reportDD();   /* 档案数 +1 → 同步驾驶舱 KPI */
   toast("已建立待核查档案 · 多数数据源未覆盖");
 };
 
@@ -763,5 +771,6 @@ render(picker.value);
 <script src="app-i18n-dict.js"></script>
 <script src="app-i18n-zht.js"></script>
 <script src="app-i18n.js"></script>
+<script src="app-fx.js"></script>
 </body>
 </html>
