@@ -1,4 +1,4 @@
-/* FALCORA 获客通AI — Service Worker v27
+/* FALCORA 获客通AI — Service Worker v28
    · HTML / 导航：网络优先（在线时永远取最新），离线回退缓存
    · 静态资源：缓存优先 + 后台更新（stale-while-revalidate，兜底防「改了没生效」）
    · 支持页面主动发 SKIP_WAITING 立即切换新版本
@@ -37,6 +37,14 @@
    · v25：④ 获客执行页新增「管理管线」入口（按钮深链到 `02_全球线索获取.html#pipe`，自动打开 02 的管线管理面板）。
          复用同一套 L1/L2-only CRUD，不重复代码、不引入 L3 字段；② 页监听 `location.hash`，`#pipe` 时自动 `openPipe()`。
          ②/④ 页静态文件有改动 → 升 CACHE 版本确保发版后用户拿到新文件。
+   · v28：**直立屏（手机）顶栏修复 + CSS 缓存失效修正** —— 用户 2026-10-14：「手机版的直立式界面没改」。
+         · 真因：`app-nav.js` 注入的 `.back-btn/.home-btn` 带 `min-width:88px`，设计系统只改了高/圆角、
+           没覆盖 min-width → 手机端「上一页/首页」变成 88px 宽的空白大按钮，顶栏控件换行错乱，看着像「没改」。
+           修法：设计系统基类 `.topbar .back-btn/.home-btn` 加 `min-width:0`；直立屏媒体查询把顶栏重排为三行
+           （① 标题整行 ② 控件整行 `flex-wrap:nowrap;overflow-x:auto` 横向滚动 ③ 搜索整行）。
+         · ⚠️ **CSS 缓存失效修正**：此前页面 `<link href="app-design.css?v=1">` 与 SW `PRECACHE './app-design.css'`
+           **URL 不一致** → 预缓存作废、且 `?v=1` 不变导致改 CSS 后访客拿到旧版。改为两边统一 `app-design.css?v=2`，
+           今后每次改 CSS **必须同时**：① 8 页 link 的 `?v=N` 递增 ② SW PRECACHE 同步 ③ 升 CACHE 版本。
    · v27：**设计系统 v1（克制专业 SaaS 风）** —— 用户 2026-10-14：「这个排版很丑，你就不能好好设计一下吗」。
          新增 `app-design.css`（设计令牌 + 组件样式），8 个页面 `<head>` 均在页内 `<style>` 之后 `<link>` 引入
          （后载入 = cascade 压过页内同名规则），并加入 PRECACHE。
@@ -132,10 +140,10 @@
          L3 补录表单不再用演示值预填；新增 07 账号与成员管理页（界面骨架）；
          侧栏由 app-nav.js 统一注入「账号与成员」入口；字典扩至 1112 条。
          升版强制刷新旧缓存。 */
-const CACHE = 'falcora-v27';
+const CACHE = 'falcora-v28';
 const PRECACHE = [
   './',
-  './app-design.css',
+  './app-design.css?v=2',
   './index.html',
   './01_战略_企业战略档案.html',
   './02_全球线索获取.html',
