@@ -1,4 +1,4 @@
-/* FALCORA 获客通AI — Service Worker v26
+/* FALCORA 获客通AI — Service Worker v27
    · HTML / 导航：网络优先（在线时永远取最新），离线回退缓存
    · 静态资源：缓存优先 + 后台更新（stale-while-revalidate，兜底防「改了没生效」）
    · 支持页面主动发 SKIP_WAITING 立即切换新版本
@@ -37,6 +37,13 @@
    · v25：④ 获客执行页新增「管理管线」入口（按钮深链到 `02_全球线索获取.html#pipe`，自动打开 02 的管线管理面板）。
          复用同一套 L1/L2-only CRUD，不重复代码、不引入 L3 字段；② 页监听 `location.hash`，`#pipe` 时自动 `openPipe()`。
          ②/④ 页静态文件有改动 → 升 CACHE 版本确保发版后用户拿到新文件。
+   · v27：**设计系统 v1（克制专业 SaaS 风）** —— 用户 2026-10-14：「这个排版很丑，你就不能好好设计一下吗」。
+         新增 `app-design.css`（设计令牌 + 组件样式），8 个页面 `<head>` 均在页内 `<style>` 之后 `<link>` 引入
+         （后载入 = cascade 压过页内同名规则），并加入 PRECACHE。
+         要点：4 级字号阶 24/20/15.5/13.5；8px 间距阶 4-8-12-16-24-32；
+         金色收敛为「主操作 + 关键计量」（卡头图标默认改 cyan 玻璃）；卡面改更亮玻璃 + 细描边真正浮起；
+         topbar 控件统一 36 高 / 10 圆角；副标题关键项 cyan 高亮；hero 加 FALCORA 蛛网细线装饰。
+         ⚠️ 直立屏媒体查询在 app-design.css 与 app-nav.js 内联 `<style>` 各有一份（内联那份防闪烁、外链那份为规范源）。
    · v26：直立屏 / 窄屏（≤860px）布局修复 —— 用户 2026-10-14：「直立屏状况下，铃铛跟小齿轮跑到右侧画面以外」。
          · 根因：① 顶栏控件（上一页·首页·铃铛·齿轮·演示标）在窄屏一行排不下 → 溢出右侧视口；
            ② `.content` 是 flex column，`.card` 作为 flex item 默认 `min-width:auto`=min-content，
@@ -125,9 +132,10 @@
          L3 补录表单不再用演示值预填；新增 07 账号与成员管理页（界面骨架）；
          侧栏由 app-nav.js 统一注入「账号与成员」入口；字典扩至 1112 条。
          升版强制刷新旧缓存。 */
-const CACHE = 'falcora-v26';
+const CACHE = 'falcora-v27';
 const PRECACHE = [
   './',
+  './app-design.css',
   './index.html',
   './01_战略_企业战略档案.html',
   './02_全球线索获取.html',
