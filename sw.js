@@ -1,4 +1,4 @@
-/* FALCORA 获客通AI — Service Worker v23
+/* FALCORA 获客通AI — Service Worker v26
    · HTML / 导航：网络优先（在线时永远取最新），离线回退缓存
    · 静态资源：缓存优先 + 后台更新（stale-while-revalidate，兜底防「改了没生效」）
    · 支持页面主动发 SKIP_WAITING 立即切换新版本
@@ -20,6 +20,35 @@
          · `app-panel.js`：标题是「中文主标 + 英文副标」的双语 lockup，英文界面下会重复成
            「Notifications / Notifications」→ 加 `html[data-lang="en"] .fd-h small{display:none}`。
            用 CSS + `data-lang`（app-i18n.js 会维护）而非 JS 判断，切语言自动生效。
+   · v24：② 全球线索获取新增**「管线管理面板」（管线 CRUD）**——用户 2026-10-13 明确授权：
+         要「可点选、可编辑、能新增、能编辑，对的就需要能删减、修正」。
+         ⚠️ 风险管理评估结论：**旧版「只能加不能删」本身就是最大风险**（不可逆、随时间累积脏数据）。
+           判定为「必要，执行」。新增/编辑风险可控（表单只暴露 L1/L2 字段、绝无 L3 输入框）；
+           删除/清空走 `window.confirm` 二次确认。
+         · 工具栏「管理管线」入口（带实时计数 badge）→ 管理 modal：列表 + 勾选 + 新增 + 编辑 + 删除 + 批量删除 + 清空。
+         · 新增/编辑 modal：公司名 / 官网域名（索引键·编辑时锁死）/ 区域 / 行业 / 采购方类型 / 需求品类 / 关键词 / 来源。
+           **全部 L1/L2，无 L3 字段**；默认来源「手动新增」（展示时本地化）。
+         · 数据层 `upsertPipe / removePipe / clearPipe` + 列表渲染 `renderPipeList` + 多订阅者刷新钩子；
+           删除/清空后漏斗 `fn3` 与 ④ 页 COS 实时同步（实测确认）。
+         · i18n：本次新增 35 条字典（管理面板全部 UI + 来源默认值 + 计数单位），9 语言全量回填；
+           **行内「编辑/删除」按钮、编辑表单标题、计数单位「家」、来源默认值** 均改为走 `T()/Tv()`，
+           英文界面下管线面板零残留中文（CDP 端到端 28/28 验证通过）。
+         · 附带修：`renderPipeList` 计数单位 `家` 原硬编码未翻译 → 改为 `Tv("{n} 家", {n})`。
+   · v25：④ 获客执行页新增「管理管线」入口（按钮深链到 `02_全球线索获取.html#pipe`，自动打开 02 的管线管理面板）。
+         复用同一套 L1/L2-only CRUD，不重复代码、不引入 L3 字段；② 页监听 `location.hash`，`#pipe` 时自动 `openPipe()`。
+         ②/④ 页静态文件有改动 → 升 CACHE 版本确保发版后用户拿到新文件。
+   · v26：直立屏 / 窄屏（≤860px）布局修复 —— 用户 2026-10-14：「直立屏状况下，铃铛跟小齿轮跑到右侧画面以外」。
+         · 根因：① 顶栏控件（上一页·首页·铃铛·齿轮·演示标）在窄屏一行排不下 → 溢出右侧视口；
+           ② `.content` 是 flex column，`.card` 作为 flex item 默认 `min-width:auto`=min-content，
+              内部多列网格（sggrid/ctgrid/ctrow）把 min-content 撑到 ~400px → 卡片拒绝收缩、横向溢出 ~414–428px。
+         · 修法（全局注入 `<style>`，一次修全 8 页）：
+           顶栏 `flex-wrap:wrap` + 按钮只留图标（`.back-btn span/.home-btn span{display:none}`）+ `.pill{display:none}`；
+           侧栏折叠到顶部整宽（`.app{flex-direction:column}` + `.sidebar{width:100%}`）；
+           `.layout` 单列（`.layout{grid-template-columns:1fr}`）；
+           **关键**：给 content、layout、card、sidebar 的直接子项全部设 `min-width:0` 解除自动最小宽，
+           并让内部两列网格（sggrid/ctgrid/ctrow）在手机屏堆叠为单列。
+         · CDP 端到端验证（390×844，SW 禁用确保拿到新文件）：8/8 页 `scrollWidth=390=innerWidth`、零横向溢出，
+           铃铛/齿轮/顶栏 `.top-right` 均在视口内（right=376 ≤ 390）。
    · v22：② 全球线索获取**按 ① 战略档案收敛**（用户 2026-10-13：「输入光学瞄准镜，却出现了医疗行业」）。
          ⚠️ 旧版 ② 页**完全不读战略档案**——不碰 localStorage、`LEADS` 写死 16 条跨品类演示数据，
             `ind` 里医疗器械 / 化工 / 建材 / 汽车零部件混在一起，与用户填的主营品类无关。
@@ -96,7 +125,7 @@
          L3 补录表单不再用演示值预填；新增 07 账号与成员管理页（界面骨架）；
          侧栏由 app-nav.js 统一注入「账号与成员」入口；字典扩至 1112 条。
          升版强制刷新旧缓存。 */
-const CACHE = 'falcora-v23';
+const CACHE = 'falcora-v26';
 const PRECACHE = [
   './',
   './index.html',
