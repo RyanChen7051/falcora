@@ -106,9 +106,9 @@ small,.micro{font-size:12px;color:var(--muted)}
 .topbar .top-right .btn,.topbar .top-right button{
   height:36px;border-radius:10px;border:1px solid var(--border);
   background:rgba(255,255,255,.03);color:var(--muted);
-  display:inline-flex;align-items:center;gap:6px;padding:0 12px;
+  display:inline-flex;align-items:center;gap:6px;padding:0 12px;min-width:0;
   font-size:13px;font-family:inherit;font-weight:600;cursor:pointer;
-  transition:.18s;line-height:1;box-shadow:none;
+  transition:.18s;line-height:1;box-shadow:none;white-space:nowrap;
 }
 .topbar .icon-btn{width:36px;padding:0;justify-content:center}
 .topbar .icon-btn:hover,.topbar .back-btn:hover,
@@ -248,15 +248,21 @@ small,.micro{font-size:12px;color:var(--muted)}
 
 /* ===== 14. Portrait / Narrow (replaces app-nav.js inline portrait) ===== */
 @media (max-width:860px){
-  .topbar{flex-wrap:wrap;gap:10px;padding:12px 16px}
-  .title{flex:1 1 auto;min-width:0}
+  .topbar{flex-wrap:wrap;gap:8px;padding:10px 14px;align-items:center}
+  .title{order:1;flex:1 1 100%;min-width:0}
   .title p{display:none}
-  .title h1{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .search{order:9;flex:1 1 100%;max-width:none;margin-left:0}
-  .top-right{order:5;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+  .title h1{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .top-right{
+    order:2;flex:1 1 100%;margin-left:0;justify-content:flex-start;
+    gap:8px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;
+    padding-bottom:2px;
+  }
+  .top-right::-webkit-scrollbar{display:none}
+  .search{order:3;flex:1 1 100%;max-width:none;margin-left:0}
+  .topbar .back-btn,.topbar .home-btn{padding:0 12px;flex:0 0 auto}
   .topbar .back-btn span,.topbar .home-btn span{display:none}
-  .topbar .back-btn,.topbar .home-btn{padding:0 10px}
-  .topbar .icon-btn{width:36px}
+  .topbar .icon-btn{width:36px;flex:0 0 auto}
+  .topbar .top-right .btn,.topbar .top-right button{flex:0 0 auto}
   .pill{display:none}
   /* 侧栏 → 顶部横向滚动条：不再占满整屏竖向空间 */
   .app{flex-direction:column}
