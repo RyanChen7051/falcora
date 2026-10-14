@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<script src="app-vals.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0B2632" />
+<meta name="robots" content="noindex,nofollow" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="assets/favicon.ico" />
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+<title>获客通AI · 成本与报价测算</title>
+<style>
+  :root{
+    --bg:#0B2632; --bg-2:#0A2E38; --side:#0A2A33;
+    --panel:rgba(13,46,54,.72); --panel-2:rgba(16,58,68,.55);
+    --border:rgba(126,154,160,.16); --border-2:rgba(94,234,212,.14);
+    --cyan:#5EEAD4; --teal:#0E9A8E; --gold:#F5B841;
+    --ink:#E9F3F4; --muted:#8AA3A8; --muted-2:#6E878C;
+    --good:#34D399; --danger:#FF6B6B; --warn:#F5B841;
+    --radius:16px; --shadow:0 18px 48px rgba(0,0,0,.35);
+    --font:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);
+    background-image:radial-gradient(1100px 520px at 78% -8%,rgba(14,154,142,.16),transparent 60%),
+      radial-gradient(820px 460px at 8% 108%,rgba(245,184,65,.08),transparent 60%);
+    -webkit-font-smoothing:antialiased;line-height:1.5}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:.2px}
+  .app{display:flex;min-height:100vh}
+  .sidebar{width:248px;flex:0 0 248px;background:linear-gradient(180deg,var(--side),#08222A);
+    border-right:1px solid var(--border);padding:20px 16px;position:sticky;top:0;height:100vh;
+    display:flex;flex-direction:column;gap:6px}
+  .brand{display:flex;align-items:center;gap:11px;padding:6px 8px 18px}
+  .brand-mark{width:34px;height:34px;border-radius:10px;flex:0 0 auto;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+  .brand-txt b{font-size:17px;letter-spacing:.5px;display:block}
+  .brand-txt span{font-size:11px;color:var(--muted-2);letter-spacing:1.5px}
+  .nav-label{font-size:11px;color:var(--muted-2);letter-spacing:1.5px;padding:14px 10px 6px}
+  .nav-item{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:11px;
+    color:var(--muted);font-size:14px;cursor:pointer;transition:.18s;position:relative;text-decoration:none}
+  .nav-item .idx{width:22px;height:22px;flex:0 0 auto;border-radius:7px;display:grid;place-items:center;
+    font-size:11px;font-weight:700;background:rgba(94,234,212,.08);color:var(--cyan)}
+  .nav-item:hover{background:rgba(94,234,212,.06);color:var(--ink)}
+  .nav-item.active{background:linear-gradient(90deg,rgba(94,234,212,.16),rgba(94,234,212,.02));color:#fff}
+  .nav-item.active::before{content:"";position:absolute;left:-16px;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--cyan)}
+  .nav-item.active .idx{background:var(--cyan);color:#06262B}
+  .side-foot{margin-top:auto;border-top:1px solid var(--border);padding-top:14px;display:flex;gap:10px;align-items:center}
+  .avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--teal),var(--cyan));display:grid;place-items:center;font-weight:700;color:#06262B;flex:0 0 auto}
+  .side-foot small{display:block;color:var(--muted-2);font-size:11px}
+  .side-foot b{font-size:13px}
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{display:flex;align-items:center;gap:18px;padding:18px 28px;border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:20;background:rgba(11,38,50,.82);backdrop-filter:blur(10px)}
+  .title h1{font-size:19px;font-weight:700;letter-spacing:.4px}
+  .title p{font-size:12px;color:var(--muted-2);letter-spacing:1.4px;text-transform:uppercase}
+  .search{flex:1;max-width:420px;margin-left:8px;position:relative}
+  .search input{width:100%;padding:10px 14px 10px 38px;border-radius:11px;border:1px solid var(--border);
+    background:rgba(0,0,0,.22);color:var(--ink);font-size:13px;font-family:inherit;outline:none}
+  .search input:focus{border-color:var(--border-2);box-shadow:0 0 0 3px rgba(94,234,212,.1)}
+  .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.5}
+  .top-right{display:flex;align-items:center;gap:12px;margin-left:auto}
+  .pill{font-size:12px;padding:7px 13px;border-radius:999px;background:linear-gradient(135deg,rgba(245,184,65,.22),rgba(245,184,65,.06));
+    color:var(--gold);border:1px solid rgba(245,184,65,.3);font-weight:600}
+  .icon-btn{width:38px;height:38px;border-radius:11px;border:1px solid var(--border);background:rgba(0,0,0,.2);
+    display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+  .icon-btn:hover{color:var(--ink);border-color:var(--border-2)}
+  .content{padding:24px 28px 48px;display:flex;flex-direction:column;gap:18px}
+
+  .toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .toolbar h2{font-size:20px;font-weight:750}
+  .toolbar .sub{font-size:12.5px;color:var(--muted-2)}
+  .spacer{flex:1}
+  .btnrow{display:flex;gap:10px;flex:0 0 auto;flex-wrap:wrap}
+  .btn{padding:11px 20px;border-radius:12px;border:1px solid rgba(245,184,65,.4);cursor:pointer;font-size:14px;font-weight:700;
+    background:linear-gradient(135deg,var(--gold),#E0A02E);color:#3a2a05;font-family:inherit}
+  .btn:hover{filter:brightness(1.06)}
+  .btn.ghost{background:rgba(94,234,212,.08);color:var(--cyan);border-color:var(--border-2)}
+  .btn.ghost:hover{background:rgba(94,234,212,.14)}
+  .sel{padding:10px 14px;border-radius:11px;border:1px solid var(--border);background:rgba(0,0,0,.24);color:var(--ink);font-size:14px;font-family:inherit;outline:none}
+  .sel:focus{border-color:var(--border-2)}
+
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 348px;gap:18px;align-items:start}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:18px}
+  .card-h{display:flex;align-items:center;gap:10px;padding:15px 18px;border-bottom:1px solid var(--border)}
+  .card-h .ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto;background:rgba(245,184,65,.16);color:var(--gold);font-size:13px;font-weight:700}
+  .card-h h3{font-size:15px;font-weight:700}
+  .card-h .tag{margin-left:auto;font-size:11px;color:var(--muted-2);white-space:nowrap}
+  .card-b{padding:16px 18px}
+
+  /* ---------- 输入行 ---------- */
+  .fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}
+  .fgrid.one{grid-template-columns:minmax(0,1fr)}
+  .frow{display:flex;align-items:center;gap:10px;min-width:0}
+  .frow label{flex:1 1 auto;min-width:0;font-size:13px;color:var(--muted)}
+  .frow input{width:118px;flex:0 0 auto;padding:9px 11px;border-radius:10px;border:1px solid var(--border);
+    background:rgba(0,0,0,.26);color:var(--ink);font-size:13.5px;font-family:inherit;outline:none;text-align:right}
+  .frow input:focus{border-color:var(--border-2);box-shadow:0 0 0 3px rgba(94,234,212,.09)}
+  .frow .u{flex:0 0 auto;font-size:11.5px;color:var(--muted-2);min-width:34px}
+  .sub-h{font-size:11.5px;color:var(--muted-2);letter-spacing:1.2px;padding:4px 0 8px}
+  .divider{height:1px;background:var(--border);margin:16px 0}
+
+  /* ---------- 公式行 ---------- */
+  .fmlist{display:flex;flex-direction:column;gap:1px;margin-top:14px;border-top:1px solid var(--border);padding-top:12px}
+  .fm{display:grid;grid-template-columns:minmax(0,1fr) 128px;gap:12px;align-items:center;padding:8px 0;border-bottom:1px dashed rgba(126,154,160,.12)}
+  .fm:last-child{border-bottom:0}
+  .fm .fl{min-width:0}
+  .fm .fl b{display:block;font-size:13px;font-weight:650;margin-bottom:2px}
+  .fm .fl code{display:block;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;
+    color:var(--cyan);background:rgba(94,234,212,.06);border:1px solid var(--border-2);border-radius:7px;padding:4px 8px;
+    white-space:normal;word-break:break-word;line-height:1.45}
+  .fm .fv{text-align:right;font-size:15px;font-weight:750}
+  .fm .fv small{display:block;font-size:10.5px;color:var(--muted-2);font-weight:500}
+  .fm.hi .fv{color:var(--gold)}
+  .fm.hi .fl code{color:var(--gold);background:rgba(245,184,65,.07);border-color:rgba(245,184,65,.24)}
+
+  /* ---------- 结果盒 ---------- */
+  .resgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .res{border:1px solid var(--border);border-radius:12px;padding:13px 14px;background:rgba(0,0,0,.16);min-width:0}
+  .res .rk{font-size:11.5px;color:var(--muted-2);margin-bottom:6px;line-height:1.35}
+  .res .rv{font-size:20px;font-weight:750;line-height:1.2}
+  .res .rs{font-size:11px;color:var(--muted-2);margin-top:4px}
+  .res.cy .rv{color:var(--cyan)}
+  .res.gd .rv{color:var(--gold)}
+  .res.gn .rv{color:var(--good)}
+  .res.bad .rv{color:var(--danger)}
+
+  /* ---------- 报价阶梯 ---------- */
+  .ladder{display:flex;flex-direction:column;gap:9px}
+  .ld{display:grid;grid-template-columns:56px minmax(0,1fr) 84px;gap:10px;align-items:center}
+  .ld .lt{font-size:12.5px;font-weight:750;letter-spacing:.4px;color:var(--cyan)}
+  .ld .lbar{height:26px;border-radius:8px;background:linear-gradient(90deg,rgba(94,234,212,.30),rgba(14,154,142,.16));
+    display:flex;align-items:center;padding:0 10px;font-size:12.5px;font-weight:700;color:#06262B;transition:.35s;min-width:0}
+  .ld .lv{text-align:right;font-size:13px;font-weight:750}
+  .ld .lv small{display:block;font-size:10px;color:var(--muted-2);font-weight:500}
+  .ld.last .lbar{background:linear-gradient(90deg,rgba(245,184,65,.42),rgba(245,184,65,.14))}
+
+  /* ---------- 符号表 ---------- */
+  .leg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 14px;font-size:12px}
+  .leg div{display:flex;gap:8px;min-width:0;color:var(--muted)}
+  .leg span{color:var(--cyan);font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-weight:700;flex:0 0 auto;min-width:46px}
+
+  /* ---------- 公式速查 ---------- */
+  .ftab{width:100%;border-collapse:collapse;font-size:12.5px}
+  .ftab th{text-align:left;font-size:11px;color:var(--muted-2);letter-spacing:1.2px;font-weight:600;
+    padding:0 10px 8px 0;border-bottom:1px solid var(--border)}
+  .ftab td{padding:9px 10px 9px 0;border-bottom:1px dashed rgba(126,154,160,.12);vertical-align:top}
+  .ftab td:first-child{width:132px;color:var(--muted);white-space:nowrap}
+  .ftab code{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:var(--ink);
+    background:rgba(0,0,0,.22);border:1px solid var(--border);border-radius:6px;padding:3px 7px;display:inline-block;
+    word-break:break-word;line-height:1.5}
+  .ftab td:last-child{width:34%;color:var(--muted-2);font-size:11.5px}
+  .ftab tr.grp td{padding-top:16px;border-bottom:0}
+  .ftab tr.grp td b{font-size:12.5px;color:var(--gold);letter-spacing:.4px}
+
+  .note{font-size:12px;color:var(--muted-2);line-height:1.6}
+  .note b{color:var(--warn);font-weight:650}
+  .foot{font-size:11.5px;color:var(--muted-2);line-height:1.6;border-top:1px solid var(--border);padding-top:14px}
+
+  @media (max-width:1080px){
+    .layout{grid-template-columns:minmax(0,1fr)}
+    .resgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media (max-width:860px){
+    .fgrid{grid-template-columns:minmax(0,1fr)}
+    .resgrid{grid-template-columns:minmax(0,1fr)}
+    .leg{grid-template-columns:minmax(0,1fr)}
+    .fm{grid-template-columns:minmax(0,1fr) 96px}
+    .ld{grid-template-columns:44px minmax(0,1fr) 70px;gap:8px}
+  }
+</style>
+<link rel="stylesheet" href="app-design.css?v=2">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <img class="brand-mark" src="assets/logo.png" alt="FALCORA" />
+      <div class="brand-txt"><b>获客通AI</b><span>FALCORA</span></div>
+    </div>
+    <div class="nav-label">主导航</div>
+    <a class="nav-item" href="index.html"><span class="idx">⌂</span> 增长总司令驾驶舱</a>
+    <a class="nav-item" href="01_战略_企业战略档案.html"><span class="idx">①</span> 战略 · 企业战略档案</a>
+    <a class="nav-item" href="02_全球线索获取.html"><span class="idx">②</span> 全球线索获取</a>
+    <a class="nav-item" href="03_客户尽调与风险核查.html"><span class="idx">③</span> 客户尽调与风险核查</a>
+    <a class="nav-item" href="04_获客执行与内容.html"><span class="idx">④</span> 获客执行与内容</a>
+    <a class="nav-item" href="05_客户深挖.html"><span class="idx">⑤</span> 客户深挖</a>
+    <a class="nav-item" href="06_转化率升级.html"><span class="idx">⑥</span> 转化率升级</a>
+    <a class="nav-item" href="07_账号与成员管理.html"><span class="idx">⚙</span> 账号与成员</a>
+    <a class="nav-item active" href="08_成本与报价测算.html"><span class="idx">🧮</span> 成本与报价测算</a>
+    <div class="side-foot">
+      <div class="avatar">CB</div>
+      <div><b>陈邦杰</b><small>首席产品设计官</small></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="title"><h1>成本与报价测算</h1><p>Costing &amp; Quotation</p></div>
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        <input placeholder="搜索公式 / 术语 / 指标…" />
+      </div>
+      <div class="top-right">
+        <span class="pill">测算工具 · 不代报税</span>
+        <div class="icon-btn">⚙</div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="toolbar">
+        <h2>从料工费一路算到 DDP</h2>
+        <span class="sub">成本 → 报价 → 关税 → 利润 → 毛利率 → 退税，每一步都给出公式</span>
+        <div class="spacer"></div>
+        <div class="btnrow">
+          <button class="btn ghost" id="demoBtn">填入示例数据</button>
+          <button class="btn ghost" id="clearBtn">清空</button>
+        </div>
+      </div>
+
+      <div class="layout">
+        <div>
+          <!-- ============ 基础参数 ============ -->
+          <div class="card">
+            <div class="card-h"><div class="ic">0</div><h3>基础参数</h3><span class="tag">计价币种 · 数量 · 目标利润</span></div>
+            <div class="card-b">
+              <div class="fgrid">
+                <div class="frow"><label for="cur">报价币种</label><select class="sel" id="cur" style="width:118px;padding:9px 10px;font-size:13.5px">
+                  <option value="USD">USD</option><option value="EUR">EUR</option><option value="CNY">CNY</option>
+                  <option value="JPY">JPY</option><option value="GBP">GBP</option><option value="AED">AED</option>
+                  <option value="VND">VND</option><option value="INR">INR</option><option value="HKD">HKD</option><option value="TWD">TWD</option>
+                </select><span class="u"></span></div>
+                <div class="frow"><label for="baseCur">本币</label><select class="sel" id="baseCur" style="width:118px;padding:9px 10px;font-size:13.5px">
+                  <option value="CNY">CNY</option><option value="USD">USD</option><option value="EUR">EUR</option>
+                  <option value="JPY">JPY</option><option value="TWD">TWD</option><option value="HKD">HKD</option>
+                </select><span class="u"></span></div>
+                <div class="frow"><label for="qty">订单数量</label><input id="qty" class="num" type="number" min="0" step="1" /><span class="u">件</span></div>
+                <div class="frow"><label for="fxQuote">报价汇率</label><input id="fxQuote" class="num" type="number" min="0" step="0.0001" /><span class="u">本币</span></div>
+                <div class="frow"><label for="fxNow">当前汇率</label><input id="fxNow" class="num" type="number" min="0" step="0.0001" /><span class="u">本币</span></div>
+                <div class="frow"><label for="margin">目标毛利率</label><input id="margin" class="num" type="number" min="0" max="99" step="0.1" /><span class="u">%</span></div>
+                <div class="frow"><label for="floorM">可接受最低毛利率</label><input id="floorM" class="num" type="number" min="0" max="99" step="0.1" /><span class="u">%</span></div>
+                <div class="frow"><label for="comm">佣金率</label><input id="comm" class="num" type="number" min="0" max="99" step="0.1" /><span class="u">%</span></div>
+              </div>
+              <div class="note" style="margin-top:12px">报价汇率填「1 单位报价币 = 多少本币」。本页全部国内费用按本币填，国际运费与目的国费用按报价币填。</div>
+            </div>
+          </div>
+
+          <!-- ============ 一、单位成本 ============ -->
+          <div class="card">
+            <div class="card-h"><div class="ic">1</div><h3>一、单位成本（料 · 工 · 费 → 完全成本）</h3><span class="tag">每件 · 本币</span></div>
+            <div class="card-b">
+              <div class="fgrid">
+                <div class="frow"><label for="mat">原材料</label><input id="mat" class="num" type="number" min="0" step="0.01" /><span class="u">/件</span></div>
+                <div class="frow"><label for="lab">直接人工</label><input id="lab" class="num" type="number" min="0" step="0.01" /><span class="u">/件</span></div>
+                <div class="frow"><label for="ovh">制造费用</label><input id="ovh" class="num" type="number" min="0" step="0.01" /><span class="u">/件</span></div>
+                <div class="frow"><label for="pack">包装</label><input id="pack" class="num" type="number" min="0" step="0.01" /><span class="u">/件</span></div>
+                <div class="frow"><label for="cert">检测认证分摊</label><input id="cert" class="num" type="number" min="0" step="0.01" /><span class="u">/件</span></div>
+                <div class="frow"><label for="other">其他直接费用</label><input id="other" class="num" type="number" min="0" step="0.01" /><span class="u">/件</span></div>
+                <div class="frow"><label for="loss">损耗率</label><input id="loss" class="num" type="number" min="0" max="99" step="0.1" /><span class="u">%</span></div>
+                <div class="frow"><label for="period">期间费用率</label><input id="period" class="num" type="number" min="0" max="99" step="0.1" /><span class="u">%</span></div>
+              </div>
+              <div class="fmlist">
+                <div class="fm"><div class="fl"><b>单位制造成本</b><code>MC = M + L + O + P + C + X</code></div><div class="fv num" id="rMfg">—</div></div>
+                <div class="fm"><div class="fl"><b>含损耗成本</b><code>MC′ = MC ÷ (1 − r_loss)</code></div><div class="fv num" id="rLoss">—</div></div>
+                <div class="fm hi"><div class="fl"><b>完全成本</b><code>FC = MC′ × (1 + r_period)</code></div><div class="fv num" id="rFull">—</div></div>
+              </div>
+              <div class="note" style="margin-top:12px">期间费用率＝管理费用、销售费用、财务费用按成本分摊的比例。损耗率按「投入即损耗」口径：损耗后成本 = 成本 ÷ (1 − 损耗率)，不是 成本 × (1 + 损耗率)。</div>
+            </div>
+          </div>
+
+          <!-- ============ 二、出口费用 ============ -->
+          <div class="card">
+            <div class="card-h"><div class="ic">2</div><h3>二、出口费用与贸易术语换算</h3><span class="tag">EXW → FOB → CFR → CIF → DDP</span></div>
+            <div class="card-b">
+              <div class="sub-h">国内段（整批合计 · 本币）</div>
+              <div class="fgrid">
+                <div class="frow"><label for="inland">内陆运费</label><input id="inland" class="num" type="number" min="0" step="0.01" /><span class="u">整批</span></div>
+                <div class="frow"><label for="clear">报关报检</label><input id="clear" class="num" type="number" min="0" step="0.01" /><span class="u">整批</span></div>
+                <div class="frow"><label for="port">港杂与装柜</label><input id="port" class="num" type="number" min="0" step="0.01" /><span class="u">整批</span></div>
+                <div class="frow"><label for="exOther">其他出口费用</label><input id="exOther" class="num" type="number" min="0" step="0.01" /><span class="u">整批</span></div>
+              </div>
+              <div class="divider"></div>
+              <div class="sub-h">国际段（报价币）</div>
+              <div class="fgrid">
+                <div class="frow"><label for="freight">国际运费</label><input id="freight" class="num" type="number" min="0" step="0.01" /><span class="u">整批</span></div>
+                <div class="frow"><label for="insRate">保险费率</label><input id="insRate" class="num" type="number" min="0" step="0.01" /><span class="u">%</span></div>
+                <div class="frow"><label for="insMarkup">投保加成</label><input id="insMarkup" class="num" type="number" min="0" step="1" /><span class="u">%</span></div>
+              </div>
+              <div class="divider"></div>
+              <div class="sub-h">目的国段（整批合计 · 报价币）</div>
+              <div class="fgrid">
+                <div class="frow"><label for="broker">清关代理费</label><input id="broker" class="num" type="number" min="0" step="0.01" /><span class="u">整批</span></div>
+                <div class="frow"><label for="destPort">目的港杂费</label><input id="destPort" class="num" type="number" min="0" step="0.01" /><span class="u">整批</span></div>
+                <div class="frow"><label for="lastMile">末端派送</label><input id="lastMile" class="num" type="number" min="0" step="0.01" /><span class="u">整批</span></div>
+              </div>
+              <div class="fmlist">
+                <div class="fm"><div class="fl"><b>EXW 单价</b><code>EXW = FC ÷ e_q ÷ (1 − r_gm)</code></div><div class="fv num" id="rExw">—</div></div>
+                <div class="fm"><div class="fl"><b>国内段分摊</b><code>d = (D_inland + D_clear + D_port + D_other) ÷ N ÷ e_q</code></div><div class="fv num" id="rDom">—</div></div>
+                <div class="fm"><div class="fl"><b>FOB 单价</b><code>FOB = EXW + d</code></div><div class="fv num" id="rFob">—</div></div>
+                <div class="fm"><div class="fl"><b>CFR 单价</b><code>CFR = FOB + F_freight ÷ N</code></div><div class="fv num" id="rCfr">—</div></div>
+                <div class="fm hi"><div class="fl"><b>CIF 单价</b><code>CIF = CFR ÷ (1 − r_ins × (1 + k))</code></div><div class="fv num" id="rCif">—</div></div>
+              </div>
+              <div class="note" style="margin-top:12px">保险费不能用「CFR × 费率」直接算 —— 因为保费本身也计入保险金额。正确做法是先把 CFR 除以 (1 − 费率 × 投保加成)，反推出 CIF，再倒推保费。</div>
+            </div>
+          </div>
+
+          <!-- ============ 三、关税与进口税费 ============ -->
+          <div class="card">
+            <div class="card-h"><div class="ic">3</div><h3>三、关税与进口税费（目的国到岸）</h3><span class="tag">以 CIF 为完税价格</span></div>
+            <div class="card-b">
+              <div class="fgrid">
+                <div class="frow"><label for="dutyRate">进口关税率</label><input id="dutyRate" class="num" type="number" min="0" step="0.01" /><span class="u">%</span></div>
+                <div class="frow"><label for="vatRate">进口增值税率</label><input id="vatRate" class="num" type="number" min="0" step="0.1" /><span class="u">%</span></div>
+                <div class="frow"><label for="antiRate">反倾销与附加税率</label><input id="antiRate" class="num" type="number" min="0" step="0.01" /><span class="u">%</span></div>
+              </div>
+              <div class="fmlist">
+                <div class="fm"><div class="fl"><b>完税价格</b><code>DPV = CIF</code></div><div class="fv num" id="rDpv">—</div></div>
+                <div class="fm"><div class="fl"><b>进口关税</b><code>Duty = DPV × r_duty</code></div><div class="fv num" id="rDuty">—</div></div>
+                <div class="fm"><div class="fl"><b>反倾销与附加税</b><code>Anti = DPV × r_anti</code></div><div class="fv num" id="rAnti">—</div></div>
+                <div class="fm"><div class="fl"><b>进口增值税</b><code>VAT = (DPV + Duty + Anti) × r_vat</code></div><div class="fv num" id="rVat">—</div></div>
+                <div class="fm hi"><div class="fl"><b>DDP 单价</b><code>DDP = CIF + Duty + Anti + VAT + B ÷ N</code></div><div class="fv num" id="rDdp">—</div></div>
+              </div>
+              <div class="note" style="margin-top:12px">口径提醒：欧盟进口增值税通常可由进口商申报抵扣，实际不构成最终成本；美国无联邦增值税，但可能叠加州销售税与 HTS 项下关税。<b>具体税率必须以目的国海关税则与税局公告为准，本页不代查税则。</b></div>
+            </div>
+          </div>
+
+          <!-- ============ 四、利润与毛利率 ============ -->
+          <div class="card">
+            <div class="card-h"><div class="ic">4</div><h3>四、利润 · 毛利率 · 目标价反推</h3><span class="tag">每件 · 报价币</span></div>
+            <div class="card-b">
+              <div class="fgrid">
+                <div class="frow"><label for="price">当前报价</label><input id="price" class="num" type="number" min="0" step="0.01" /><span class="u">/件</span></div>
+                <div class="frow"><label for="varCost">单位变动成本</label><input id="varCost" class="num" type="number" min="0" step="0.01" /><span class="u">/件</span></div>
+                <div class="frow"><label for="fixedCost">固定费用总额</label><input id="fixedCost" class="num" type="number" min="0" step="0.01" /><span class="u">整批</span></div>
+              </div>
+              <div class="fmlist">
+                <div class="fm"><div class="fl"><b>完全成本（折报价币）</b><code>FC_q = FC ÷ e_q</code></div><div class="fv num" id="rFullQ">—</div></div>
+                <div class="fm"><div class="fl"><b>毛利</b><code>GM = Price − FC_q</code></div><div class="fv num" id="rGross">—</div></div>
+                <div class="fm"><div class="fl"><b>毛利率</b><code>r_gm = GM ÷ Price × 100%</code></div><div class="fv num" id="rMargin">—</div></div>
+                <div class="fm"><div class="fl"><b>成本加成率</b><code>r_mk = GM ÷ FC_q × 100%</code></div><div class="fv num" id="rMarkup">—</div></div>
+                <div class="fm hi"><div class="fl"><b>目标价（按目标毛利率反推）</b><code>Price* = FC_q ÷ (1 − r_target)</code></div><div class="fv num" id="rTarget">—</div></div>
+                <div class="fm"><div class="fl"><b>盈亏平衡量</b><code>Q_be = K ÷ (Price − V)</code></div><div class="fv num" id="rBe">—</div></div>
+              </div>
+              <div class="note" style="margin-top:12px"><b>最常见的错误：把毛利率当加成率用。</b>想赚 30% 毛利，售价是 成本 ÷ (1 − 30%)＝成本的 1.4286 倍，不是 成本 × 1.3。用错公式会直接把利润算少一截。</div>
+            </div>
+          </div>
+
+          <!-- ============ 五、汇率 · 佣金 · 议价 · 退税 ============ -->
+          <div class="card">
+            <div class="card-h"><div class="ic">5</div><h3>五、汇率 · 佣金 · 议价空间 · 出口退税</h3><span class="tag">成交前后的账要算清</span></div>
+            <div class="card-b">
+              <div class="fgrid">
+                <div class="frow"><label for="netPrice">净价（不含佣）</label><input id="netPrice" class="num" type="number" min="0" step="0.01" /><span class="u">/件</span></div>
+                <div class="frow"><label for="buyIncl">采购含税单价</label><input id="buyIncl" class="num" type="number" min="0" step="0.01" /><span class="u">本币</span></div>
+                <div class="frow"><label for="vatOut">采购增值税率</label><input id="vatOut" class="num" type="number" min="0" step="0.1" /><span class="u">%</span></div>
+                <div class="frow"><label for="refundRate">出口退税率</label><input id="refundRate" class="num" type="number" min="0" step="0.1" /><span class="u">%</span></div>
+              </div>
+              <div class="fmlist">
+                <div class="fm"><div class="fl"><b>本币收入</b><code>R = Price × e_n × N</code></div><div class="fv num" id="rRev">—</div></div>
+                <div class="fm"><div class="fl"><b>汇率损益</b><code>FX = Price × (e_n − e_q) × N</code></div><div class="fv num" id="rFx">—</div></div>
+                <div class="fm"><div class="fl"><b>含佣金报价</b><code>Price_c = Net ÷ (1 − r_comm)</code></div><div class="fv num" id="rComm">—</div></div>
+                <div class="fm"><div class="fl"><b>底价（按最低毛利率）</b><code>Floor = FC_q ÷ (1 − r_floor)</code></div><div class="fv num" id="rFloor">—</div></div>
+                <div class="fm"><div class="fl"><b>议价空间</b><code>Room = Price − Floor</code></div><div class="fv num" id="rRoom">—</div></div>
+                <div class="fm"><div class="fl"><b>外贸企业退税额</b><code>Refund = C_incl ÷ (1 + r_vat_out) × r_refund</code></div><div class="fv num" id="rRefund">—</div></div>
+                <div class="fm"><div class="fl"><b>生产企业免抵退上限</b><code>Refund* = FOB × e_q × r_refund</code></div><div class="fv num" id="rRefund2">—</div></div>
+              </div>
+              <div class="note" style="margin-top:12px">生产企业实际退税额还要看当期留抵税额与「不得免征和抵扣税额」（＝出口离岸价 ×（征税率 − 退税率）），本页只给上限值。实际退税额以税务机关核定为准。</div>
+            </div>
+          </div>
+
+          <!-- ============ 公式速查 ============ -->
+          <div class="card">
+            <div class="card-h"><div class="ic">∑</div><h3>公式速查表</h3><span class="tag">共 26 条 · 可直接抄用</span></div>
+            <div class="card-b">
+              <div class="leg" style="margin-bottom:16px">
+                <div><span>M</span>原材料/件</div><div><span>L</span>直接人工/件</div>
+                <div><span>O</span>制造费用/件</div><div><span>P</span>包装/件</div>
+                <div><span>C</span>检测认证分摊/件</div><div><span>X</span>其他直接费用/件</div>
+                <div><span>MC</span>单位制造成本</div><div><span>MC′</span>含损耗成本</div>
+                <div><span>FC</span>完全成本（本币）</div><div><span>FC_q</span>完全成本（报价币）</div>
+                <div><span>N</span>订单数量</div><div><span>e_q</span>报价汇率</div>
+                <div><span>e_n</span>当前汇率</div><div><span>r_gm</span>毛利率</div>
+                <div><span>r_mk</span>成本加成率</div><div><span>r_comm</span>佣金率</div>
+                <div><span>r_floor</span>最低毛利率</div><div><span>r_loss</span>损耗率</div>
+                <div><span>r_period</span>期间费用率</div><div><span>r_ins</span>保险费率</div>
+                <div><span>k</span>投保加成</div><div><span>r_duty</span>进口关税率</div>
+                <div><span>r_vat</span>进口增值税率</div><div><span>r_anti</span>反倾销税率</div>
+                <div><span>D</span>国内段费用合计</div><div><span>B</span>目的国段费用合计</div>
+                <div><span>K</span>固定费用总额</div><div><span>V</span>单位变动成本</div>
+                <div><span>C_incl</span>采购含税单价</div><div><span>r_vat_out</span>采购增值税率</div>
+                <div><span>r_refund</span>出口退税率</div><div><span>F_freight</span>国际运费（整批）</div>
+              </div>
+              <table class="ftab">
+                <thead><tr><th>公式</th><th>表达式</th><th>说明</th></tr></thead>
+                <tbody>
+                  <tr class="grp"><td colspan="3"><b>一、单位成本</b></td></tr>
+                  <tr><td>单位制造成本</td><td><code>MC = M + L + O + P + C + X</code></td><td>料工费六项直接相加</td></tr>
+                  <tr><td>含损耗成本</td><td><code>MC′ = MC ÷ (1 − r_loss)</code></td><td>投入 100 件只出 98 件时，单件成本要除以产出率</td></tr>
+                  <tr><td>完全成本</td><td><code>FC = MC′ × (1 + r_period)</code></td><td>叠加管理、销售、财务费用分摊</td></tr>
+                  <tr class="grp"><td colspan="3"><b>二、报价阶梯</b></td></tr>
+                  <tr><td>EXW 单价</td><td><code>EXW = FC ÷ e_q ÷ (1 − r_gm)</code></td><td>先把完全成本折成报价币，再用目标毛利率反推出厂价，不是 FC × (1 + r_gm)</td></tr>
+                  <tr><td>国内段分摊</td><td><code>d = D ÷ N ÷ e_q</code></td><td>整批国内费用摊到每件，并折算成报价币</td></tr>
+                  <tr><td>FOB 单价</td><td><code>FOB = EXW + d</code></td><td>装运港船上交货</td></tr>
+                  <tr><td>CFR 单价</td><td><code>CFR = FOB + F_freight ÷ N</code></td><td>含国际运费，不含保险</td></tr>
+                  <tr><td>保险费</td><td><code>Ins = CIF × r_ins × (1 + k)</code></td><td>保险金额含加成，保费基于 CIF 而非 CFR</td></tr>
+                  <tr><td>CIF 单价</td><td><code>CIF = CFR ÷ (1 − r_ins × (1 + k))</code></td><td>先反推 CIF，再倒推保费</td></tr>
+                  <tr class="grp"><td colspan="3"><b>三、关税与进口税费</b></td></tr>
+                  <tr><td>完税价格</td><td><code>DPV = CIF</code></td><td>多数国家以 CIF 为海关估价基础</td></tr>
+                  <tr><td>进口关税</td><td><code>Duty = DPV × r_duty</code></td><td>按 HS 编码对应税则税率</td></tr>
+                  <tr><td>反倾销与附加税</td><td><code>Anti = DPV × r_anti</code></td><td>双反、保障措施等附加税，单独一行算</td></tr>
+                  <tr><td>进口增值税</td><td><code>VAT = (DPV + Duty + Anti) × r_vat</code></td><td>计税基数是完税价加关税，不是完税价本身</td></tr>
+                  <tr><td>到岸总成本</td><td><code>Landed = CIF + Duty + Anti + VAT + B ÷ N</code></td><td>即 DDP 口径的落地成本</td></tr>
+                  <tr class="grp"><td colspan="3"><b>四、利润与毛利率</b></td></tr>
+                  <tr><td>毛利</td><td><code>GM = Price − FC_q</code></td><td>售价减完全成本，单位必须统一到同一币种</td></tr>
+                  <tr><td>毛利率</td><td><code>r_gm = GM ÷ Price × 100%</code></td><td>分母是售价</td></tr>
+                  <tr><td>成本加成率</td><td><code>r_mk = GM ÷ FC_q × 100%</code></td><td>分母是成本，恒大于毛利率</td></tr>
+                  <tr><td>目标价反推</td><td><code>Price* = FC_q ÷ (1 − r_target)</code></td><td>最常被用错的一条</td></tr>
+                  <tr><td>保本价</td><td><code>Price_be = FC_q</code></td><td>毛利率为零的售价</td></tr>
+                  <tr><td>盈亏平衡量</td><td><code>Q_be = K ÷ (Price − V)</code></td><td>覆盖固定费用所需的最小销量</td></tr>
+                  <tr class="grp"><td colspan="3"><b>五、汇率 · 佣金 · 退税</b></td></tr>
+                  <tr><td>本币收入</td><td><code>R = Price × e_n × N</code></td><td>按结算日汇率折算</td></tr>
+                  <tr><td>汇率损益</td><td><code>FX = Price × (e_n − e_q) × N</code></td><td>正数为汇兑收益，负数为损失</td></tr>
+                  <tr><td>含佣金报价</td><td><code>Price_c = Net ÷ (1 − r_comm)</code></td><td>佣金按成交价计，故要除不是乘</td></tr>
+                  <tr><td>底价</td><td><code>Floor = FC_q ÷ (1 − r_floor)</code></td><td>低于此价即跌破最低毛利率</td></tr>
+                  <tr><td>议价空间</td><td><code>Room = Price − Floor</code></td><td>业务员可自主让价的额度</td></tr>
+                  <tr><td>外贸企业退税</td><td><code>Refund = C_incl ÷ (1 + r_vat_out) × r_refund</code></td><td>免退税办法，按采购不含税额乘退税率</td></tr>
+                  <tr><td>生产企业免抵退上限</td><td><code>Refund* = FOB × e_q × r_refund</code></td><td>实际退税额另受留抵税额限制</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="foot">本页为测算辅助工具，用于把口径讲清、把账算平。所有税率、费率、汇率均为您自行输入或示例值，未接入实时税则与汇率数据源；不构成税务、法律或投资意见。实际申报请以目的国海关税则、税局公告及专业顾问意见为准。</div>
+        </div>
+
+        <!-- ============ 右栏 ============ -->
+        <div>
+          <div class="card">
+            <div class="card-h"><h3>报价阶梯</h3><span class="tag" id="ladderTag">每件 · 报价币</span></div>
+            <div class="card-b"><div class="ladder" id="ladder"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><h3>盈利体检</h3><span class="tag">按当前报价</span></div>
+            <div class="card-b"><div class="resgrid" id="kpi" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><h3>口径提示</h3><span class="tag">算之前先对齐</span></div>
+            <div class="card-b">
+              <div class="note" style="display:flex;flex-direction:column;gap:9px">
+                <div>一、所有费用要分清「整批」与「每件」：整批费用必须除以数量再进单价。</div>
+                <div>二、毛利与加成率分母不同，谈价时先说清用哪一个。</div>
+                <div>三、关税按 CIF 计，增值税按「CIF＋关税」计，两层基数不要混。</div>
+                <div>四、汇率要区分「报价汇率」与「结算汇率」，两者的差额就是汇兑损益。</div>
+                <div>五、退税是事后收回的钱，报价时是否让出，取决于您的现金流与议价策略。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="app-update.js"></script>
+<script src="app-nav.js"></script>
+<script src="app-panel.js"></script>
+<script>
+(function () {
+  var STORE = 'falcora_calc_v1';
+  var IDS = ['qty','fxQuote','fxNow','margin','floorM','comm',
+    'mat','lab','ovh','pack','cert','other','loss','period',
+    'inland','clear','port','exOther','freight','insRate','insMarkup',
+    'broker','destPort','lastMile','dutyRate','vatRate','antiRate',
+    'price','varCost','fixedCost','netPrice','buyIncl','vatOut','refundRate'];
+
+  var DEMO = {
+    qty:'500', fxQuote:'7.18', fxNow:'7.24', margin:'28', floorM:'18', comm:'3',
+    mat:'168', lab:'42', ovh:'26', pack:'9', cert:'5', other:'4', loss:'2', period:'8',
+    inland:'1800', clear:'600', port:'1200', exOther:'300',
+    freight:'4200', insRate:'0.35', insMarkup:'10',
+    broker:'260', destPort:'480', lastMile:'900',
+    dutyRate:'4.7', vatRate:'21', antiRate:'0',
+    price:'68', varCost:'46', fixedCost:'18000',
+    netPrice:'62', buyIncl:'195', vatOut:'13', refundRate:'13'
+  };
+
+  function el(id) { return document.getElementById(id); }
+  function v(id) { var x = el(id); var n = x ? parseFloat(x.value) : NaN; return isNaN(n) ? 0 : n; }
+  function r(id) { return v(id) / 100; }
+  function cur() { return (el('cur') && el('cur').value) || 'USD'; }
+  function bcur() { return (el('baseCur') && el('baseCur').value) || 'CNY'; }
+
+  /* 数字本地化：按当前界面语言格式化（不走字典） */
+  function locale() {
+    var l = (window.__falGetLang && window.__falGetLang()) || 'zh';
+    return l === 'zh' ? 'zh-CN' : l;
+  }
+  function fmt(n, d) {
+    if (!isFinite(n)) return '—';
+    d = (d == null) ? 2 : d;
+    try { return new Intl.NumberFormat(locale(), { minimumFractionDigits: d, maximumFractionDigits: d }).format(n); }
+    catch (e) { return n.toFixed(d); }
+  }
+  function pct(n) { if (!isFinite(n)) return '—'; return fmt(n * 100, 1) + '%'; }
+
+  var CALC = {};
+
+  function compute() {
+    var N = v('qty') || 1;
+    var eq = v('fxQuote') || 1;
+    var en = v('fxNow') || eq;
+
+    /* 一、单位成本（本币/件） */
+    var MC = v('mat') + v('lab') + v('ovh') + v('pack') + v('cert') + v('other');
+    var rl = r('loss'); var MC2 = (rl < 1) ? MC / (1 - rl) : MC;
+    var rp = r('period'); var FC = MC2 * (1 + rp);
+
+    /* 二、报价阶梯（报价币/件） */
+    var rgm = r('margin');
+    /* ⚠️ FC 是本币，必须先 ÷ e_q 折成报价币，否则 EXW 会以本币金额顶着报价币的标签 */
+    var EXW = (rgm < 1) ? FC / (1 - rgm) / eq : 0;
+    var Dsum = v('inland') + v('clear') + v('port') + v('exOther');
+    var d = Dsum / N / eq;
+    var FOB = EXW + d;
+    var CFR = FOB + v('freight') / N;
+    var rins = r('insRate'), k = r('insMarkup');
+    var denom = 1 - rins * (1 + k);
+    var CIF = (denom > 0) ? CFR / denom : 0;
+    var INS = CIF - CFR;
+
+    /* 三、关税与进口税费 */
+    var DPV = CIF;
+    var Duty = DPV * r('dutyRate');
+    var Anti = DPV * r('antiRate');
+    var VAT = (DPV + Duty + Anti) * r('vatRate');
+    var B = (v('broker') + v('destPort') + v('lastMile')) / N;
+    var DDP = CIF + Duty + Anti + VAT + B;
+
+    /* 四、利润与毛利率（报价币/件） */
+    var FCq = FC / eq;
+    var P = v('price');
+    var GM = P - FCq;
+    var rgmNow = P > 0 ? GM / P : 0;
+    var rmk = FCq > 0 ? GM / FCq : 0;
+    var target = (rgm < 1) ? FCq / (1 - rgm) : 0;
+    var Vc = v('varCost');
+    var Qbe = (P - Vc) > 0 ? v('fixedCost') / (P - Vc) : 0;
+
+    /* 五、汇率 · 佣金 · 议价 · 退税 */
+    var Rev = P * en * N;
+    var FXP = P * (en - eq) * N;
+    var rcm = r('comm');
+    var PriceC = (rcm < 1) ? v('netPrice') / (1 - rcm) : 0;
+    var rf = r('floorM');
+    var Floor = (rf < 1) ? FCq / (1 - rf) : 0;
+    var Room = P - Floor;
+    var Refund = v('buyIncl') / (1 + r('vatOut')) * r('refundRate');
+    var Refund2 = FOB * eq * r('refundRate');
+
+    CALC = { N:N, eq:eq, en:en, MC:MC, MC2:MC2, FC:FC, EXW:EXW, d:d, FOB:FOB, CFR:CFR,
+      CIF:CIF, INS:INS, DPV:DPV, Duty:Duty, Anti:Anti, VAT:VAT, B:B, DDP:DDP,
+      FCq:FCq, P:P, GM:GM, rgmNow:rgmNow, rmk:rmk, target:target, Qbe:Qbe,
+      Rev:Rev, FXP:FXP, PriceC:PriceC, Floor:Floor, Room:Room, Refund:Refund, Refund2:Refund2 };
+
+    render();
+  }
+
+  function set(id, text, sub) {
+    var e = el(id); if (!e) return;
+    e.innerHTML = text + (sub ? '<small>' + sub + '</small>' : '');
+  }
+  function money(n, dec) { return cur() + ' ' + fmt(n, dec == null ? 2 : dec); }
+
+  function render() {
+    var c = CALC;
+
+    /* 一 */
+    set('rMfg', fmt(c.MC), bcur());
+    set('rLoss', fmt(c.MC2), bcur());
+    set('rFull', fmt(c.FC), bcur());
+
+    /* 二 */
+    set('rExw', money(c.EXW), '/件');
+    set('rDom', money(c.d), '/件');
+    set('rFob', money(c.FOB), '/件');
+    set('rCfr', money(c.CFR), '/件');
+    set('rCif', money(c.CIF), '/件');
+
+    /* 三 */
+    set('rDpv', money(c.DPV), '/件');
+    set('rDuty', money(c.Duty), '/件');
+    set('rAnti', money(c.Anti), '/件');
+    set('rVat', money(c.VAT), '/件');
+    set('rDdp', money(c.DDP), '/件');
+
+    /* 四 */
+    set('rFullQ', money(c.FCq), '/件');
+    set('rGross', money(c.GM), '/件');
+    set('rMargin', pct(c.rgmNow), '');
+    set('rMarkup', pct(c.rmk), '');
+    set('rTarget', money(c.target), '/件');
+    set('rBe', (c.Qbe > 0 ? fmt(c.Qbe, 0) : '—'), '件');
+
+    /* 五 */
+    set('rRev', bcur() + ' ' + fmt(c.Rev, 0), '');
+    set('rFx', bcur() + ' ' + fmt(c.FXP, 0), '');
+    set('rComm', money(c.PriceC), '/件');
+    set('rFloor', money(c.Floor), '/件');
+    set('rRoom', money(c.Room), '/件');
+    set('rRefund', bcur() + ' ' + fmt(c.Refund, 2), '/件');
+    set('rRefund2', bcur() + ' ' + fmt(c.Refund2, 2), '/件');
+
+    /* 报价阶梯 */
+    var steps = [
+      { t: 'EXW', v: c.EXW, cls: '' },
+      { t: 'FOB', v: c.FOB, cls: '' },
+      { t: 'CFR', v: c.CFR, cls: '' },
+      { t: 'CIF', v: c.CIF, cls: '' },
+      { t: 'DDP', v: c.DDP, cls: 'last' }
+    ];
+    var max = 0; steps.forEach(function (s) { if (s.v > max) max = s.v; });
+    var base = c.EXW || 1;
+    var html = '';
+    steps.forEach(function (s) {
+      var w = max > 0 ? Math.max(14, s.v / max * 100) : 0;
+      var delta = base > 0 ? ((s.v - base) / base * 100) : 0;
+      html += '<div class="ld ' + s.cls + '">'
+        + '<div class="lt">' + s.t + '</div>'
+        + '<div class="lbar" style="width:' + w.toFixed(1) + '%">' + fmt(s.v, 2) + '</div>'
+        + '<div class="lv">' + cur() + '<small>' + (s.t === 'EXW' ? '基准' : '+' + fmt(delta, 1) + '%') + '</small></div>'
+        + '</div>';
+    });
+    var lad = el('ladder'); if (lad) lad.innerHTML = html;
+
+    /* 盈利体检 */
+    var tone = c.rgmNow >= r('margin') ? 'gn' : (c.rgmNow >= r('floorM') ? 'gd' : 'bad');
+    var kpi = [
+      { k: '毛利 / 件', v: money(c.GM), c: c.GM >= 0 ? 'gn' : 'bad' },
+      { k: '毛利率', v: pct(c.rgmNow), c: tone },
+      { k: '成本加成率', v: pct(c.rmk), c: '' },
+      { k: '保本价', v: money(c.FCq), c: 'cy' },
+      { k: '议价空间', v: money(c.Room), c: c.Room >= 0 ? 'gd' : 'bad' },
+      { k: '出口退税 / 件', v: bcur() + ' ' + fmt(c.Refund, 2), c: '' }
+    ];
+    var kh = '';
+    kpi.forEach(function (x) {
+      kh += '<div class="res ' + x.c + '"><div class="rk">' + x.k + '</div><div class="rv num">' + x.v + '</div></div>';
+    });
+    var ke = el('kpi'); if (ke) ke.innerHTML = kh;
+  }
+
+  /* ---------- 持久化 ---------- */
+  function save() {
+    var o = { cur: cur(), baseCur: bcur() };
+    IDS.forEach(function (id) { var e = el(id); if (e) o[id] = e.value; });
+    try { localStorage.setItem(STORE, JSON.stringify(o)); } catch (e) {}
+  }
+  function load() {
+    var o = null;
+    try { o = JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) {}
+    if (!o) return;
+    if (o.cur && el('cur')) el('cur').value = o.cur;
+    if (o.baseCur && el('baseCur')) el('baseCur').value = o.baseCur;
+    IDS.forEach(function (id) { var e = el(id); if (e && o[id] != null) e.value = o[id]; });
+  }
+
+  function fill(o) { IDS.forEach(function (id) { var e = el(id); if (e) e.value = (o[id] != null ? o[id] : ''); }); }
+
+  function boot() {
+    load();
+    IDS.forEach(function (id) { var e = el(id); if (e) e.addEventListener('input', function () { save(); compute(); }); });
+    ['cur', 'baseCur'].forEach(function (id) { var e = el(id); if (e) e.addEventListener('change', function () { save(); compute(); }); });
+    var d = el('demoBtn');
+    if (d) d.addEventListener('click', function () { fill(DEMO); save(); compute(); });
+    var cb = el('clearBtn');
+    if (cb) cb.addEventListener('click', function () { fill({}); save(); compute(); });
+    compute();
+    /* 语言切换后重新格式化数字 */
+    if (window.__falOnRefresh) window.__falOnRefresh(function () { render(); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+<script src="app-i18n-dict.js"></script>
+<script src="app-i18n-zht.js"></script>
+<script src="app-i18n.js"></script>
+</body>
+</html>
