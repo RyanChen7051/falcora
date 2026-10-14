@@ -1,4 +1,4 @@
-/* FALCORA 获客通AI — Service Worker v28
+/* FALCORA 获客通AI — Service Worker v34
    · HTML / 导航：网络优先（在线时永远取最新），离线回退缓存
    · 静态资源：缓存优先 + 后台更新（stale-while-revalidate，兜底防「改了没生效」）
    · 支持页面主动发 SKIP_WAITING 立即切换新版本
@@ -37,6 +37,52 @@
    · v25：④ 获客执行页新增「管理管线」入口（按钮深链到 `02_全球线索获取.html#pipe`，自动打开 02 的管线管理面板）。
          复用同一套 L1/L2-only CRUD，不重复代码、不引入 L3 字段；② 页监听 `location.hash`，`#pipe` 时自动 `openPipe()`。
          ②/④ 页静态文件有改动 → 升 CACHE 版本确保发版后用户拿到新文件。
+   · v34：**驾驶舱 KPI 反虚报（六项全部改实时统计）** —— 用户 2026-10-14：「检查这排数字的真实性，不要虚报」。
+         审计结论：原 KPI 是 index.html 里的**字面量常量**（今日新线索 326 / 已锁定客户 1,842 / 覆盖国家 76 /
+         本周拦截风险 47 / 节省尽调工时 312 / 沟通率 34.1%），与系统真实状态严重不符——② 页演示池实际 16 家、
+         ③ 页尽调档案实际 2 份、管线默认 0 家，「节省尽调工时」在产品里根本没有对应功能，
+         连「较上周 +18.4%」也是写死的（系统无历史库，算不出来）。② 页 changelog 里早就立过
+         「不编造『312 家 / 47 家』这类数字」的铁律，KPI 排是同一组数字的漏网之鱼。
+         · **新建 `app-stats.js`**（跨页统计 registry，键 `falcora_stats_v1`）：数据持有页 `set(命名空间, {...})`、
+           阅读页 `get(命名空间)`；**未上报过的命名空间返回 null，绝不回退预设数字**。9 页 `<head>` 接入。
+         · ② 页上报**当前范围池**（不是静态演示池全集）：`scope/mode/n/countries/regions/regionList`，
+           签名不变不写盘，`render()` 末尾挂钩（切范围/筛选/名片建档实时同步）。
+         · ③ 页 `reportDD()`：建档 +1 即重报。
+         · KPI 六项口径（全部可验）：线索池企业/覆盖国家 ← ② 上报实数；已锁定客户 ← 本页地图 clients；
+           尽调档案 ← ③ 上报实数；加入管线 ← `falcora_pipeline_v1`；沟通率 ← `falcora_seq_v1` 已标记客户数 ÷ 加入管线，
+           分母 0 → **诚实空态「尚未统计」**（不编造百分比）。去掉全部同比 delta。
+         · **AI 洞察横幅四态**（原写死「3 个高匹配度市场尚未被覆盖 / 预计释放 1,200 条优质线索」——
+           与演示池实际覆盖 7 个区域矛盾，且档案未填时说「基于您的行业画像」也是假的）：
+           档案未填 / ② 未打开 / 池为空 / 有数据（按 ① 目标区域 vs 池实际区域算真实缺口），CTA 按态跳转。
+         · `index.html` 删死代码（`.delta`/`.spark`/`kpiT0`），字典 **1960 → 1986 条**（第 26 批 +26）。
+   · v33：**驾驶舱 KPI 新增第 6 张「管线启动沟通率」** —— 用户 2026-10-14：「@截图 这个地方帮我增加一个看版，
+         显示『加入管线及与客户启动沟通』的转化率。」（截图标记的是 KPI 网格第 6 个空位）
+         · 卡片口径：**转化率 = 与客户启动沟通家数 ÷ 加入管线家数**（演示数据 214 / 628 = **34.1%**，较上周 +3.6pt）。
+           卡面同时显示主数字 34.1% 与副文案 `214/628`（比值是**独立节点**，不与中文拼串，
+           否则反查字典落空会在英文界面残留中文）。卡片 `title` 另给口径说明，走字典翻译。
+         · `.kpis` 由 `repeat(5,1fr)` 改 **`repeat(6,1fr)`**，并加 `@media (max-width:1480px)` 回落到 3 列
+           —— 6 列时英文标签（Countries/regions covered）会换行、单卡过窄；`.kpi .sub` 加 `flex-wrap:wrap` 兜底。
+         · ⚠️ **KPI 原用 `.toLocaleString()` 无参格式**（跟随浏览器 locale，不跟随界面语言）→ 改为
+           **`Intl.NumberFormat(locale())`**，并注册 `__falOnRefresh` 在切语言时重绘数字。
+           顺带说明：原 `fmt` 字段是死代码（从未被渲染使用），本次一并移除。
+         · `index.html`、`app-i18n-dict.js` 为静态文件 → 升 CACHE 版本。
+   · v32：**侧栏「每日汇率」组件** —— 用户 2026-10-14：「帮我在主导航上方加入一排每日最新国际汇率，
+         基础汇率是人民币，换算币种包含 美金、欧元、日币、韩元、台币、泰铢、印度卢比、英镑…等主要货币。
+         每天早上北京时间 8 点整，自动更新最新汇率。」
+         · 新增 `app-fx.js`（独立脚本，9 页在 `app-i18n.js` 之后引入）。注入到 `.sidebar` 里
+           **第一个 `.nav-label`（主导航）之前** → 视觉位置＝主导航上方。
+         · 基准 1 CNY；默认 8 币（USD/EUR/JPY/KRW/TWD/THB/INR/GBP，即用户列举顺序），
+           「展开全部」追加 HKD/SGD/AUD/CAD/MYR/VND/IDR/PHP。
+         · 三源顺序回退：`cdn.jsdelivr.net/@fawazahmed0/currency-api` → `latest.currency-api.pages.dev`
+           → `open.er-api.com/v6/latest/CNY`；全失败退回 `localStorage 'falcora_fx_v1'` 并**明标「离线缓存」**。
+         · 「早上 8 点自动更新」= **到点即刷 + 打开即补**（纯前端无 cron）：页面开着到北京 08:00 自行拉取；
+           关着则下次打开若发现上次更新早于最近一次 08:00 立刻补拉；后台切回前台也补拉。
+           北京 08:00 = UTC 00:00，故用 `Date.UTC` 直接算，不引时区库。
+         · 币种名称与数字格式走 **Intl.DisplayNames / Intl.NumberFormat**（不进字典，避免逐语言维护 20+ 币种名）；
+           界面文案（每日汇率/基准/更新/展开/参考汇率…）仍走字典。
+         · `app-design.css` 升 **?v=3**：新增 `@media (min-width:861px){.sidebar{overflow-y:auto}}`
+           —— 侧栏多了汇率块后，矮屏需可滚动，保证用户卡与导航项不被裁掉。
+         · 9 页 `<link href="app-design.css?v=2">` 全部升 `?v=3`；`PRECACHE` 增列 `./app-fx.js` 并同步 `?v=3`。
    · v31：**08 页补齐 10 语言字典**（v30 建页时只做了中文与繁体兜底，其它 8 语言会残留中文）。
          · `app-i18n-dict.js` 新增 **162 条**（161 条页内文案 + 1 条页标题），每条 9 语言；
            zh-Hant 仍由 OpenCC `s2twp` 自动生成。字典总量 1784 → **1946 条**。
@@ -172,10 +218,10 @@
          L3 补录表单不再用演示值预填；新增 07 账号与成员管理页（界面骨架）；
          侧栏由 app-nav.js 统一注入「账号与成员」入口；字典扩至 1112 条。
          升版强制刷新旧缓存。 */
-const CACHE = 'falcora-v31';
+const CACHE = 'falcora-v34';
 const PRECACHE = [
   './',
-  './app-design.css?v=2',
+  './app-design.css?v=3',
   './index.html',
   './01_战略_企业战略档案.html',
   './02_全球线索获取.html',
@@ -192,6 +238,8 @@ const PRECACHE = [
   './app-i18n-dict.js',
   './app-i18n-zht.js',
   './app-i18n.js',
+  './app-fx.js',
+  './app-stats.js',
   './app-vals.js',
   './manifest.webmanifest',
   './assets/logo.png',
