@@ -103,6 +103,17 @@
   .rng input[type=range]{accent-color:var(--cyan);width:160px}
   .rng b{color:var(--cyan);min-width:34px;text-align:right}
 
+  /* ---- 开始搜索（2026-10-15）：筛选条件改为「设定后点按钮才检索」 ---- */
+  .frow.facts{margin-top:3px;padding-top:15px;border-top:1px solid var(--border);gap:14px}
+  .btn.go{padding:11px 26px;font-size:14.5px;letter-spacing:.3px}
+  .btn.go.dirty{animation:falmPulse 1.5s ease-in-out infinite}
+  @keyframes falmPulse{0%,100%{box-shadow:0 0 0 0 rgba(245,184,65,.38)}55%{box-shadow:0 0 0 7px rgba(245,184,65,0)}}
+  .fstate{font-size:12.5px;color:var(--muted-2);line-height:1.6}
+  .fstate b{color:var(--cyan)}
+  .fstate .warn{color:var(--gold)}
+  .fnote{margin-top:-5px}
+  .fnote.warn{color:var(--gold)}
+
   .layout{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
   .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
   .card-h{display:flex;align-items:center;gap:10px;padding:15px 18px;border-bottom:1px solid var(--border)}
@@ -256,6 +267,10 @@
   .cbar{display:flex;gap:9px;flex-wrap:wrap;margin-top:2px}
   .warnbox{border:1px solid rgba(245,184,65,.34);background:rgba(245,184,65,.10);color:#ffe6b0;
     border-radius:12px;padding:11px 14px;font-size:12.5px;line-height:1.6}
+  /* 「示例数据」说明框（青色，与金色告警框区分）——
+     用于「有值但值是示例」的场景，如 L2 企业职能联系方式。 */
+  .samplebox{border:1px solid rgba(94,234,212,.30);background:rgba(94,234,212,.08);color:#bdf3e9;
+    border-radius:12px;padding:11px 14px;font-size:12.5px;line-height:1.6}
   @media(max-width:520px){.cform{grid-template-columns:1fr}}
 
   @media(max-width:1180px){.layout{grid-template-columns:1fr}.lhead{display:none}.lrow{grid-template-columns:1fr 1fr;gap:8px}.lrow .co{grid-column:1/-1}}
@@ -280,7 +295,10 @@
   .scopebar .sb-btn.pri{border-color:rgba(94,234,212,.4);background:linear-gradient(135deg,rgba(94,234,212,.2),rgba(14,154,142,.24));color:#eafff9}
   .guidebox{padding:30px 22px;border-radius:var(--radius);border:1px dashed var(--border-2);
     background:rgba(94,234,212,.04);text-align:center;font-size:13.5px;color:var(--muted);line-height:1.9}
-  .guidebox b{color:var(--ink);display:block;font-size:15px;margin-bottom:8px}
+  /* ⚠️ 只把「直接子级」的 b 当标题（block）；说明文字里的 <b> 是行内强调，
+     若一并 display:block，句中被加粗的变量会被强行断行（2026-10-15 修）。 */
+  .guidebox > b{color:var(--ink);display:block;font-size:15px;margin-bottom:8px}
+  .guidebox span b{color:var(--gold);font-weight:700}
   .guidebox a{color:var(--cyan);font-weight:650;text-decoration:none}
   .guidebox a:hover{text-decoration:underline}
   /* 2026-10-15 新增：类别 / 关键词筛选 chips + 示例（非真实）样本 */
@@ -408,6 +426,11 @@
             <span class="chip gold active" data-v="red">高/需复核</span>
             <span class="chip gold active" data-v="na">未核查</span>
           </div>
+        </div>
+        <div class="fhint fnote" id="matchNote" hidden></div>
+        <div class="frow facts">
+          <button class="btn go" id="searchBtn">开始搜索</button>
+          <span class="fstate" id="searchState"></span>
         </div>
       </div>
 
@@ -614,6 +637,20 @@ const FAM = [
        ["分销商 / 代理","光学器材 · 户外光学","光学镜片","公开代理品牌清单含相邻品类"],
        ["制造商 (OEM/ODM)","精密光学组件 · 镜片","精密光学组件","公开产线扩产新闻，光学件外采比例高"],
        ["工程商 / 项目方","安防监控 · 光学镜头","光学镜头","公开中标项目清单，镜头为外采件"]]},
+  { id:"tactical", lab:"战术 / 户外装备", ind:"户外装备", cat:["消费品/快消","五金/工具"],
+    /* 2026-10-15 新增：使用者填「战术装备」时原来一个族都命中不了 → ② 页关键词行里
+       完全看不到这个词，像是被系统吞了输入。补上这一族后「战术 / 战术装备 / 战术配件 /
+       户外 / 军警 / 装具…」都能被识别并单独成组。
+       ⚠️ kw 只收「这个族自己特有」的词：望远镜 / 夜视 / 测距 等跨族共用词留给 optics，
+          否则两个族会因同一个词同时命中，把「按关键词分组」的语义搅乱。 */
+    suf:["Tactical","Outdoor Gear","Field Supply","Gear Works"],
+    kw:["战术","战术装备","战术配件","户外","户外装备","军警","警用","防护","头盔","背包","装具","迷彩","射击","靶场","狩猎","护目","腰带","手套","携行"],
+    mk:["北美","欧盟","中东","东南亚","东亚"],
+    /* 四条都是**采购方**（不写同业竞争者 / 上游供应商） */
+    b:[["分销商 / 代理","战术装备 · 户外装具","战术装具","公开分销品类清单，含相邻品类"],
+       ["品牌商","户外装备 · 战术配件","户外战术配件","官网公开产品线，设供应商准入页"],
+       ["采购代理 / 贸易","战术装备 · 户外用品代采","战术装备","公开为多品牌提供代采服务，采购量稳定"],
+       ["制造商 (OEM/ODM)","装具五金 · 织带扣具","装具五金","公开产线信息，装具五金为外采件"]]},
   { id:"electronics", lab:"电子 / 电气", ind:"电子制造", cat:["电子/电气"],
     suf:["Electronics","Micro Systems","Circuit Components","Electro Devices"],
     kw:["电子","电气","元器件","PCB","线路板","连接器","电源","线束","半导体","芯片","传感器","模组","电容","电阻","被动元件"],
@@ -725,6 +762,7 @@ const FAM = [
    序号即索引位 → 同一家公司每次刷新得到同一组标签（确定性，不用随机数）。 */
 const ADJ = {
   optics:      ["hardware",    "consumer"],    /* 光学 ↔ 五金工具（共享粗类目）/ 户外消费品（场景相邻） */
+  tactical:    ["hardware",    "consumer"],    /* 战术装备 ↔ 装具五金 / 户外消费品 */
   electronics: ["auto",        "software"],    /* 电子 ↔ 汽车电子 / 工业软件 */
   machinery:   ["building",    "hardware"],    /* 机械 ↔ 建材工程（机电安装）/ 五金（传动件） */
   hardware:    ["machinery",   "building"],    /* 五金 ↔ 机械 / 建材（共享粗类目） */
@@ -835,7 +873,8 @@ function matchFamilies(p){
    ⚠️ 口径（2026-10-15 重做）：生成的是**示例 · 非真实主体**样本 ——
       公司名 / 域名由系统按品类确定性拼出，只为让「按关键词分组 → 按类别筛选 → 地图上色」
       这条链路可演示可验证。三类最容易造成混乱的假数据一律不再编造：
-        · 联系方式   → 一律留空（contact:"none"，列表显示「未覆盖」）
+        · 联系方式   → L2 企业职能联系方式给**明确标注「示例」的值**（contact:"L2"，
+                        见 sampleL2()）；L3 个人联系方式一律不生成（平台不抓取、不推断）
         · 匹配度     → 一律 null（列表显示「待核查」，不编造评分）
         · 风险等级   → 一律 na（未核查，不编造评级）
       列表每行标「示例」、范围条转金色明示、页脚再声明一次 —— 三处可见。
@@ -870,7 +909,7 @@ function genLeads(fams, regions, hitsByFam, tokens){
         out.push({
           nm:nm, dm:dm, flag:geo[0], region:rg, ind:f.ind,
           size:["M","L","S","M"][bi % 4],
-          match:null, risk:"na", contact:"none", src:"示例样本", sample:true,
+          match:null, risk:"na", contact:"L2", src:"示例样本", sample:true,
           btype:b[0], need:b[1],
           /* 轮换索引刻意用 (bi + ri*2)：若用 (bi*2+ri)，当命中 2 个词时
              「关键词」会与「目标市场」完全重合（北美全是词 A、欧盟全是词 B），
@@ -887,10 +926,51 @@ function genLeads(fams, regions, hitsByFam, tokens){
 
 /* 确定性哈希 → 联系方式（同域名永远得到同一组值） */
 function hashStr(s){ let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return h; }
-function contactsOf(dm){
-  /* 2026-10-15 用户「消除所有演示数据」：不再按域名哈希编造联系方式。
-     演示联系方式（CONTACTS）已清空；无自备/无数据源时一律返回空，由使用者自行补录。 */
+
+/* ================= L2 示例企业职能联系方式（2026-10-15 用户授权恢复） =================
+   ⚠️⚠️ 合规边界 —— 改这段之前必须读懂，否则会踩 L1/L2/L3 红线：
+   · **只对示例线索**（`l.sample === true`，即由 genLeads 确定性生成的样本）生成；
+     使用者自备 / 展会名片建档的线索**一律不生成**，它们有值就是有值、没有就是没有。
+   · 生成的值**只用于渲染**：不写 localStorage、不进管线记录（falcora_pipeline_v1）、
+     不进驾驶舱 KPI。刷新后按域名重新推导，同域名永远同一组值（确定性，不用随机数）。
+   · 电话号码**只使用各国为影视 / 文档保留的「不可分配」号段**：
+       北美 NANP 555-0100~0199 · 英国 Ofcom 01632 960000~960999 · 澳洲 ACMA 0491 570 006~156
+     其余区域用「该国真实区号 + 555 段」的通行示例写法。**绝不使用真实可分配的号码** ——
+     那样等于凭空指认某家真实企业，比留空更糟。
+   · 邮箱用**线索自己的域名**（`procurement@<dm>`）—— 与主体天然一致，不额外编造第三方域名。
+   · **L3 个人联系方式（人名 / 手机 / 私人邮箱 / IM）一律不生成** —— 平台不抓取、不推断、不买卖。
+   · 每个字段在 UI 上都必须带「示例」标记 —— 绝不冒充已核实的真实信息。 */
+const L2_ROLES = ["采购经理","采购总监","供应链经理","品类采购经理","战略采购经理","采购主管"];
+const L2_BOX   = ["procurement","sourcing","purchasing","purchase"];
+/* 各国「不可分配」虚构号段：pre = 号段前缀，n = 可变尾数位数 */
+const L2_TEL = {
+  "北美":   {pre:"+1 202 555 01",  n:2},   /* NANP 保留段 555-0100 ~ 555-0199 */
+  "欧盟":   {pre:"+44 1632 960 ",  n:3},   /* Ofcom 保留段 01632 960000 ~ 960999 */
+  "中东":   {pre:"+971 4 555 01",  n:2},
+  "东南亚": {pre:"+65 6555 01",    n:2},
+  "东亚":   {pre:"+81 3 5555 01",  n:2},
+  "大洋洲": {pre:"+61 491 570 ",   n:3},   /* ACMA 保留段 0491 570 006 ~ 570 156 */
+  "拉美":   {pre:"+52 55 5555 01", n:2},
+  "非洲":   {pre:"+27 11 555 01",  n:2}
+};
+function sampleL2(l){
+  if(!l || !l.sample) return null;                       /* 只给示例线索，别的一律不生成 */
+  const h = hashStr(l.dm);
+  const t = L2_TEL[l.region] || L2_TEL["北美"];
+  const tail = String(h % Math.pow(10, t.n)).padStart(t.n, "0");
+  return {
+    role: L2_ROLES[h % L2_ROLES.length],
+    cp:   t.pre + tail,
+    ce:   L2_BOX[(h >>> 3) % L2_BOX.length] + "@" + l.dm,
+    web:  "https://" + l.dm,
+    li:   "",
+    src:  "示例 · 企业官网公开职能信息（未接入真实数据源）"
+  };
+}
+function contactsOf(l){
+  const dm = (typeof l === "string") ? l : (l && l.dm);
   if(CONTACTS[dm]) return CONTACTS[dm];
+  if(l && typeof l === "object" && l.sample) return sampleL2(l) || {};
   return {};
 }
 
@@ -1053,11 +1133,49 @@ function closePipeEdit(){ document.getElementById("pipeEditModal").hidden = true
    kw  按「是 ① 档案里的哪一个关键词带来了这家采购方」分组 —— 填几个词就分几组，
         ② 可按词筛选、驾驶舱地图按词上色（用户原话：「依据不同关键词做清楚区分」）。
    cat 按产品类别分（一家公司可有多条产品线 → 多标签；「全产业」为通配，见 catHit）。 */
-const state = {scope:"profile", region:new Set(), kw:new Set(), cat:new Set(), industry:"", btype:"", size:"", contact:"", match:0, risk:new Set(["green","yellow","red","na"]), q:"", added:new Set(Object.keys(loadPipe()))};
+const state = {scope:"profile", region:new Set(), kw:new Set(), cat:new Set(), industry:"", btype:"", size:"", contact:"", match:0, risk:new Set(["green","yellow","red","na"]), q:"", added:new Set(Object.keys(loadPipe())),
+  /* ---- 「开始搜索」闸门（2026-10-15，用户诉求）----
+     筛选条件改完 → 点「开始搜索」才启动检索；不再「每动一下就实时重绘」。
+     理由有二：
+     ① 产品语义：真实环境检索要打外部数据源、要扣查询点数，不可能随滑块拖动就跑；
+     ② 体验：实时过滤会让使用者「改了半天，不知道是哪一步把结果筛没了」——
+        尤其「最低匹配度」一拖到 >0，示例样本的 match 全是 null，列表会瞬间清空且不给原因。
+     searched=false → 列表区显示「条件已就绪，点开始搜索」引导，而不是一片空白。 */
+  searched:false, dirty:false, at:null};
+
+/* 条件变更：只标记「已变更」+ 点亮按钮，不重绘结果列表（等用户点「开始搜索」）。
+   还没检索过时没有「旧结果」可留 → 直接重绘引导态即可。 */
+function touch(){
+  if(!state.searched){ render(); return; }
+  state.dirty = true;
+  paintSearchState();
+}
+function hhmm(ts){
+  const d=new Date(ts||Date.now()), p=function(x){return String(x).length<2?"0"+x:String(x);};
+  return p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes());
+}
+/* 搜索状态行：三种态（未检索 / 条件已变更 / 已检索·命中N家） */
+function paintSearchState(n){
+  const el=document.getElementById("searchState");
+  const btn=document.getElementById("searchBtn");
+  if(!el) return;
+  if(!state.searched){
+    el.textContent = T("设定好条件后，点左侧按钮开始检索。");
+    if(btn) btn.classList.remove("dirty");
+    return;
+  }
+  if(state.dirty){
+    el.innerHTML = '<span class="warn">'+T("筛选条件已变更 —— 点「开始搜索」按新条件重新检索。")+'</span>';
+    if(btn) btn.classList.add("dirty");
+    return;
+  }
+  if(btn) btn.classList.remove("dirty");
+  el.innerHTML = Tv("已检索 · 命中 {n} 家 · {t}", {n:"<b>"+n+"</b>", t:"<span>"+hhmm(state.at)+"</span>"});
+}
 
 // build filter chips
 const fRegion = document.getElementById("fRegion");
-REGIONS.forEach(r=>{const c=document.createElement("span");c.className="chip";c.textContent=r;c.onclick=()=>{c.classList.toggle("active");state.region.has(r)?state.region.delete(r):state.region.add(r);render();};fRegion.appendChild(c);});
+REGIONS.forEach(r=>{const c=document.createElement("span");c.className="chip";c.textContent=r;c.onclick=()=>{c.classList.toggle("active");state.region.has(r)?state.region.delete(r):state.region.add(r);touch();};fRegion.appendChild(c);});
 const fIndustry=document.getElementById("fIndustry");
 /* 行业下拉从「当前线索池实际出现的行业」动态生成 —— 写死 8 个行业在按档案收敛后会对不上 */
 function fillIndustry(){
@@ -1069,7 +1187,7 @@ function fillIndustry(){
   if(state.industry && inds.indexOf(state.industry)===-1) state.industry="";
   fIndustry.value=state.industry;
 }
-fIndustry.onchange=()=>{state.industry=fIndustry.value;render();};
+fIndustry.onchange=()=>{state.industry=fIndustry.value;touch();};
 
 /* ---- 关键词 / 产品类别 筛选 chips ----
    两个都从「当前线索池里实际出现过的值」动态生成 —— 写死一排标签，
@@ -1084,7 +1202,17 @@ function buildChipRow(boxId, rowId, valOf, sel, hintId, hintTpl, trans){
   const keys=Object.keys(cnt).sort();
   row.hidden = keys.length===0;
   const sig=keys.map(function(k){return k+":"+cnt[k];}).join("|");
-  if(box.dataset.sig===sig) return;      /* 池没变就不重建，避免每帧重绘丢焦点 */
+  /* ⚠️ 提示语必须在 sig 早退【之前】重算（2026-10-15 修）：
+     · 它走 T()，要跟着语言变；被 sig 挡掉后，若首屏渲染早于 i18n 引擎就绪，
+       提示语会永久停在中文 —— 表现为「切英文后筛选区还挂着两句中文」。
+     · 且要用 innerHTML：模板里的 {n} 被替换成 `<b>N</b>`，用 textContent 会把
+       标签当纯文本原样显示出来。 */
+  const hint=document.getElementById(hintId);
+  if(hint){
+    hint.hidden = keys.length===0;
+    hint.innerHTML = keys.length ? Tv(hintTpl, {n:"<b>"+keys.length+"</b>"}) : "";
+  }
+  if(box.dataset.sig===sig) return;      /* 池没变就不重建 chips，避免每帧重绘丢焦点 */
   box.dataset.sig=sig;
   box.innerHTML=keys.map(function(k){
     /* trans=true（产品类别）= 系统定义的品类名 → 走字典翻译；
@@ -1096,12 +1224,8 @@ function buildChipRow(boxId, rowId, valOf, sel, hintId, hintTpl, trans){
   box.querySelectorAll(".chip").forEach(function(c){
     const v=c.dataset.v;
     if(sel.has(v)) c.classList.add("active");
-    c.onclick=function(){ sel.has(v)?sel.delete(v):sel.add(v); c.classList.toggle("active"); render(); };
+    c.onclick=function(){ sel.has(v)?sel.delete(v):sel.add(v); c.classList.toggle("active"); touch(); };
   });
-  const hint=document.getElementById(hintId);
-  if(hint) hint.textContent = keys.length
-    ? Tv(hintTpl, {n:"<b>"+keys.length+"</b>"})
-    : "";
 }
 function fillKw(){ buildChipRow("fKw","rowKw", function(l){ return [String(l.kw||"").trim()].filter(function(k){return k&&k!=="—";}); },
   state.kw, "kwHint2", "共 {n} 个关键词在池中有命中 —— 多选可只看某几个词带来的采购方。", false); }
@@ -1109,13 +1233,31 @@ function fillCat(){ buildChipRow("fCat","rowCat", function(l){ return l.cats||[]
   state.cat, "catHint", "共 {n} 个产品类别；一家公司可能同时属于多个类别。", true); }
 const fBtype=document.getElementById("fBtype");
 BTYPES.forEach(i=>{const o=document.createElement("option");o.value=i;o.textContent=i;fBtype.appendChild(o);});
-fBtype.onchange=()=>{state.btype=fBtype.value;render();};
-document.getElementById("fSize").onchange=e=>{state.size=e.target.value;render();};
-document.getElementById("fContact").onchange=e=>{state.contact=e.target.value;render();};
-document.getElementById("fMatch").oninput=e=>{state.match=+e.target.value;document.getElementById("fMatchV").textContent=e.target.value+"%";render();};
-document.getElementById("q").oninput=e=>{state.q=e.target.value.trim().toLowerCase();render();};
-document.querySelectorAll("#fRisk .chip").forEach(c=>{c.onclick=()=>{c.classList.toggle("active");const v=c.dataset.v;state.risk.has(v)?state.risk.delete(v):state.risk.add(v);render();};});
+fBtype.onchange=()=>{state.btype=fBtype.value;touch();};
+document.getElementById("fSize").onchange=e=>{state.size=e.target.value;touch();};
+document.getElementById("fContact").onchange=e=>{state.contact=e.target.value;touch();};
+document.getElementById("fMatch").oninput=e=>{state.match=+e.target.value;document.getElementById("fMatchV").textContent=e.target.value+"%";paintMatchNote();touch();};
+document.getElementById("q").oninput=e=>{state.q=e.target.value.trim().toLowerCase();touch();};
+document.querySelectorAll("#fRisk .chip").forEach(c=>{c.onclick=()=>{c.classList.toggle("active");const v=c.dataset.v;state.risk.has(v)?state.risk.delete(v):state.risk.add(v);touch();};});
 document.getElementById("resetBtn").onclick=()=>location.reload();
+document.getElementById("searchBtn").onclick=()=>runSearch();
+
+/* 最低匹配度提示：池内若一条都没标注 match，这个筛选是「拖到 >0 就必然清空」的陷阱。
+   直接把它说明白 —— 而不是等使用者拖完看到空列表再猜。 */
+function paintMatchNote(){
+  const el=document.getElementById("matchNote"); if(!el) return;
+  const pool=allLeads();
+  const labelled=pool.some(l=>typeof l.match==="number");
+  if(labelled){ el.hidden=true; el.textContent=""; return; }
+  el.hidden=false;
+  if(state.match>0){
+    el.className="fhint fnote warn";
+    el.textContent=T("池内线索的匹配度尚未标注（示例样本 / 未接入数据源），阈值大于 0 会把它们全部排除。请把滑块拉回 0。");
+  }else{
+    el.className="fhint fnote";
+    el.textContent=T("池内线索的匹配度尚未标注（示例样本 / 未接入数据源），此筛选暂不生效。");
+  }
+}
 
 /* 关键词匹配：l.kw 是「带来这家客户的那个关键词」。
    「—」/ 空 = 未标注来源（如展会名片），按关键词筛选时不算命中 ——
@@ -1146,16 +1288,118 @@ function pass(l){
 function T(zh){ try{ return (window.__falT && window.__falT(zh)) || zh; }catch(e){ return zh; } }
 function Tv(zh,vars){ var s=T(zh); if(vars) for(var k in vars) s=s.split("{"+k+"}").join(vars[k]); return s; }
 
+/* ---------- 空结果诊断（2026-10-15）----------
+   原来的空态只有一句「没有符合当前筛选条件的线索，试试放宽匹配度或区域」——
+   使用者根本不知道自己动了哪一步。这里改成「逐条排除法」：
+   把当前生效的每个条件单独关掉再跑一次筛选，**关掉谁就有结果，谁就是元凶**；
+   全部关掉仍为空 ⇒ 问题出在池子本身，不是筛选。 */
+function snapshotState(){
+  return {region:[...state.region], kw:[...state.kw], cat:[...state.cat],
+          industry:state.industry, btype:state.btype, size:state.size,
+          contact:state.contact, match:state.match, risk:[...state.risk], q:state.q};
+}
+function restoreState(s){
+  state.region=new Set(s.region); state.kw=new Set(s.kw); state.cat=new Set(s.cat);
+  state.industry=s.industry; state.btype=s.btype; state.size=s.size;
+  state.contact=s.contact; state.match=s.match; state.risk=new Set(s.risk); state.q=s.q;
+}
+function countWithout(off){
+  const bak=snapshotState();
+  if(off==="region") state.region=new Set();
+  if(off==="kw") state.kw=new Set();
+  if(off==="cat") state.cat=new Set();
+  if(off==="industry") state.industry="";
+  if(off==="btype") state.btype="";
+  if(off==="size") state.size="";
+  if(off==="contact") state.contact="";
+  if(off==="match") state.match=0;
+  if(off==="risk") state.risk=new Set(["green","yellow","red","na"]);
+  if(off==="q") state.q="";
+  const n=allLeads().filter(pass).length;
+  restoreState(bak);
+  return n;
+}
+function diagBox(title, desc, cta){
+  return '<div class="guidebox"><b>'+title+'</b><span>'+desc+'</span>'
+    + '<div style="margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'+cta+'</div></div>';
+}
+function emptyDiagnosis(){
+  const base=allLeads();
+  const active=[];
+  if(state.region.size)  active.push(["region","目标区域"]);
+  if(state.kw.size)      active.push(["kw","关键词"]);
+  if(state.cat.size)     active.push(["cat","产品类别"]);
+  if(state.industry)     active.push(["industry","行业"]);
+  if(state.btype)        active.push(["btype","采购方类型"]);
+  if(state.size)         active.push(["size","公司规模"]);
+  if(state.contact)      active.push(["contact","联系可用性"]);
+  if(state.match>0)      active.push(["match","最低匹配度"]);
+  if(state.risk.size<4)  active.push(["risk","风险"]);
+  if(state.q)            active.push(["q","搜索词"]);
+
+  const toProfile = '<button class="sb-btn pri" id="diagProfile">'+T("按我的档案筛选")+'</button>';
+  const toReset   = '<button class="sb-btn" id="diagReset">'+T("清空全部筛选条件")+'</button>';
+
+  /* ① 池子本身为空 —— 与筛选无关 */
+  if(!base.length){
+    if(state.scope==="all"){
+      return diagBox(T("全部线索池当前为空"),
+        T("本机没有可展示的线索：原型未接入外部数据源，演示数据也已按你的要求清除。切回「按我的档案筛选」可由 ① 战略档案收敛生成示例样本，或先做「名片建档」把线下拿到的名片录进来。"),
+        toProfile + '<a class="sb-btn" href="01_战略_企业战略档案.html" style="text-decoration:none">'+T("前往填写战略档案")+'</a>');
+    }
+    return diagBox(T("当前范围池为空"),
+      T("本机没有可展示的线索，请先补全 ① 战略档案或做名片建档。"), toReset);
+  }
+  /* ② 没设任何条件却 0 命中 ⇒ 是范围本身的问题，不是筛选 */
+  if(!active.length){
+    return diagBox(T("没有命中任何线索"),
+      Tv("当前范围池共 {n} 家，且你未设任何筛选条件 —— 说明是范围本身为空。",
+         {n:"<b>"+base.length+"</b>"}), toReset);
+  }
+  /* ③ 逐条排除，点名「关掉它就有结果」的条件 */
+  const culprits=active.filter(function(d){ return countWithout(d[0])>0; });
+  if(culprits.length){
+    const names=culprits.map(function(d){ return T(d[1]); }).join(T("、"));
+    return diagBox(T("没有符合当前筛选条件的线索"),
+      Tv("把「{c}」放宽或取消就能看到结果 —— 当前是这些条件把结果筛空了。",
+         {c:"<b>"+names+"</b>"}), toReset);
+  }
+  return diagBox(T("没有符合当前筛选条件的线索"),
+    Tv("当前范围池共 {n} 家，但没有哪个条件单独就能解释这个空结果 —— 是多个条件叠加造成的。建议逐条放宽后重试。",
+       {n:"<b>"+base.length+"</b>"}), toReset);
+}
+/* 一键清空全部筛选条件（空态里的出口） */
+function clearFilters(){
+  state.region=new Set(); state.kw=new Set(); state.cat=new Set();
+  state.industry=""; state.btype=""; state.size=""; state.contact="";
+  state.match=0; state.risk=new Set(["green","yellow","red","na"]); state.q="";
+  document.querySelectorAll("#fRegion .chip, #fKw .chip, #fCat .chip").forEach(c=>c.classList.remove("active"));
+  document.querySelectorAll("#fRisk .chip").forEach(c=>c.classList.add("active"));
+  const s=document.getElementById("fMatch"); if(s){ s.value=0; document.getElementById("fMatchV").textContent="0%"; }
+  const setV=(id,v)=>{const e=document.getElementById(id); if(e) e.value=v;};
+  setV("fIndustry",""); setV("fBtype",""); setV("fSize",""); setV("fContact",""); setV("q","");
+  runSearch();
+}
+function runSearch(){
+  state.searched=true; state.dirty=false; state.at=Date.now();
+  render();
+}
+
 function render(){
   fillIndustry();
   fillKw();
   fillCat();
   renderScopeBar();
   renderInsight();
+  paintMatchNote();
   const list=document.getElementById("list");
   const pool=currentPool();
-  const view=allLeads().filter(pass);
-  document.getElementById("count").innerHTML="<span>"+T("共")+"</span> <b>"+view.length+"</b> <span>"+T("家")+"</span>";
+  /* 未点「开始搜索」→ 不出结果。给一份「看起来已经搜过」的列表，
+     使用者就分不清哪些是本次检索到的、哪些是默认带出来的。 */
+  const view = state.searched ? allLeads().filter(pass) : [];
+  document.getElementById("count").innerHTML = state.searched
+    ? "<span>"+T("共")+"</span> <b>"+view.length+"</b> <span>"+T("家")+"</span>"
+    : "<span>"+T("尚未检索")+"</span>";
   if(state.scope==="profile" && pool.mode==="empty"){
     list.innerHTML='<div class="guidebox"><b>'+T("尚未填写 ① 战略档案")+'</b>'
       +'<span>'+T("线索池要按你的主营品类与目标区域收敛，必须先有档案。填好后这里会自动只出与你主营相关的采购方，不会混入无关行业。")+'</span>'
@@ -1168,11 +1412,21 @@ function render(){
       +'<div style="margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
       +'<a class="sb-btn pri" href="01_战略_企业战略档案.html" style="text-decoration:none">'+T("回档案补充关键词")+'</a>'
       +'<button class="sb-btn" id="guideAll">'+T("查看全部线索")+'</button></div></div>';
-  } else if(!view.length){list.innerHTML='<div class="empty">'+T("没有符合当前筛选条件的线索，试试放宽匹配度或区域。")+'</div>';}
+  } else if(!state.searched){
+    /* 未点「开始搜索」→ 引导态（不是空白，也不是一份来路不明的列表） */
+    const n=allLeads().length;
+    list.innerHTML='<div class="guidebox"><b>'+T("筛选条件已就绪 —— 点「开始搜索」开始检索")+'</b>'
+      +'<span>'+Tv("当前范围池共 {n} 家。设定好上方条件后，点「开始搜索」按条件检索；检索前不展示结果，避免分不清哪些是本次条件筛出来的。",{n:"<b>"+n+"</b>"})+'</span>'
+      +'<div style="margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
+      +'<button class="sb-btn pri" id="guideSearch">'+T("开始搜索")+'</button></div></div>';
+  } else if(!view.length){
+    /* 空结果必须给原因 —— 不再只说「试试放宽匹配度或区域」 */
+    list.innerHTML=emptyDiagnosis();
+  }
   else{
     list.innerHTML=view.map((l,i)=>{
       const added=state.added.has(l.dm);
-      const c=contactsOf(l.dm); const own=loadOwn()[l.dm]||{};
+      const c=contactsOf(l); const own=loadOwn()[l.dm]||{};
       const card=l.card||{};
       const hasPerson=(own.person||card.person||c.person||'').trim();
       const hasPhone=(own.phone||card.tel||c.cp||'').trim();
@@ -1200,7 +1454,16 @@ function render(){
     list.querySelectorAll("[data-card]").forEach(b=>{b.onclick=()=>openCM(b.dataset.card, (allLeads().find(x=>x.dm===b.dataset.card)||{}).nm||"");});
   }
   const gb=document.getElementById("guideAll");
-  if(gb) gb.onclick=()=>{state.scope="all";state.industry="";render();};
+  if(gb) gb.onclick=()=>{state.scope="all";state.industry="";touch();};
+  /* 范围切换（按档案 ↔ 全部池）在 renderScopeBar 里接线，同样走 touch()，
+     视同「条件变更」不自动重搜 —— 与其它筛选条件保持一致 */
+  const gs=document.getElementById("guideSearch");
+  if(gs) gs.onclick=runSearch;
+  const dr=document.getElementById("diagReset");
+  if(dr) dr.onclick=clearFilters;
+  const dp=document.getElementById("diagProfile");
+  if(dp) dp.onclick=()=>{state.scope="profile";state.industry="";runSearch();};
+  paintSearchState(view.length);
   renderRegionDist(view);
   updateFunnel();
   reportStats();   /* 池子规模/范围变化 → 同步给驾驶舱 KPI（签名不变则不写盘） */
@@ -1265,9 +1528,9 @@ function renderScopeBar(){
   }
   el.innerHTML=h;
   const a=document.getElementById("sbAll");
-  if(a) a.onclick=()=>{state.scope="all";state.industry="";render();};
+  if(a) a.onclick=()=>{state.scope="all";state.industry="";touch();};
   const b=document.getElementById("sbProfile");
-  if(b) b.onclick=()=>{state.scope="profile";state.industry="";render();};
+  if(b) b.onclick=()=>{state.scope="profile";state.industry="";touch();};
 }
 
 /* insight 正文：只描述真实发生的事，不编造「312 家 / 47 家」这类数字 */
@@ -1327,7 +1590,7 @@ document.getElementById("exportBtn").onclick=()=>{
   const rows=allLeads().filter(l=>state.added.has(l.dm));
   const q=x=>'"'+String(x==null?"":x).replace(/"/g,'""')+'"';
   const head=["公司","域名","区域","行业","规模","采购方类型","采购需求品类","命中关键词","命中依据","匹配度","风险","联系可用性","窗口人岗位","企业电话","部门邮箱","人名","WhatsApp","WeChat","Telegram","来源"];
-  const body=rows.map(l=>{const c=contactsOf(l.dm);const o=loadOwn()[l.dm]||{};
+  const body=rows.map(l=>{const c=contactsOf(l);const o=loadOwn()[l.dm]||{};
     return [l.nm,l.dm,l.region,l.ind,l.size,l.btype||"",l.need||"",l.kw||"",l.why||"",l.match,l.risk,l.contact,c.role||"",o.phone||c.cp||"",o.email||c.ce||"",o.person||c.person||"",o.whatsapp||c.wa||"",o.wechat||c.wc||"",o.telegram||c.tg||"",c.src||l.src].map(q).join(",");});
   const csv="\ufeff"+[head.map(q).join(",")].concat(body).join("\n");
   const blob=new Blob([csv],{type:"text/csv"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="FALCORA_管线线索_演示.csv";a.click();
@@ -1340,12 +1603,18 @@ function saveOwn(o){try{localStorage.setItem(CKEY,JSON.stringify(o))}catch(e){}}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 const LAYER_TXT={L1:"L1 公开",L2:"L2 职能",L3:"L3 自备",none:"未覆盖"};
 function lb(layer){return '<span class="badge b-'+layer+'">'+(LAYER_TXT[layer]||layer)+'</span>'}
-function cRow(k,v,layer,naTxt){const has=v&&String(v).trim();
-  return '<div class="crow"><span class="k">'+esc(k)+'</span><span class="v'+(has?'':' na')+'">'+esc(has||(naTxt||"需自备"))+'</span>'+lb(layer)+'</div>';}
+/* cRow(键, 值, 层级, 空占位文案, 是否示例值)
+   ⚠️ 「示例」角标必须挂在**值的 span 内部**：`.crow` 是 `88px 1fr auto` 三列 grid，
+      往 grid 里再塞一个子元素会把列数撑破、整行错位。 */
+function cRow(k,v,layer,naTxt,isSample){const has=v&&String(v).trim();
+  return '<div class="crow"><span class="k">'+esc(k)+'</span>'
+    +'<span class="v'+(has?'':' na')+'">'+esc(has||(naTxt||"需自备"))
+    +(isSample&&has?'<span class="sflag">'+T("示例")+'</span>':'')+'</span>'
+    +lb(layer)+'</div>';}
 function cval(id){const e=document.getElementById(id);return e?e.value.trim():""}
 function openCM(dm,nm){
   const l=allLeads().find(x=>x.dm===dm)||{nm:nm||dm,dm:dm,region:"",ind:"",contact:"none"};
-  const c=contactsOf(dm); const own=loadOwn()[dm]||{};
+  const c=contactsOf(l); const own=loadOwn()[dm]||{};
   document.getElementById("cmName").textContent=l.nm;
   document.getElementById("cmDom").innerHTML=[l.dm,l.region,l.ind,l.btype].filter(Boolean).map(function(x){return "<span>"+esc(x)+"</span>";}).join(" · ");
   const role=c.role||"";
@@ -1356,9 +1625,17 @@ function openCM(dm,nm){
   const wc=own.wechat||c.wc||"";
   const tg=own.telegram||c.tg||"";
   const cov=l.contact;
-  const na=cov==="none"?"数据未覆盖 · 需自备":"需自备（L3）";
+  /* ⚠️ L2 与 L3 的「空」性质完全不同，绝不能共用同一句占位文案（2026-10-15 修）：
+     · L2 企业公开职能联系方式 = **平台能力** —— 接入数据源后由平台填充，须标来源；
+     · L3 个人联系方式        = **用户自备** —— 平台不抓取、不推断、不买卖。
+     旧版把两者都写成「需自备」，等于把平台的能力说成使用者的义务 →
+     使用者看到「连企业电话都要我自己找」，会误以为这个产品拿不到任何联系方式。 */
+  const isSample=!!l.sample;   /* 示例线索：L2 给的是**标注清楚的示例值**（见 sampleL2） */
+  const naL2=T("待数据源接入");
+  const naL3=T("需自备（L3）");
   let h="";
-  if(cov==="none") h+='<div class="warnbox">该线索仅有域名，联系方式数据未覆盖——不代表不存在，需您自行补充或等待数据源接入。</div>';
+  if(cov==="none") h+='<div class="warnbox">'+T("该线索目前仅有域名（L1 公开信息）。企业职能联系方式（L2）由平台在接入数据源后自动填充；个人联系方式（L3）平台不抓取、不推断，需您自备（名片 / 展会 / 客户留资）。「数据未覆盖」既不等于「不存在」，也不等于「无风险」。")+'</div>';
+  else if(isSample) h+='<div class="samplebox">'+T("以下 L2 企业职能联系方式为「示例 · 非真实」，仅用于演示接入数据源后的呈现形态，不代表任何真实企业的实际联络信息。L3 个人联系方式平台不抓取、不推断，需您自备。")+'</div>';
   /* 采购需求与命中依据（为什么它是「您的」采购方） */
   const needNA = !l.kw || l.kw==="—";
   h+='<div class="csec"><h4><span>采购需求与命中依据</span><span class="lay">'+lb("L1")+'</span></h4>'
@@ -1367,17 +1644,20 @@ function openCM(dm,nm){
     +'<div class="crow"><span class="k">命中关键词</span><span class="v'+(needNA?" na":"")+'">'+esc(needNA?"—":l.kw)+'</span>'+lb("L1")+'</div>'
     +'<div class="crow"><span class="k">命中依据</span><span class="v">'+esc(l.why||"—")+'</span>'+lb("L1")+'</div></div>';
   h+='<div class="csec"><h4><span>联系窗口人</span><span class="lay">'+lb("L2")+'</span></h4>'
-    +cRow("岗位",role,"L2",na)
-    +cRow("人名",person,"L3",na)+'</div>';
+    +cRow("岗位",role,"L2",naL2,isSample)
+    +cRow("人名",person,"L3",naL3)+'</div>';
   h+='<div class="csec"><h4><span>企业职能联系方式</span><span class="lay">'+lb("L2")+'</span></h4>'
-    +cRow("企业电话",cp,"L2",na)
-    +cRow("部门邮箱",ce,"L2",na)
-    +cRow("官网",c.web||"","L1","—")
-    +cRow("公司主页",c.li||"","L1","—")+'</div>';
+    +cRow("企业电话",cp,"L2",naL2,isSample)
+    +cRow("部门邮箱",ce,"L2",naL2,isSample)
+    /* 官网 = L1 公开信息。线索本身就有域名（弹窗副标题已显示该域名），
+       这一栏空着反而自相矛盾 → 直接用线索域名回填（示例域名，页脚已声明）。 */
+    +cRow("官网",c.web||l.dm,"L1","—")
+    +cRow("公司主页",c.li||"","L1","—")
+    +'<div class="cnote">'+T("L2 = 企业公开的采购 / 销售职能联系方式，由平台在接入数据源后填充并标注来源；L3 = 个人联系方式，平台只接受您自备。")+'</div>'+'</div>';
   h+='<div class="csec"><h4><span>个人 / 即时通讯</span><span class="lay">'+lb("L3")+'</span></h4>'
-    +cRow("WhatsApp",wa,"L3","需自备（L3）")
-    +cRow("WeChat",wc,"L3","需自备（L3）")
-    +cRow("Telegram",tg,"L3","需自备（L3）")+'</div>';
+    +cRow("WhatsApp",wa,"L3",naL3)
+    +cRow("WeChat",wc,"L3",naL3)
+    +cRow("Telegram",tg,"L3",naL3)+'</div>';
   h+='<div class="cnote"><span>数据来源</span> <b>'+esc(c.src||"—")+'</b></div>'
     +'<div class="cnote">个人联系方式（人名 / 手机 / 私人邮箱 / 即时通讯）属 L3，平台只接受用户自备（名片 / 展会 / 客户留资），不抓取、不买卖、不推断。</div>';
   h+='<div class="csec"><h4><span>补录联系方式（L3 · 仅存本机）</span></h4>'
@@ -1434,7 +1714,7 @@ function runVerify(){
 
   /* 2) 邮箱有效性 */
   let mN=0,mBad=0,mFree=0,mOk=0;
-  all.forEach(l=>{const c=contactsOf(l.dm),o=own[l.dm]||{},k=l.card||{};
+  all.forEach(l=>{const c=contactsOf(l),o=own[l.dm]||{},k=l.card||{};
     const m=String(o.email||k.email||c.ce||"").trim(); if(!m) return; mN++;
     if(!MAIL_RE.test(m)){mBad++;return;}
     const host=m.split("@")[1].toLowerCase(), base=normDm(l.dm).split(".")[0];
@@ -1444,7 +1724,7 @@ function runVerify(){
 
   /* 3) 电话 E.164 */
   let tN=0,tOk=0;
-  all.forEach(l=>{const c=contactsOf(l.dm),o=own[l.dm]||{},k=l.card||{};
+  all.forEach(l=>{const c=contactsOf(l),o=own[l.dm]||{},k=l.card||{};
     const t=String(o.phone||k.tel||c.cp||"").trim(); if(!t) return; tN++; if(TEL_RE.test(t.replace(/[\s-]/g,""))) tOk++;});
 
   /* 4) 联系可用性分层 */
@@ -1469,7 +1749,7 @@ function runVerify(){
     if(!d.b.card){ toast("「"+d.b.nm+"」为内置演示数据，不可合并"); return; }
     saveCards(loadCards().filter(x=>normDm(x.dm)!==normDm(d.b.dm)));
     state.added.delete(d.b.dm);
-    runVerify(); render(); updateFunnel();
+    runVerify(); runSearch(); updateFunnel();
     toast("已合并「"+d.b.nm+"」到「"+d.a.nm+"」");
   };});
 
@@ -1526,7 +1806,7 @@ document.getElementById("kSave").onclick=()=>{
     contact:"L3",src:"② 名片建档",at:Date.now()};
   savePipe(pm);
   closeCard();
-  runVerify(); render(); updateFunnel(); showSaved();
+  runVerify(); runSearch(); updateFunnel(); showSaved();
   toast(before!==loadCards().length?"已建档（同名合并）":"已建档并加入线索池");
 };
 
