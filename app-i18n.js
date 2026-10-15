@@ -37,6 +37,25 @@
 
   function norm(s) { return String(s).replace(/\s+/g, ' ').trim(); }
 
+  /* 字典键规范化（2026-10-15）：
+     引擎查表前会把「待查 key」做 norm()（折叠空白 + trim），但字典里有一批键自带
+     前导/尾随空白 —— " 等。"、"用 {b} 定位的 "、07 页以全角空格 U+3000 开头的条目 ——
+     于是 DICT[norm(key)] 永远落空。表现为「这条文案明明写在字典里，切语言却翻不出来」，
+     排查时极易误判成「漏补词条」。启动时把字典键也 norm 一遍，两边对齐。
+     ⚠️ 归一化后会有键碰撞（如 " 条" 与 "条" 并存，且两条译文措辞不同）。
+        **干净键（本身就等于 norm 结果的那个）优先** —— 因为它在归一化前就是唯一可命中的
+        那一份，让带空白的死键覆盖它会凭空改变既有译文。 */
+  (function normalizeDictKeys() {
+    var raw = window.FAL_DICT || {}, out = {};
+    for (var k in raw) {
+      if (!Object.prototype.hasOwnProperty.call(raw, k)) continue;
+      var nk = norm(k);
+      if (nk === k) out[nk] = raw[k];              /* 干净键：总是写（可覆盖死键） */
+      else if (out[nk] === undefined) out[nk] = raw[k]; /* 带空白键：仅在无干净键时兜底 */
+    }
+    DICT = out;
+  })();
+
   /* 繁體兜底：主字典只收「静态界面文案」，页面上还有一批运行时拼接的中文
      （① 战略页分析结论、② 页占位符、⑤ 页下拉选项……）整句不在字典里。
      此时若语言是 zh-Hant，交给 app-i18n-zht.js 的 __falZHT() 做
