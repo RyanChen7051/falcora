@@ -315,7 +315,7 @@
         <input id="q" placeholder="搜索公司 / 域名 / 行业 / 区域…" />
       </div>
       <div class="top-right">
-        <span class="pill">演示数据 · L1/L2/L3</span>
+        <span class="pill">L1/L2/L3 合规分层</span>
         <div class="icon-btn">⚙</div>
       </div>
     </header>
@@ -434,7 +434,7 @@
 
       <div class="foot">
         <span>本池只收录「采购方」——即对您主营品类存在实际采购需求的企业；纯同业竞争者、上游供应商与无采购行为的企业已在初筛阶段剔除。</span><br />
-        <span>演示数据 · 所有公司、联系方式与评分均为示例，不对应真实主体；联系可用性严格遵循 L1/L2/L3 分层与合规边界。 「未发现命中」与「数据未覆盖」均不等于「无风险」。</span>
+        <span>合规声明 · 本原型未接入真实企业数据源，所列企业（如有）均为占位、不对应真实主体；联系可用性严格遵循 L1/L2/L3 分层与合规边界。 「未发现命中」与「数据未覆盖」均不等于「无风险」。</span>
       </div>
     </div>
   </main>
@@ -560,41 +560,12 @@
    · need  = 采购需求品类（他们买什么 —— 与 ① 战略档案的「主营产品/服务关键词」对齐）
    · kw    = 命中的主营关键词（为什么判定为「您的」采购方）
    · why   = 命中依据（判定为采购方的事实依据，用于人工复核）
+   · cats  = **产品类别标签**（自由文本、多值数组 —— 一家公司可有多条产品线，
+     「有的公司不止一种产品」；主标签 = 其采购画像的具体品类，其余按 ADJ 从相邻族推导。
+     ⚠️ 特殊值 **「全产业」= 通配类别**：采购代理/贸易等经营范围横跨全行业的公司，
+     标了它 = 任何类别筛选都命中（见 catHit）。检索层属性，**不改动**按档案收敛的既有逻辑）
    纯同业竞争者、上游供应商、无采购行为的企业已在初筛阶段剔除。 */
-const LEADS = [
-  {nm:"Northwind Industrial Co.", dm:"northwind-ind.com", flag:"🇺🇸", region:"北美", ind:"工业设备", size:"L", match:94, risk:"green", contact:"L2", src:"公开企业库 + 展会名录",
-    btype:"制造商 (OEM/ODM)", need:"工业传感器 · OEM 模组", kw:"工业传感器", why:"官网公开采购需求页 + 海关近 12 个月同类进口记录"},
-  {nm:"RheinMasch GmbH", dm:"rheinmasch.de", flag:"🇩🇪", region:"欧盟", ind:"工业设备", size:"M", match:91, risk:"green", contact:"L2", src:"公开企业库 + 海关数据",
-    btype:"制造商 (OEM/ODM)", need:"伺服驱动 · 精密模组", kw:"精密模组", why:"公共招标平台发布过同类采购公告；采购部门邮箱公开"},
-  {nm:"GulfTech Trading LLC", dm:"gulftech.ae", flag:"🇦🇪", region:"中东", ind:"新能源", size:"M", match:88, risk:"yellow", contact:"L2", src:"公开企业库 + 官网联系页",
-    btype:"分销商 / 代理", need:"储能逆变器 · 光伏组件", kw:"储能逆变器", why:"主营分销业务，公开代理品牌清单含相邻品类"},
-  {nm:"Pacific Sourcing Ltd.", dm:"pacsourcing.sg", flag:"🇸🇬", region:"东南亚", ind:"电子制造", size:"L", match:86, risk:"green", contact:"L2", src:"公开企业库 + 海关数据",
-    btype:"采购代理 / 贸易", need:"电子元器件 · 模组代采", kw:"OEM 模组", why:"公开为多品牌提供代采服务，采购量稳定"},
-  {nm:"Andes Components S.A.", dm:"andescomp.ar", flag:"🇦🇷", region:"拉美", ind:"汽车零部件", size:"M", match:83, risk:"yellow", contact:"L2", src:"公开企业库 + 官网联系页",
-    btype:"制造商 (OEM/ODM)", need:"车用传感器 · 线束", kw:"工业传感器", why:"公开产线扩产新闻，配套件外采比例高"},
-  {nm:"Sahara Build Supplies", dm:"saharabuild.ma", flag:"🇲🇦", region:"非洲", ind:"建材", size:"S", match:79, risk:"red", contact:"L2", src:"公开企业库 + 官网联系页",
-    btype:"分销商 / 代理", need:"建材五金 · 工具", kw:"—", why:"仅域名线索，采购行为待验证（数据未覆盖）"},
-  {nm:"Nordic Med Devices", dm:"nordicmed.fi", flag:"🇫🇮", region:"欧盟", ind:"医疗器械", size:"M", match:90, risk:"green", contact:"L2", src:"公开企业库 + 认证库",
-    btype:"品牌商", need:"医疗设备模组 · 传感组件", kw:"精密模组", why:"持 CE/FDA 认证，官网设供应商招募入口"},
-  {nm:"BlueOcean Renewables", dm:"blueocean.co.jp", flag:"🇯🇵", region:"东亚", ind:"新能源", size:"L", match:87, risk:"green", contact:"L2", src:"公开企业库 + 新闻",
-    btype:"工程商 / 项目方", need:"储能系统 · 逆变器", kw:"储能逆变器", why:"公开中标项目清单，EPC 采购量大"},
-  {nm:"Levant Chemical Hldg", dm:"levantchem.com", flag:"🇯🇴", region:"中东", ind:"化工", size:"L", match:81, risk:"yellow", contact:"L2", src:"公开企业库 + 官网联系页",
-    btype:"制造商 (OEM/ODM)", need:"化工设备 · 仪表", kw:"工业传感器", why:"公开新建产线环评，需采购仪表与成套设备"},
-  {nm:"Mekong Packaging", dm:"mekongpkg.vn", flag:"🇻🇳", region:"东南亚", ind:"包装", size:"S", match:76, risk:"green", contact:"L2", src:"公开企业库 + 官网联系页",
-    btype:"制造商 (OEM/ODM)", need:"包装机械配件", kw:"精密模组", why:"展会采购团留资（用户自备名片）"},
-  {nm:"Cordillera AgriTech", dm:"cordagri.cl", flag:"🇨🇱", region:"拉美", ind:"工业设备", size:"S", match:74, risk:"yellow", contact:"L2", src:"公开企业库 + 官网联系页",
-    btype:"系统集成商", need:"农业自动化模组", kw:"OEM 模组", why:"公开集成项目案例，模组为外采件"},
-  {nm:"Atlas Pharma Logistics", dm:"atlaspharm.eu", flag:"🇳🇱", region:"欧盟", ind:"医疗器械", size:"M", match:92, risk:"green", contact:"L2", src:"公开企业库 + 认证库",
-    btype:"采购代理 / 贸易", need:"冷链设备 · 监测仪表", kw:"工业传感器", why:"公开供应商准入页 + 采购部门职能邮箱"},
-  {nm:"Sahel Solar Works", dm:"sahelsolar.sn", flag:"🇸🇳", region:"非洲", ind:"新能源", size:"S", match:71, risk:"red", contact:"L2", src:"公开企业库 + 官网联系页",
-    btype:"工程商 / 项目方", need:"光伏 · 储能", kw:"—", why:"仅域名线索，采购行为待核实（数据未覆盖）"},
-  {nm:"Han River Components", dm:"hanriver.kr", flag:"🇰🇷", region:"东亚", ind:"汽车零部件", size:"L", match:89, risk:"green", contact:"L2", src:"公开企业库 + 海关数据",
-    btype:"制造商 (OEM/ODM)", need:"车用电子 · 传感器", kw:"工业传感器", why:"海关数据连续进口记录；采购部门公开"},
-  {nm:"Baltic Trade House", dm:"baltictrade.lv", flag:"🇱🇻", region:"欧盟", ind:"建材", size:"M", match:82, risk:"green", contact:"L2", src:"公开企业库 + 官网联系页",
-    btype:"分销商 / 代理", need:"建材 · 五金", kw:"—", why:"公开分销品类清单，含相邻品类"},
-  {nm:"GulfStar Contracting", dm:"gulfstar.qa", flag:"🇶🇦", region:"中东", ind:"建材", size:"M", match:85, risk:"yellow", contact:"L2", src:"公开企业库 + 官网联系页",
-    btype:"工程商 / 项目方", need:"建材 · 机电设备", kw:"精密模组", why:"客户留资，在建项目需采购机电设备"},
-];
+const LEADS = [];
 
 const BTYPES = ["制造商 (OEM/ODM)","品牌商","分销商 / 代理","工程商 / 项目方","系统集成商","采购代理 / 贸易","公共采购"];
 
@@ -720,6 +691,44 @@ const FAM = [
        ["系统集成商","集成服务 · 分包","集成服务","公开集成项目案例"]]}
 ];
 
+/* 相邻品类族（用于推导「第二类别标签」）—— 只收**商业上真实相邻**的配对。
+   ⚠️ 绝不随机跨行业：医疗器械公司不会兼营软件服务；光学公司可能兼营五金工具 / 户外用品。
+   序号即索引位 → 同一家公司每次刷新得到同一组标签（确定性，不用随机数）。 */
+const ADJ = {
+  optics:      ["hardware",    "consumer"],    /* 光学 ↔ 五金工具（共享粗类目）/ 户外消费品（场景相邻） */
+  electronics: ["auto",        "software"],    /* 电子 ↔ 汽车电子 / 工业软件 */
+  machinery:   ["building",    "hardware"],    /* 机械 ↔ 建材工程（机电安装）/ 五金（传动件） */
+  hardware:    ["machinery",   "building"],    /* 五金 ↔ 机械 / 建材（共享粗类目） */
+  chemical:    ["packaging",   "newenergy"],   /* 化工 ↔ 包装材料 / 新能源材料 */
+  medical:     ["chemical",    "electronics"], /* 医疗 ↔ 化工材料（医用耗材）/ 电子（模组） */
+  newenergy:   ["electronics", "building"],    /* 新能源 ↔ 电子（逆变器·BMS）/ 工程（EPC） */
+  auto:        ["electronics", "machinery"],   /* 汽车 ↔ 电子 / 机械 */
+  textile:     ["consumer",    "packaging"],   /* 纺织 ↔ 消费品（家纺）/ 包装（辅料） */
+  packaging:   ["consumer",    "chemical"],    /* 包装 ↔ 快消 / 化工材料 */
+  building:    ["hardware",    "machinery"],   /* 建材 ↔ 五金 / 机械 */
+  consumer:    ["packaging",   "textile"],     /* 消费品 ↔ 包装 / 纺织 */
+  software:    ["electronics", "service"],     /* 软件 ↔ 电子（工控配套）/ 专业服务 */
+  service:     ["software",    "chemical"]     /* 服务 ↔ 软件 / 化工（检测） */
+};
+const FAM_BY_ID = {};
+FAM.forEach(function(f){ FAM_BY_ID[f.id] = f; });
+/* 第 n 个相邻族（按 ADJ 序号确定性取用；无相邻族返回 null） */
+function adjFam(id, n){
+  const a = ADJ[id] || [];
+  return a.length ? (FAM_BY_ID[a[n % a.length]] || null) : null;
+}
+
+/* 「全产业」= 通配类别：经营范围横跨全行业的公司（采购代理/贸易等）。
+   真实环境应由数据源按公开经营范围认定，原型只做演示标注；
+   语义：标了它的线索，**任何类别筛选都命中**，不该被具体类别筛掉。 */
+const ALLCAT = "全产业";
+/* 类别匹配：sel 为 Set（多选）。空 → 不约束；含「全产业」的线索 → 恒真；否则按标签相交 */
+function catHit(l, sel){
+  if(!sel || !sel.size) return true;
+  const cats = l.cats || [];
+  return cats.indexOf(ALLCAT) !== -1 || cats.some(c => sel.has(c));
+}
+
 /* 公司名素材（确定性组合：同一条线索每次刷新都得到同样的域名与公司名，
    否则「加入管线」的记录在刷新后会错位） */
 const PRE = ["Northwind","Rhein","Gulf","Pacific","Andes","Nordic","BlueOcean","Levant","Mekong",
@@ -788,50 +797,17 @@ function matchFamilies(p){
    每族 4 条采购方画像 × 2 个目标市场 = 8 条 —— 同一品类的采购需求在不同国家都成立，
    池内才有可操作的数量；公司与域名按索引确定性生成，互不重复。最多取 2 族。 */
 function genLeads(fams, regions){
-  const out = [];
-  fams.slice(0,2).forEach((f,fi)=>{
-    const pool = (regions && regions.length) ? regions : f.mk;
-    f.b.forEach((b,bi)=>{
-      for(let ri=0; ri<2; ri++){
-        const idx = fi*8 + bi*2 + ri;
-        const p = PRE[idx % PRE.length];
-        const suf = f.suf[(bi+ri) % f.suf.length];
-        const rg = pool[(bi*2+ri) % pool.length];
-        const list = REGMAP[rg] || REGMAP["北美"];
-        const cty = list[(fi+bi+ri) % list.length];
-        out.push({
-          nm: p + " " + suf,
-          dm: p.toLowerCase().replace(/[^a-z]/g,"") + "-" + f.id + ri + "." + cty[2],
-          flag: cty[0], region: rg, ind: f.ind,
-          size: ["S","M","L","M"][bi % 4],
-          match: 96 - bi*3 - fi*2 - ri,
-          risk: (bi===3 || (bi===2&&ri===1)) ? "yellow" : "green",
-          contact: "L2", src: "公开企业库 + 官网联系页",
-          btype: b[0], need: b[1], kw: b[2], why: b[3],
-          fam: f.id, lab: f.lab, telcc: cty[3]
-        });
-      }
-    });
-  });
-  return out;
-}
+  /* 2026-10-15 用户「消除所有演示数据」：不再动态编造采购方线索，避免驾驶舱被虚报。真实环境由数据源按 ① 战略档案检索后返回。 */
+  return [];
+}  /* /genLeads */
 
-/* 确定性哈希 → 演示联系方式（同域名永远得到同一组值） */
+/* 确定性哈希 → 联系方式（同域名永远得到同一组值） */
 function hashStr(s){ let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return h; }
 function contactsOf(dm){
+  /* 2026-10-15 用户「消除所有演示数据」：不再按域名哈希编造联系方式。
+     演示联系方式（CONTACTS）已清空；无自备/无数据源时一律返回空，由使用者自行补录。 */
   if(CONTACTS[dm]) return CONTACTS[dm];
-  const l = allLeads().find(x=>x.dm===dm);
-  if(!l) return {};
-  const h = hashStr(dm);
-  return {
-    role: ROLE[h % ROLE.length], person:"",
-    cp: (l.telcc || "+1 ") + "555 " + (1000 + (h % 9000)),
-    ce: "procurement@" + dm,
-    web: dm,
-    li: "linkedin.com/company/" + String(dm).split(".")[0],
-    wa:"", wc:"", tg:"",
-    src: "公开企业库 + 官网联系页"
-  };
+  return {};
 }
 
 /* 当前线索池：按档案生成 / 或全量演示池 */
@@ -856,6 +832,8 @@ function importedLeads(){
     nm:c.nm, dm:c.dm, flag:"🏳", region:c.region || "待确认", ind:c.ind || "待确认", size:"",
     match:null, risk:"na", contact:"L3", src:"展会名片（用户自备）",
     btype:"待确认", need:"待确认", kw:"—", why:(c.scene || "线下取得") + " · " + (c.date || "") + (c.title ? " · " + c.title : ""),
+    /* 名片建档只填了单个行业文本框 → 类别标签就一个；用户自备数据不强行推断多品类 */
+    cats: (c.ind && c.ind !== "待确认") ? [c.ind] : [],
     card:c
   }));
 }
@@ -872,24 +850,7 @@ function allLeads(){
    · person / wa / wc / tg = 个人姓名与即时通讯——L3，只接受使用者自备，
      平台不抓取、不买卖、不推断。故这里一律留空（不使用任何预设值），
      由使用者在弹窗内自行补录，补录内容只存本机。 */
-const CONTACTS = {
-  "northwind-ind.com":{role:"采购总监",person:"",cp:"+1 312 555 0148",ce:"procurement@northwind-ind.com",web:"northwind-ind.com",li:"linkedin.com/company/northwind-industrial",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
-  "rheinmasch.de":{role:"采购经理",person:"",cp:"+49 89 5550 2210",ce:"einkauf@rheinmasch.de",web:"rheinmasch.de",li:"linkedin.com/company/rheinmasch",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
-  "gulftech.ae":{role:"采购负责人",person:"",cp:"+971 4 555 7788",ce:"info@gulftech.ae",web:"gulftech.ae",li:"linkedin.com/company/gulftech-trading",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
-  "pacsourcing.sg":{role:"采购总监",person:"",cp:"+65 6555 3320",ce:"sourcing@pacsourcing.sg",web:"pacsourcing.sg",li:"linkedin.com/company/pacific-sourcing",wa:"",wc:"",tg:"",src:"公开企业库 + 海关数据"},
-  "andescomp.ar":{role:"采购主管",person:"",cp:"+54 11 5555 8890",ce:"compras@andescomp.ar",web:"andescomp.ar",li:"linkedin.com/company/andes-components",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
-  "saharabuild.ma":{role:"采购经理",person:"",cp:"+212 5 22 555 340",ce:"achats@saharabuild.ma",web:"saharabuild.ma",li:"linkedin.com/company/sahara-build-supplies",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
-  "nordicmed.fi":{role:"采购总监",person:"",cp:"+358 9 5550 1180",ce:"procurement@nordicmed.fi",web:"nordicmed.fi",li:"linkedin.com/company/nordic-med-devices",wa:"",wc:"",tg:"",src:"公开企业库 + 认证库"},
-  "blueocean.co.jp":{role:"調達部長",person:"",cp:"+81 3 5555 6600",ce:"procurement@blueocean.co.jp",web:"blueocean.co.jp",li:"linkedin.com/company/blueocean-renewables",wa:"",wc:"",tg:"",src:"公开企业库 + 新闻"},
-  "levantchem.com":{role:"采购经理",person:"",cp:"+962 6 555 2211",ce:"info@levantchem.com",web:"levantchem.com",li:"linkedin.com/company/levant-chemical",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
-  "mekongpkg.vn":{role:"采购经理",person:"",cp:"+84 28 5555 1234",ce:"purchasing@mekongpkg.vn",web:"mekongpkg.vn",li:"linkedin.com/company/mekong-packaging",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
-  "cordagri.cl":{role:"采购主管",person:"",cp:"+56 2 5555 4477",ce:"compras@cordagri.cl",web:"cordagri.cl",li:"linkedin.com/company/cordillera-agritech",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
-  "atlaspharm.eu":{role:"采购总监",person:"",cp:"+31 20 555 8899",ce:"procurement@atlaspharm.eu",web:"atlaspharm.eu",li:"linkedin.com/company/atlas-pharma-logistics",wa:"",wc:"",tg:"",src:"公开企业库 + 认证库"},
-  "sahelsolar.sn":{role:"采购负责人",person:"",cp:"+221 33 555 4120",ce:"approvisionnement@sahelsolar.sn",web:"sahelsolar.sn",li:"linkedin.com/company/sahel-solar-works",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
-  "hanriver.kr":{role:"구매 이사",person:"",cp:"+82 2 5555 1122",ce:"purchasing@hanriver.kr",web:"hanriver.kr",li:"linkedin.com/company/han-river-components",wa:"",wc:"",tg:"",src:"公开企业库 + 海关数据"},
-  "baltictrade.lv":{role:"采购经理",person:"",cp:"+371 6 555 3344",ce:"info@baltictrade.lv",web:"baltictrade.lv",li:"linkedin.com/company/baltic-trade-house",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
-  "gulfstar.qa":{role:"采购经理",person:"",cp:"+974 4 555 7788",ce:"purchasing@gulfstar.qa",web:"gulfstar.qa",li:"linkedin.com/company/gulfstar-contracting",wa:"",wc:"",tg:"",src:"公开企业库 + 官网联系页"},
-};
+const CONTACTS = {};  /* 2026-10-15 用户「消除所有演示数据」：演示联系方式一并清除；不再编造。 */;
 
 const REGIONS = ["北美","欧盟","中东","东南亚","拉美","非洲","东亚","大洋洲"];
 const INDUSTRIES = ["工业设备","电子制造","医疗器械","新能源","建材","化工","汽车零部件","包装"];
@@ -905,7 +866,10 @@ function savePipe(o){ try{ localStorage.setItem(PIPEKEY, JSON.stringify(o)); }ca
 function addToPipe(l){
   if(!l || !l.dm) return;
   const m = loadPipe();
+  /* flag = 国旗 emoji（L1 公开信息）—— 驾驶舱「全球客户分布」地图按它定位点位；
+     手动新增的记录没有 flag，地图回退到区域锚点。 */
   m[l.dm] = { dm:l.dm, nm:l.nm||l.dm, region:l.region||"", ind:l.ind||"",
+              flag:l.flag||"",
               btype:l.btype||"", need:l.need||"", kw:l.kw||"",
               contact:l.contact||"", src:"② 线索池", at:Date.now() };
   savePipe(m);
@@ -1059,13 +1023,13 @@ function render(){
       +'<span>'+T("线索池要按你的主营品类与目标区域收敛，必须先有档案。填好后这里会自动只出与你主营相关的采购方，不会混入无关行业。")+'</span>'
       +'<div style="margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
       +'<a class="sb-btn pri" href="01_战略_企业战略档案.html" style="text-decoration:none">'+T("前往填写战略档案")+'</a>'
-      +'<button class="sb-btn" id="guideAll">'+T("先看全部演示池")+'</button></div></div>';
+      +'<button class="sb-btn" id="guideAll">'+T("查看全部线索")+'</button></div></div>';
   } else if(state.scope==="profile" && pool.mode==="nocover"){
     list.innerHTML='<div class="guidebox"><b>'+T("你的主营品类在当前演示库中未覆盖")+'</b>'
-      +'<span>'+T("已按档案匹配，但没有命中任何品类族 —— 为了不塞给你无关行业，这里保持为空。真实环境会由数据源按关键词检索后返回结果；原型阶段可先看全部演示池，或回档案补充更具体的关键词。")+'</span>'
+      +'<span>'+T("已按档案匹配，但没有命中任何品类族 —— 为了不塞给你无关行业，这里保持为空。真实环境会由数据源按关键词检索后返回结果，或回档案补充更具体的关键词。")+'</span>'
       +'<div style="margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
       +'<a class="sb-btn pri" href="01_战略_企业战略档案.html" style="text-decoration:none">'+T("回档案补充关键词")+'</a>'
-      +'<button class="sb-btn" id="guideAll">'+T("先看全部演示池")+'</button></div></div>';
+      +'<button class="sb-btn" id="guideAll">'+T("查看全部线索")+'</button></div></div>';
   } else if(!view.length){list.innerHTML='<div class="empty">'+T("没有符合当前筛选条件的线索，试试放宽匹配度或区域。")+'</div>';}
   else{
     list.innerHTML=view.map((l,i)=>{
@@ -1115,20 +1079,20 @@ function renderScopeBar(){
   if(state.scope==="all"){
     el.className="scopebar warn";
     h='<div class="sb-ic">◎</div><div class="sb-t"><span>'+T("当前范围")+'</span></div>'
-      +'<div class="sb-d">'+Tv("全部演示池 —— {n} 家跨品类演示线索，与你填写的档案无关，仅用于预览界面能力。",{n:"<b>"+LEADS.length+"</b>"})+'</div>'
+      +'<div class="sb-d">'+T("本原型未接入真实企业数据源；当前展示的是全部线索池（含你建档的展会名片）。真实环境由数据源按 ① 战略档案检索后返回采购方线索，所列企业不对应真实主体。")+'</div>'
       +'<div class="sb-acts"><button class="sb-btn pri" id="sbProfile">'+T("按我的档案筛选")+'</button></div>';
   } else if(pool.mode==="empty"){
     el.className="scopebar warn";
     h='<div class="sb-ic">!</div><div class="sb-t"><span>'+T("范围未定")+'</span></div>'
       +'<div class="sb-d"><span>'+T("尚未填写 ① 战略档案，线索池无法按你的主营品类收敛。")+'</span></div>'
       +'<div class="sb-acts"><a class="sb-btn pri" href="01_战略_企业战略档案.html" style="text-decoration:none">'+T("前往填写档案")+'</a>'
-      +'<button class="sb-btn" id="sbAll">'+T("看全部演示池")+'</button></div>';
+      +'<button class="sb-btn" id="sbAll">'+T("查看全部线索")+'</button></div>';
   } else if(pool.mode==="nocover"){
     el.className="scopebar warn";
     h='<div class="sb-ic">!</div><div class="sb-t"><span>'+T("品类未覆盖")+'</span></div>'
       +'<div class="sb-d">'+Tv("档案关键词「{kw}」未命中任何品类族。为不塞给你无关行业，此处保持为空。",{kw:"<b>"+kws+"</b>"})+'</div>'
       +'<div class="sb-acts"><a class="sb-btn pri" href="01_战略_企业战略档案.html" style="text-decoration:none">'+T("补充关键词")+'</a>'
-      +'<button class="sb-btn" id="sbAll">'+T("看全部演示池")+'</button></div>';
+      +'<button class="sb-btn" id="sbAll">'+T("查看全部线索")+'</button></div>';
   } else {
     const fams=esc(pool.m.fams.slice(0,3).map(f=>T(f.lab)).join(" / "));
     el.className="scopebar";
@@ -1139,7 +1103,7 @@ function renderScopeBar(){
     if(pool.m.regions.length) vars.rg="<b>"+esc(pool.m.regions.map(r=>T(r)).join(" / "))+"</b>";
     h='<div class="sb-ic">◎</div><div class="sb-t"><span>'+T("当前范围")+'</span></div>'
       +'<div class="sb-d">'+Tv(tpl,vars)+'</div>'
-      +'<div class="sb-acts"><button class="sb-btn" id="sbAll">'+T("看全部演示池")+'</button></div>';
+      +'<div class="sb-acts"><button class="sb-btn" id="sbAll">'+T("查看全部线索")+'</button></div>';
   }
   el.innerHTML=h;
   const a=document.getElementById("sbAll");
@@ -1155,19 +1119,23 @@ function renderInsight(){
   const pool=currentPool();
   let h="";
   if(state.scope==="all"){
-    h='<span>'+T("当前展示的是全部演示池，与你的档案无关。点上方「按我的档案筛选」可按 ① 战略档案的主营关键词与目标区域收敛范围。")+'</span>'
-     +'<span>'+T("池内公司、联系方式与评分均为示例，不对应真实主体。")+'</span>';
+    h='<span>'+T("本原型未接入真实企业数据源，当前没有可展示的采购方线索。点上方「按我的档案筛选」可按 ① 战略档案的主营关键词与目标区域收敛范围（真实环境由数据源返回结果）。")+'</span>'
+     +'<span>'+T("所列企业（如有）均为你自备或占位，不对应真实主体。")+'</span>';
   } else if(pool.mode==="empty"){
     h='<span>'+T("尚未填写 ① 战略档案，线索池无法判断你的主营品类，因此暂不生成任何采购方 —— 避免混入与你无关的行业。")+'</span>'
      +'<span>'+T("填好档案后，这里会按关键词与目标区域收敛，只出对你有实际采购需求的企业。")+'</span>';
   } else if(pool.mode==="nocover"){
     h='<span>'+T("档案关键词在当前演示库中没有对应的品类族，因此这里保持为空，而不是塞给你无关行业的线索。")+'</span>'
-     +'<span>'+T("真实环境会由数据源按关键词检索后返回；原型阶段可先看全部演示池。")+'</span>';
+     +'<span>'+T("真实环境会由数据源按关键词检索后返回结果。")+'</span>';
   } else {
     const fams=esc(pool.m.fams.slice(0,3).map(f=>T(f.lab)).join(" / "));
-    h='<span>'+Tv("依据 ① 战略档案的主营关键词，已收敛到 {fams} 品类族，生成 {n} 家采购方 —— 即对这些品类存在实际采购需求的企业。",{fams:"<b>"+fams+"</b>",n:"<b>"+pool.leads.length+"</b>"})+'</span>'
-     +'<span>'+T("已剔除纯同业竞争者、上游供应商与无采购行为的企业。")+'</span>'
-     +'<span>'+T("池内公司与联系方式为演示数据，不对应真实主体；下方「未覆盖」标记代表该数据源尚未接入，并非无风险。")+'</span>';
+    if(pool.leads.length===0){
+      h='<span>'+T("本原型未接入真实企业数据源，依据 ① 战略档案收敛后当前无可操作的真实采购方。真实环境由数据源按关键词检索后返回采购方线索。")+'</span>';
+    } else {
+      h='<span>'+Tv("依据 ① 战略档案的主营关键词，已收敛到 {fams} 品类族，生成 {n} 家采购方 —— 即对这些品类存在实际采购需求的企业。",{fams:"<b>"+fams+"</b>",n:"<b>"+pool.leads.length+"</b>"})+'</span>'
+       +'<span>'+T("已剔除纯同业竞争者、上游供应商与无采购行为的企业。")+'</span>'
+       +'<span>'+T("本原型未接入真实数据源，所列企业与联系方式为占位、不对应真实主体；下方「未覆盖」标记代表该数据源尚未接入，并非无风险。")+'</span>';
+    }
   }
   el.innerHTML=h;
 }
