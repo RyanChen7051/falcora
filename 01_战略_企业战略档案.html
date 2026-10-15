@@ -467,6 +467,10 @@
   const $ = s => document.querySelector(s);
   const $$ = s => [...document.querySelectorAll(s)];
   const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  /* ND = 使用者自填业务数据（公司名 / 关键词 / 战略意图 / 卖点 / 竞品名…）→ 包 .noi18n，
+     绝不做机器翻译：① 与 ① 档案原文对不上会断掉 ② 分组链；② 字典恰好收录的词被翻、
+     未收录的留中文 → 半中半英（如「光学瞄准镜」→ Optical Riflescopes，而「红点瞄具」留原文）。 */
+  const ND = s => '<span class="noi18n">'+esc(s)+'</span>';
 
   /* ---- i18n 整句翻译（2026-10-15 新增）----
      本页分析卡正文原先是「中文硬编码 + <b> 内联强调」直接拼进 innerHTML，
@@ -730,7 +734,7 @@
       return `<div style="border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
         <b style="color:var(--cyan)">${esc(T(r))}</b>
         <ul class="find" style="margin-top:8px">
-          <li><b>${T("强制认证")}：</b>${esc(a.certs.join(T("、")))}</li>
+          <li><b>${T("强制认证")}：</b>${esc(a.certs.map(c=>T(c)).join(T("、")))}</li>
           <li><b>${T("关税参考")}：</b>${esc(a.tariff)}</li>
           <li><b>${T("本地化要求")}：</b>${esc(a.local)}</li>
           <li><b>${T("行业限制")}：</b>${esc(a.restrict)}</li>
@@ -846,7 +850,7 @@
       ].filter(Boolean);
       $("#anPeer").innerHTML =
         `<div class="verdict">${pVerdict}</div>
-         <table class="matrix"><tr><th>${T("维度")}</th><th>${T("您")}</th>${peers.map(p=>`<th>${esc(p.n).slice(0,6)||T("竞品")}</th>`).join("")}</tr>
+         <table class="matrix"><tr><th>${T("维度")}</th><th>${T("您")}</th>${peers.map(p=>`<th>${p.n?'<span class="noi18n">'+esc(p.n).slice(0,6)+'</span>':T("竞品")}</th>`).join("")}</tr>
          ${dims.map((d,i)=>`<tr><td class="n">${T(d)}</td>${cell(userRow[i])}${peers.map(()=>`<td class="dot-n" title="${esc(T("数据未覆盖 · 接入数据源后补齐"))}">—</td>`).join("")}</tr>`).join("")}</table>
          <ul class="find">${pFind.map(f=>`<li>${f}</li>`).join("")}</ul>`;
     }
@@ -917,13 +921,13 @@
       ? Tv("、{b} 的价格带",{b:"<b>"+T(price>=120?"高于行业均价":price<=75?"低于行业均价":"贴近行业均价")+"</b>"})
       : Tv("、{b}（C 区可选）",{b:"<b>"+T("价格带尚未填写")+"</b>"});
     const posSentence = Tv("{who}{pos}{price}，进入 {reg}；{kwLabel}{kw}。",
-      {who:"<b>"+esc(who)+"</b>", pos:posTxt, price:priceTxt,
-       reg:"<b>"+esc(regTxt)+"</b>", kwLabel:T("主营关键词："), kw:"<b>"+esc(kwTxt)+"</b>"});
+      {who:"<b>"+ND(who)+"</b>", pos:posTxt, price:priceTxt,
+       reg:"<b>"+esc(regTxt)+"</b>", kwLabel:T("主营关键词："), kw:"<b>"+ND(kwTxt)+"</b>"});
     const kwAdvice = kws.length
       ? Tv("建议把「{b1}」做成可被搜索、可被询盘的{b2}，其余关键词作为长尾与交叉销售补充。",
-           {b1:"<b>"+esc(kws[0])+"</b>", b2:"<b>"+T("品类词")+"</b>"})
+           {b1:"<b>"+ND(kws[0])+"</b>", b2:"<b>"+T("品类词")+"</b>"})
       : T("建议先补全主营关键词——它是②线索匹配与④内容生成的共同锚点。");
-    const uspTxt = usp ? Tv("差异化主张：「{b}」。",{b:"<b>"+esc(usp)+"</b>"})
+    const uspTxt = usp ? Tv("差异化主张：「{b}」。",{b:"<b>"+ND(usp)+"</b>"})
                        : T("尚未填写核心差异化卖点，提案与报价缺少锚点，建议补齐。");
     const posBox = `<div class="sbox"><h4><span class="n">1</span>${T("定位与主张")}</h4><p>
       ${posSentence}
@@ -937,7 +941,7 @@
        rl:T("决策角色"), r:"<b>"+esc(buyerRole)+"</b>",
        cl:T("主要触达渠道"), c:"<b>"+esc(chanTxt)+"</b>"});
     const buyerScope = Tv("②「全球线索获取」应{b}的企业（{roles}），排除纯同业竞争者、上游供应商与无采购行为的企业。",
-      {b:"<b>"+Tv("只保留对「{kw}」有实际采购需求",{kw:esc(kws.slice(0,2).join(" / ")||T("主营品类"))})+"</b>",
+      {b:"<b>"+Tv("只保留对「{kw}」有实际采购需求",{kw:kws.length?ND(kws.slice(0,2).join(" / ")):esc(T("主营品类"))})+"</b>",
        roles:T("采购方 / 使用方 / 集成方")});
     const buyerBox = `<div class="sbox"><h4><span class="n">2</span>${T("目标采购方画像")}</h4><p>
       ${buyerSentence}
@@ -950,7 +954,7 @@
     cs.push(comps.length
       ? Tv("已录入 {n} 个主要竞争对手：{names}{tail}",
            {n:"<b>"+comps.length+"</b>",
-            names:"<b>"+comps.slice(0,3).map(c=>esc(c.n)).join(T("、"))+"</b>",
+            names:"<b>"+comps.slice(0,3).map(c=>ND(c.n)).join(T("、"))+"</b>",
             tail:comps.length>3?T(" 等。"):T("。")})
       : Tv("主要竞争对手{b}——同行对标暂缺，请至少补 2 家真实同业，对标结论才可用。",{b:"<b>"+T("尚未录入")+"</b>"}));
     if(!hasPrice) cs.push(Tv("主流价格区间{b}——无法判断我方所处价格带，价格竞争结论暂缺（请在 C 区选择价格带）。",{b:"<b>"+T("尚未填写")+"</b>"}));
@@ -966,11 +970,11 @@
     /* 4 战略路径（三阶段） */
     const p1=Tv("在 {r} 中选 1 个「认证已解锁 + 竞争强度低」的细分市场做{b1}；把「{kw}」做成可询盘的内容资产；在②按「采购方 + 匹配度 ≥ 85」筛出 20–30 家，逐个走③尽调。{tail}",
       {r:"<b>"+esc(regions[0]?T(regions[0]):T("首选区域"))+"</b>", b1:"<b>"+T("样板案例")+"</b>",
-       kw:"<b>"+esc(coreKw)+"</b>", tail:T("目标：跑通 3–5 个可复制的询盘→报价闭环。")});
+       kw:"<b>"+ND(coreKw)+"</b>", tail:T("目标：跑通 3–5 个可复制的询盘→报价闭环。")});
     const p2=Tv("补齐关键认证与资质以解锁更多区域（当前认证：{c}）；从所选渠道中收敛出 2 个主力渠道并跑通首单；对前 2 名竞品建立价格 / 认证 / 新闻的{b}。",
       {c:"<b>"+esc(certs.length?certs.map(x=>T(x)).join(T("、")):T("未填写"))+"</b>", b:"<b>"+T("周度监测")+"</b>"});
     const p3=Tv("围绕 {t} 与差异化卖点构建不可替代性；针对替代方案抬高客户切换成本；以 {kw} 的品类心智对齐战略意图达成度。",
-      {t:"<b>"+esc(tech.length?T(tech[0]):T("技术壁垒"))+"</b>", kw:"<b>"+esc(coreKw)+"</b>"});
+      {t:"<b>"+esc(tech.length?T(tech[0]):T("技术壁垒"))+"</b>", kw:"<b>"+ND(coreKw)+"</b>"});
 
     /* 5 待验证假设 */
     const asm=[];
@@ -991,13 +995,13 @@
 
     const posInVerdict = pos ? Tv("用 {b} 定位的 ",{b:"<b>"+esc(T(pos))+"</b>"}) : "";
     /* 关键词未填时不写「主营品类 打」，避免出现悬空的占位词 + 空格 */
-    const objPart = kws.length ? Tv("{b} 打",{b:"<b>"+esc(coreKw)+"</b>"}) : T("主营品类打");
+    const objPart = kws.length ? Tv("{b} 打",{b:"<b>"+ND(coreKw)+"</b>"}) : T("主营品类打");
     const gapNote = (!pos||!hasPrice) ? T("（定位与价格带尚未填写，补全后结论更准）") : "";
     $("#anStrategy").innerHTML =
       `<div class="verdict">${Tv("一句话结论：在 {r}，{pos}{obj}「{b}」，避开纯比价，先立样板再复制。{gap}{intent}",
          {r:"<b>"+esc(regTxt)+"</b>", pos:posInVerdict, obj:objPart,
           b:"<b>"+T("认证 + 交付确定性")+"</b>", gap:gapNote,
-          intent:intent?Tv("战略意图：{b}。",{b:"<b>"+esc(intent)+"</b>"}):""})}</div>
+          intent:intent?Tv("战略意图：{b}。",{b:"<b>"+ND(intent)+"</b>"}):""})}</div>
        <div class="sgrid">${posBox}${buyerBox}</div>
        <div class="sbox" style="margin-top:14px"><h4><span class="n">3</span>${T("竞争态势判断")}</h4>
          <ul class="find">${cs.map(x=>`<li>${x}</li>`).join("")}</ul></div>
