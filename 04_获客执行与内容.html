@@ -221,7 +221,7 @@
         <input placeholder="搜索客户 / 模板 / 序列…" />
       </div>
       <div class="top-right">
-        <span class="pill">演示数据 · 合规优先</span>
+        <span class="pill">合规优先 · L1/L2/L3</span>
         <div class="icon-btn">⚙</div>
       </div>
     </header>
@@ -238,6 +238,7 @@
 
       <div class="layout">
         <div>
+        <div class="empty" id="coEmpty" hidden>尚无目标客户 · 在 ② 全球线索获取把客户「加入管线」，或从展会名片建档后，这里会出现可生成开发信与执行触达的对象。</div>
           <div class="card">
             <div class="card-h"><div class="ic">✎</div><h3>AI 内容工坊</h3><span class="tag">基于客户画像生成 · 不承诺效果</span></div>
             <div class="card-b">
@@ -329,12 +330,12 @@
 
         <div>
           <div class="card">
-            <div class="card-h"><h3>本周执行看板</h3><span class="tag">演示</span></div>
+            <div class="card-h"><h3>本周执行看板</h3><span class="tag">框架演示</span></div>
             <div class="sb">
-              <div class="stat"><span class="k">触达发送</span><span class="v cy num">1,284</span></div>
-              <div class="stat"><span class="k">打开率</span><span class="v gn num">46.2%</span></div>
-              <div class="stat"><span class="k">回复率</span><span class="v gd num">12.4%</span></div>
-              <div class="stat"><span class="k">约谈转化</span><span class="v cy num">38</span></div>
+              <div class="stat"><span class="k">触达发送</span><span class="v cy num">尚未统计</span></div>
+              <div class="stat"><span class="k">打开率</span><span class="v gn num">尚未统计</span></div>
+              <div class="stat"><span class="k">回复率</span><span class="v gd num">尚未统计</span></div>
+              <div class="stat"><span class="k">约谈转化</span><span class="v cy num">尚未统计</span></div>
             </div>
           </div>
           <div class="card">
@@ -353,30 +354,14 @@
         </div>
       </div>
 
-      <div class="foot">演示数据 · 所有客户、文案与指标均为示例；平台遵守「不代发送 / 不群发 / 不抓未授权联系方式」红线。</div>
+      <div class="foot">本原型未接入真实客户数据源，所列均为框架演示；平台遵守「不代发送 / 不群发 / 不抓未授权联系方式」红线。</div>
     </div>
   </main>
 </div>
 
 <script>
 /* ---------- 客户与「对方资料」（L1/L2 公开职能 · L3 仅用户自备） ---------- */
-const COS_BASE = [
-  {dm:"northwind-ind.com", nm:"Northwind Industrial Co.", ind:"工业设备", region:"北美", role:"采购总监",
-   web:"northwind-ind.com", email:"procurement@northwind-ind.com", tel:"+1 312 555 0148",
-   src:"公开企业库 + 官网联系页", L:"L2"},
-  {dm:"rheinmasch.de", nm:"RheinMasch GmbH", ind:"工业设备", region:"欧盟", role:"采购经理",
-   web:"rheinmasch.de", email:"einkauf@rheinmasch.de", tel:"+49 89 5550 2210",
-   src:"公开企业库 + 官网联系页", L:"L2"},
-  {dm:"gulftech.ae", nm:"GulfTech Trading LLC", ind:"新能源", region:"中东", role:"采购负责人",
-   web:"gulftech.ae", email:"info@gulftech.ae", tel:"+971 4 555 7788",
-   src:"公开企业库 + 官网联系页", L:"L2"},
-  {dm:"pacsourcing.sg", nm:"Pacific Sourcing Ltd.", ind:"电子制造", region:"东南亚", role:"采购总监",
-   web:"pacsourcing.sg", email:"sourcing@pacsourcing.sg", tel:"+65 6555 3320",
-   src:"公开企业库 + 海关数据", L:"L2"},
-  {dm:"mekongpkg.vn", nm:"Mekong Packaging", ind:"包装", region:"东南亚", role:"采购经理",
-   web:"mekongpkg.vn", email:"purchasing@mekongpkg.vn", tel:"+84 28 5555 1234",
-   src:"公开企业库 + 官网联系页", L:"L2"}
-];
+const COS_BASE = [];
 
 /* ---------- 跨页商机状态：② 线索池「加入管线」的公司并入发信对象 ----------
    读 ② 页写的 falcora_pipeline_v1（按域名索引）。这样在 ② 点过「加入管线」的公司，
@@ -539,7 +524,7 @@ const V={
 };
 const lv=(v,lang)=>(V[v]&&V[v][lang])||v;
 
-function cur(){ return COS.find(x=>x.dm===sel.value)||COS[0]; }
+function cur(){ return COS.length ? (COS.find(x=>x.dm===sel.value)||COS[0]) : null; }
 
 /* ---------- ① AI 内容工坊：生成 + 可自行编辑 ---------- */
 let lastSubj="", dbEl=null, dbKey="", dbTm=null, dbDirty=false;
@@ -710,7 +695,8 @@ function renderContacts(){
     + rowI("Telegram","ctTg",o.tg,"需自备 · 在此补录");
 }
 document.getElementById("ctSave").onclick=()=>{
-  const dm=cur().dm, all=ld(OKEY);
+  const cc=cur(); if(!cc) return;
+  const dm=cc.dm, all=ld(OKEY);
   all[dm]={person:val("ctPerson"),phone:val("ctPhone"),wa:val("ctWa"),wc:val("ctWc"),tg:val("ctTg")};
   sv(OKEY,all);
   renderContacts(); renderDraft(); renderSeq();
@@ -769,11 +755,18 @@ function renderSeq(){
 }
 
 /* ---------- 交互绑定 ---------- */
-function renderAll(){ renderDraft(); renderContacts(); renderSeq(); }
+function renderAll(){
+  const c=cur(); const empty=document.getElementById("coEmpty");
+  if(!c){ if(empty) empty.hidden=false; return; }
+  if(empty) empty.hidden=true;
+  renderDraft(); renderContacts(); renderSeq();
+}
 sel.onchange=renderAll;
 document.getElementById("lang").onchange=renderDraft;
 document.getElementById("gen").onclick=()=>{
-  const raw=cur(), key=raw.dm+"|"+curLang()+"|"+chan;
+  const raw=cur();
+  if(!raw){ toast("请先在 ② 加入管线客户，或从展会名片建档"); return; }
+  const key=raw.dm+"|"+curLang()+"|"+chan;
   if(ld(DKEY)[key] && !confirm("该草稿已被您编辑过，重新生成将覆盖您的改动。确定继续？")) return;
   const all=ld(DKEY); delete all[key]; sv(DKEY,all); dbDirty=false; renderDraft();
 };
@@ -808,9 +801,10 @@ SG_FIELDS.forEach(id=>{
   };
 })();
 document.getElementById("exportBtn").onclick=()=>{
-  const c=cur(); const o=ownOf(c.dm); const marks=ld(SKEY)[c.dm]||{}; const s=senderOf();
+  const c=cur(); if(!c){ toast("请先选择目标客户"); return; }
+  const o=ownOf(c.dm); const marks=ld(SKEY)[c.dm]||{}; const s=senderOf();
   const co=companyOf("zh")||"获客通AI";
-  const lines=[co+" 本周执行报告（演示）",
+  const lines=[co+" 本周执行报告",
     "发信方企业,"+co,"发件人,"+(s.person||"未填"),"发件邮箱,"+(s.from||"未填"),
     "收件邮箱,"+(toMail(c)||"未填"),
     "客户,"+c.nm+" ("+c.dm+")",
@@ -818,11 +812,11 @@ document.getElementById("exportBtn").onclick=()=>{
     "人名(L3),"+(o.person||"需自备"),"手机(L3),"+(o.phone||"需自备"),"",
     "序列进度,"+SEQ.filter((s,i)=>marks[i]).length+"/"+SEQ.length];
   SEQ.forEach((s,i)=>{ lines.push(s.day+","+s.t+","+(marks[i]?"已发送":"待执行")); });
-  lines.push("","触达发送,1284","打开率,46.2%","回复率,12.4%","约谈转化,38",
+  lines.push("","（本看板为框架演示，未接入真实执行数据，暂不输出触达/打开/回复/转化指标）",
     "","合规：平台不代发送/不群发/不抓取未授权联系方式；L3 个人联系方式仅接受用户自备。");
   const blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/plain;charset=utf-8"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);
-  a.download=co.replace(/[\\/:*?"<>|]/g,"_")+"_执行报告_演示.txt";a.click();
+  a.download=co.replace(/[\\/:*?"<>|]/g,"_")+"_执行报告.txt";a.click();
 };
 if(window.__falOnRefresh) window.__falOnRefresh(function(){ renderContacts(); renderSeq(); renderSig(); });
 syncSenderUI();
