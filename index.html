@@ -154,19 +154,33 @@
   .map-wrap svg{width:100%; height:auto; display:block}
   .land{fill:rgba(14,154,142,.16); stroke:rgba(94,234,212,.22); stroke-width:.6}
   .grat{stroke:rgba(126,154,160,.10); stroke-width:.5; fill:none}
-  .thread{stroke:rgba(245,184,65,.13); stroke-width:.8; fill:none}
+  .thread{stroke:rgba(94,234,212,.12); stroke-width:.8; fill:none}
+  .thread-started{stroke:rgba(245,184,65,.18); stroke-width:.8; fill:none}
   .client{cursor:pointer}
-  .client .core{fill:var(--gold); stroke:#fff; stroke-width:.5}
-  .client .halo{fill:var(--gold); opacity:.28; transform-origin:center; transform-box:fill-box; animation:pulse 2.6s ease-in-out infinite}
+  /* 默认（青色）= 已加入管线；.started（金色）= 已启动沟通 —— 用户 2026-10-15 要求二态分色 */
+  .client .core{fill:var(--cyan); stroke:#fff; stroke-width:.5}
+  .client .halo{fill:var(--cyan); opacity:.22; transform-origin:center; transform-box:fill-box; animation:pulse 2.6s ease-in-out infinite}
+  .client.started .core{fill:var(--gold); stroke:#fff; stroke-width:.5}
+  .client.started .halo{fill:var(--gold); opacity:.28; transform-origin:center; transform-box:fill-box; animation:pulse 2.6s ease-in-out infinite}
   @keyframes pulse{0%,100%{transform:scale(1); opacity:.30}50%{transform:scale(2.1); opacity:0}}
+  /* 无管线记录时的诚实空态（不画演示点充数） */
+  .map-empty{
+    position:absolute; inset:8px 10px 14px; z-index:20; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:10px; text-align:center;
+    background:rgba(8,30,37,.55); border-radius:12px; padding:20px;
+  }
+  .map-empty[hidden]{display:none}
+  .map-empty b{font-size:14px; color:var(--text)}
+  .map-empty span{font-size:12px; color:var(--muted-2); max-width:420px; line-height:1.7}
   .map-tip{
     position:absolute; pointer-events:none; z-index:30; transform:translate(-50%,-120%);
     background:rgba(8,30,37,.96); border:1px solid var(--border-2); border-radius:10px;
     padding:8px 11px; font-size:12px; white-space:nowrap; box-shadow:var(--shadow); opacity:0; transition:.12s;
   }
   .map-tip b{color:var(--gold)} .map-tip small{color:var(--muted-2); display:block}
-  .legend{display:flex; gap:18px; align-items:center; padding:4px 16px 14px; font-size:12px; color:var(--muted)}
-  .legend i{width:9px; height:9px; border-radius:50%; background:var(--gold); display:inline-block; margin-right:6px; vertical-align:middle}
+  .legend{display:flex; gap:18px; align-items:center; padding:4px 16px 14px; font-size:12px; color:var(--muted); flex-wrap:wrap}
+  .legend i{width:9px; height:9px; border-radius:50%; background:var(--cyan); display:inline-block; margin-right:6px; vertical-align:middle}
+  .legend i.l-start{background:var(--gold)}
 
   .leads{display:flex; flex-direction:column}
   .lead{display:flex; align-items:center; gap:12px; padding:13px 18px; border-bottom:1px solid var(--border)}
@@ -192,6 +206,19 @@
   .badge.stop{color:var(--danger); background:rgba(255,107,107,.14)}
   .badge.rev{color:var(--gold); background:rgba(245,184,65,.12)}
   .badge.down{color:var(--muted); background:rgba(126,154,160,.12)}
+  .badge.ok{color:var(--good); background:rgba(52,211,153,.12)}
+
+  /* 列表面板诚实空态（近期线索 / 尽调动态 / 触达漏斗 共用，2026-10-15） */
+  .list-empty{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; text-align:center; padding:32px 22px}
+  .list-empty[hidden]{display:none}
+  .list-empty b{font-size:13.5px; color:var(--text)}
+  .list-empty span{font-size:12px; color:var(--muted-2); max-width:400px; line-height:1.7}
+  /* 管线状态 chip：与地图图例同色（青 = 已加入管线，金 = 已启动沟通） */
+  .chip{font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; flex:0 0 auto; white-space:nowrap}
+  .chip.pipe{color:var(--cyan); background:rgba(94,234,212,.12)}
+  .chip.start{color:var(--gold); background:rgba(245,184,65,.12)}
+  /* 漏斗口径注脚 */
+  .fnote{font-size:11.5px; color:var(--muted-2); padding:10px 18px 14px; line-height:1.6}
 
   /* ---------- Capability coverage ---------- */
   .cap-sum{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--border)}
@@ -390,29 +417,55 @@
       <!-- Map + Leads -->
       <section class="row2">
         <div class="panel">
-          <div class="panel-h"><span class="dot"></span><h3>全球客户分布</h3><span class="tag">金点 = 已锁定客户 · 演示数据</span></div>
+          <div class="panel-h"><span class="dot"></span><h3>全球客户分布</h3><span class="tag">点位来自实际加入管线的线索</span></div>
           <div class="map-wrap" id="mapWrap">
             <svg id="map" viewBox="0 0 1000 400" preserveAspectRatio="xMidYMid meet"></svg>
             <div class="map-tip" id="mapTip"></div>
+            <div class="map-empty" id="mapEmpty" hidden>
+              <b>还没有线索加入管线</b>
+              <span>到 ② 全球线索获取 把线索加入管线后，这里会按国家/区域标注点位；金色 = 已启动沟通。</span>
+              <a class="sb-btn pri" href="02_全球线索获取.html">前往 ② 加入管线</a>
+            </div>
           </div>
-          <div class="legend"><span><i></i>已锁定客户（脉冲金点）</span><span style="color:var(--muted-2)">悬停查看客户与锁定金额</span></div>
+          <div class="legend"><span><i></i>已加入管线</span><span><i class="l-start"></i>已启动沟通</span><span style="color:var(--muted-2)">点位按国家/区域示意 · 悬停查看客户与状态</span></div>
         </div>
 
         <div class="panel">
           <div class="panel-h"><span class="dot"></span><h3>近期高价值线索</h3><a class="tag" href="02_全球线索获取.html" style="color:var(--cyan);cursor:pointer;text-decoration:none">模块 ② · 全部 →</a></div>
+          <!-- 2026-10-15：原 6 家写死演示公司（虚构匹配度/风险等级）删除，改真实管线驱动；空态引导见下方 list-empty -->
           <div class="leads" id="leads"></div>
+          <div class="list-empty" id="leadsEmpty" hidden>
+            <b>还没有线索加入管线</b>
+            <span>把线索加入管线后，这里会按加入时间显示最近的客户与沟通状态。</span>
+            <a class="sb-btn pri" href="02_全球线索获取.html">前往 ② 加入管线</a>
+          </div>
         </div>
       </section>
 
       <!-- Risk feed -->
       <section class="row2">
         <div class="panel">
-          <div class="panel-h"><span class="dot" style="background:var(--gold);box-shadow:0 0 0 4px rgba(245,184,65,.16)"></span><h3>本周风险拦截动态</h3><span class="tag">模块 ③</span></div>
+          <div class="panel-h"><span class="dot" style="background:var(--gold);box-shadow:0 0 0 4px rgba(245,184,65,.16)"></span><h3>尽调档案动态</h3><span class="tag">模块 ③ · 本机档案</span></div>
+          <!-- 2026-10-15：原 4 条写死「风险拦截」事件（Nordwind 制裁/Orion 异常经营…）全为虚构，删除；
+               改 ③ 页本机真实档案动态，空态引导见下方 list-empty -->
           <div class="feed" id="feed"></div>
+          <div class="list-empty" id="feedEmpty" hidden>
+            <b>还没有建立尽调档案</b>
+            <span>到 ③ 客户尽调与风险核查 为管线客户建立核查档案后，这里会显示最新动态。</span>
+            <a class="sb-btn pri" href="03_客户尽调与风险核查.html">前往 ③ 建立档案</a>
+          </div>
         </div>
         <div class="panel">
-          <div class="panel-h"><span class="dot"></span><h3>转化漏斗（本月）</h3><span class="tag">模块 ⑥</span></div>
+          <div class="panel-h"><span class="dot"></span><h3>触达推进漏斗</h3><span class="tag">模块 ④ · 实时</span></div>
+          <!-- 2026-10-15：原「转化漏斗（本月）」1280/642/418/236 四级全为编造，删除；
+               改「加入管线 → 启动沟通 → 序列过半 → 全部完成」真实口径 -->
           <div class="feed" id="funnel"></div>
+          <div class="list-empty" id="funnelEmpty" hidden>
+            <b>还没有线索加入管线</b>
+            <span>加入管线，并在 ④ 勾选触达步骤后，这里会显示真实的推进进度。</span>
+            <a class="sb-btn pri" href="02_全球线索获取.html">前往 ② 加入管线</a>
+          </div>
+          <div class="fnote" id="funnelNote"></div>
         </div>
       </section>
 
@@ -495,43 +548,43 @@
   const M = window.WORLD_MAP;
   function proj(lon,lat){ return [ (lon-M.lonMin)/(M.lonMax-M.lonMin)*M.W, (M.latMax-lat)/(M.latMax-M.latMin)*M.H ]; }
 
-  /* ---------- 地图客户演示集（数据声明提前到 KPI 之前） ---------- */
-  /* ⚠️ 2026-10-14 修复：KPI 段的 kpiRead() 要读 clients.length，而 const 有暂时性死区，
-     原先把声明放在下面的「World map」段 → kpiRender() 一执行就
-     ReferenceError: Cannot access 'clients' before initialization → **整段 KPI 脚本中断**
-     → 页面保留旧 HTML（#kpis 空、横幅静态文案在）。故把纯数据声明提到此处。 */
-  const clients=[
-    {n:"Helios Industrial", c:"德国", lon:9.5, lat:51.2, v:4.8},
-    {n:"Meridian Components", c:"美国", lon:-98, lat:39, v:3.6},
-    {n:"Sakura Precision", c:"日本", lon:139.7, lat:35.7, v:3.1},
-    {n:"Atlas Retail Group", c:"英国", lon:-1.5, lat:52, v:2.7},
-    {n:"Vesta Manufacturing", c:"巴西", lon:-47, lat:-23.5, v:2.2},
-    {n:"Nordwind Trading", c:"阿联酋", lon:55.3, lat:25.2, v:2.9},
-    {n:"Pacific Link Co.", c:"新加坡", lon:103.8, lat:1.35, v:1.8},
-    {n:"Southern Cross Pty", c:"澳大利亚", lon:151.2, lat:-33.9, v:1.6},
-    {n:"Maple Tech Inc.", c:"加拿大", lon:-79.4, lat:43.7, v:2.0},
-    {n:"Bharat Forge Ltd", c:"印度", lon:72.9, lat:19.1, v:2.4},
-    {n:"AfriTrade Holdings", c:"南非", lon:28, lat:-26.2, v:1.3},
-    {n:"Iberia Auto S.A.", c:"西班牙", lon:-3.7, lat:40.4, v:1.9},
-    {n:"Alpine Robotics", c:"瑞士", lon:8.5, lat:47.4, v:2.1},
-    {n:"Norske Energy", c:"挪威", lon:10.7, lat:59.9, v:1.5},
-  ];
+  /* ---------- 地图定位表（国家 → 经纬度；区域 → 代表锚点） ---------- */
+  /* ⚠️ 2026-10-15 变更：地图点位**不再有演示客户**（原 14 家 clients 演示集连同虚构的
+     「锁定金额」一起删除）。唯一数据源 = 实际加入管线的线索（'falcora_pipeline_v1'）。
+     定位优先级：
+       · ② 页 addToPipe 随记录写入国旗 emoji（flag）→ COUNTRY_GEO 精确定位
+       · 手动新增的管线记录没有国旗 → REGION_GEO 区域锚点（点位为区域示意，非精确国界）
+       · 区域也未知 → 不绘制（宁可少画，不虚报位置）
+     注意：KPI 段在下面，不再引用任何地图数据（原「已锁定客户 ← clients.length」
+     已改为「已启动沟通 ← falcora_seq_v1」，见 kpiModel），故无 TDZ 顾虑。 */
+  const COUNTRY_GEO = {
+    "🇺🇸":[-98,39],    "🇨🇦":[-79.4,43.7], "🇩🇪":[9.5,51.2],  "🇳🇱":[5.5,52.2],
+    "🇫🇷":[2.3,46.6],  "🇮🇹":[12.5,42.8],  "🇦🇪":[55.3,25.2], "🇸🇦":[45,24],
+    "🇶🇦":[51.2,25.3], "🇸🇬":[103.8,1.35], "🇻🇳":[106,16],    "🇹🇭":[100.5,15],
+    "🇯🇵":[139.7,35.7],"🇰🇷":[127.5,36.5], "🇦🇷":[-58.4,-34.6],"🇨🇱":[-70.6,-33.4],
+    "🇧🇷":[-47,-23.5], "🇬🇧":[-1.5,52],    "🇦🇺":[151.2,-33.9],"🇮🇳":[72.9,19.1],
+    "🇿🇦":[28,-26.2],  "🇪🇸":[-3.7,40.4],  "🇨🇭":[8.5,47.4],  "🇳🇴":[10.7,59.9]
+  };
+  const REGION_GEO = {"北美":[-98,39],"欧盟":[9.5,51.2],"中东":[55.3,25.2],"东南亚":[103.8,1.35],
+    "东亚":[139.7,35.7],"拉美":[-47,-23.5],"非洲":[28,-26.2],"大洋洲":[151.2,-33.9]};
 
-  /* ---------- KPI cards（2026-10-14 起**全部实时计算**，不再硬编码） ---------- */
-  /* 背景（用户 2026-10-14：「检查这排数字的真实性，不要虚报」）：
-     原先这排是 index.html 里的字面量常量 —— 326 / 1,842 / 76 / 47 / 312 / 34.1%，
-     与系统真实状态严重不符：② 页演示池实际 16 家、③ 页尽调档案 2 份、管线默认 0 家，
-     「节省尽调工时」在产品里根本没有对应功能。② 页 changelog 里早就立过
-     「不编造 312 家 / 47 家」的铁律，这里却是同一组数字的漏网之鱼。
+  /* ---------- KPI cards（2026-10-15 起**全真实口径，零演示数字**） ---------- */
+  /* 两次整改的背景：
+     ① 2026-10-14 用户：「检查这排数字的真实性，不要虚报」—— 原字面量
+        326 / 1,842 / 76 / 47 / 312 / 34.1% 改为实时计算；
+     ② 2026-10-15 用户：「所有演示的数据都要消除，否则会造成混乱」——
+        原「线索池企业 / 覆盖国家」两卡仍读 ② 页**演示池**统计（tag 虽标了
+        「演示数据」，但与同排真实卡片并排出现正是「混乱」的来源），随本次
+        清零一并删除，换成同样可验的真实指标。
 
-     现在的取值口径（全部可验）：
-       · 线索池企业 / 覆盖国家 / 覆盖区域 ← ② 页经 app-stats.js 上报的**演示池实数**
-       · 已锁定客户 ← 本页地图 clients 数组（演示集，就在下方地图上，可逐个点开核对）
-       · 尽调档案 ← ③ 页上报的 DOSSIERS 实数
-       · 加入管线 ← localStorage 'falcora_pipeline_v1'（使用者在 ② 页的真实操作）
-       · 管线启动沟通率 ← 'falcora_seq_v1' 已标记步数 ÷ 加入管线；分母 0 → 诚实空态
-     ⚠️ 某个模块还没打开过时，app-stats 里没有对应命名空间 → 显示「尚未统计」，
-        **绝不回退任何预设数字**；切回本页（visibilitychange / focus）会重新统计。 */
+     六卡全部直读本机 localStorage 键（与 ②③④ 页写入口径一一对应）：
+       · falcora_pipeline_v1  = ② 页「加入管线」/ 手动新增 / 名片建档的真实商机
+       · falcora_seq_v1       = ④ 页触达序列勾选步数（≥1 步 = 已启动沟通 = 地图金点）
+       · falcora_dd_manual_v1 = ③ 页使用者手动建立的尽调档案（2 份演示档案不计入）
+       · falcora_cards_v1     = ② 页展会名片录入（L3 个人联系方式的唯一合法来源）
+       · falcora_drafts_v1    = ④ 页保存的触达草稿
+     ⚠️ 这些都是**使用者的本机操作结果**：没有操作过就是 0，不显示「尚未统计」
+        也不回退任何预设数字；唯一例外是「管线启动沟通率」——分母 0 时诚实空态。 */
 
   /* 数字走 Intl（按界面语言本地化，如 de 用逗号小数）；文案走 i18n 字典。
      ⚠️ 本脚本在 app-i18n.js 之前执行，故 __falOnRefresh 用 onLangRefresh() 延后注册。 */
@@ -548,28 +601,28 @@
   /* ⚠️ 统计标签（演示数据 / 实时统计 / 尚未统计）与标签名都是**字典条目**，
      数字本身是运行时值 —— 所以「值」永远单独成节点，不与中文拼串。 */
   function kpiRead(){
-    const S = window.__falStats ? __falStats.get() : {};
+    /* 全部直读本机键 —— 不经 app-stats 中转：这五个键的使用者操作语义明确，
+       「键不存在」就等于「从未操作过」，计数为 0 是诚实值，不是缺失。 */
     let pipeN=0; try{ pipeN=Object.keys(JSON.parse(localStorage.getItem("falcora_pipeline_v1")||"{}")||{}).length; }catch(e){}
-    /* 已启动沟通 = ④ 页 seq 里至少有 1 个已勾选步骤的客户数 */
+    /* 已启动沟通 = ④ 页 seq 里至少有 1 个已勾选步骤的客户数（= 地图金点数） */
     let started=0; try{ const sq=JSON.parse(localStorage.getItem("falcora_seq_v1")||"{}")||{};
       started=Object.keys(sq).filter(dm=>Object.keys(sq[dm]||{}).length>0).length; }catch(e){}
-    return {
-      leads: S.leads||null,                 /* {n, countries, regions, regionList} */
-      dd: S.dd||null,                       /* {n} */
-      mapN: clients.length,
-      mapCountries: new Set(clients.map(c=>c.c)).size,
-      pipeN: pipeN, started: started
-    };
+    /* 尽调档案只数 ③ 页手动建立/带入并落盘的档案（falcora_dd_manual_v1）——
+       2 份演示档案不进任何 KPI */
+    let ddN=0; try{ ddN=Object.keys(JSON.parse(localStorage.getItem("falcora_dd_manual_v1")||"{}")||{}).length; }catch(e){}
+    let cardN=0; try{ const a=JSON.parse(localStorage.getItem("falcora_cards_v1")||"[]"); if(Array.isArray(a)) cardN=a.length; }catch(e){}
+    let draftN=0; try{ draftN=Object.keys(JSON.parse(localStorage.getItem("falcora_drafts_v1")||"{}")||{}).length; }catch(e){}
+    return { pipeN:pipeN, started:started, ddN:ddN, cardN:cardN, draftN:draftN };
   }
   function kpiModel(){
     const R=kpiRead();
-    /* v=null → 尚未统计；ratio 且分母 0 → 暂无数据 */
+    /* v=null → 诚实空态（仅「管线启动沟通率」分母 0 时出现） */
     return [
-      {lab:"线索池企业",   v:R.leads?R.leads.n:null,            unit:"家", tag:R.leads?"演示数据":"尚未统计"},
-      {lab:"覆盖国家/地区", v:R.leads?R.leads.countries:null,   unit:"个", tag:R.leads?"演示数据":"尚未统计"},
-      {lab:"已锁定客户",   v:R.mapN,                             unit:"家", tag:"演示数据", gold:true},
-      {lab:"尽调档案",     v:R.dd?R.dd.n:null,                  unit:"份", tag:R.dd?"演示数据":"尚未统计"},
-      {lab:"加入管线",     v:R.pipeN,                            unit:"家", tag:"实时统计"},
+      {lab:"加入管线",       v:R.pipeN,   unit:"家", tag:"实时统计"},
+      {lab:"已启动沟通",     v:R.started, unit:"家", tag:"实时统计", gold:true},
+      {lab:"尽调档案",       v:R.ddN,     unit:"份", tag:"实时统计"},
+      {lab:"展会名片",       v:R.cardN,   unit:"张", tag:"实时统计"},
+      {lab:"触达草稿",       v:R.draftN,  unit:"份", tag:"实时统计"},
       /* 口径：与客户启动沟通家数 ÷ 加入管线家数。分母 0 时不编造百分比。
          ⚠️ 乘 100 才是百分数（0.333 → 33.3%）；title 文案必须与字典 key 完全一致。 */
       {lab:"管线启动沟通率", v:(R.pipeN>0 ? R.started/R.pipeN*100 : null), dec:1, suffix:"%",
@@ -623,6 +676,8 @@
     if(kpiAnimating) return;
     const fresh=kpiRender();
     fresh.forEach(el=>{ if(el.dataset.empty!=="1") paintKpi(el,+el.dataset.t); });
+    /* 地图 / 线索 / 尽调动态 / 漏斗 / 洞察横幅与 KPI 同源：管线或沟通一变一起刷新 */
+    renderMap(); renderLeads(); renderRiskFeed(); renderFunnel(); renderInsightBanner();
   }
   document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="visible") kpiRepaint(); });
   window.addEventListener("focus", kpiRepaint);
@@ -633,12 +688,15 @@
     if(note) note.textContent=T("以上数字均由本机可验证的数据实时计算：不使用任何预设值；对应模块尚未打开时显示「尚未统计」，绝不回退默认数字。");
   })();
 
-  /* ---------- AI 洞察横幅（2026-10-14 起按真实状态计算，不再写死） ---------- */
-  /* 原文案：「基于您的行业画像，我们发现 3 个高匹配度市场（中东工业采购、东南亚
-     电子制造、北美新能源）尚未被覆盖，预计可释放约 1,200 条优质线索」——
-     三个数字全是编的：② 页演示池实际 16 家、覆盖 7 个区域（与「3 个尚未覆盖」
-     矛盾），且 ① 档案没填时说「基于您的行业画像」本身就是假的。
-     现按四态真实计算，每句一个字典条目、动态值走 {x} 占位符（拼串铁律）。 */
+  /* ---------- AI 洞察横幅（2026-10-15 起：① 档案 × 真实管线覆盖，零演示池数字） ---------- */
+  /* 两次整改：
+     ① 2026-10-14：原文案「3 个高匹配市场」「1,200 条优质线索」三个数字全是编的
+        （② 页演示池实际 16 家、覆盖 7 个区域，与「3 个尚未覆盖」矛盾），
+        改为按 ① 档案 + ② 演示池真实状态计算；
+     ② 2026-10-15 用户「所有演示的数据都要消除」：覆盖对比不再读 ② 演示池
+        （app-stats leads），改为与地图同源的 falcora_pipeline_v1 ——
+        管线为空就说「还没有线索加入管线」，不用演示池数字撑场面。
+     四态分支，每句一个字典条目、动态值走 {x} 占位符（拼串铁律）。 */
   const IKEY="falcora_strategy_profile_v1", IKEY_OLD="falpora_strategy_profile_v1";
   /* ① 目标区域 → ② 页区域桶（与 02 页 RMAP 一致）。中国内地/中国港澳台/其他
      在 ② 页没有对应区域桶 → 映射为 ""，不参与覆盖对比（不硬凑）。 */
@@ -672,41 +730,35 @@
   function renderInsightBanner(){
     if(!ibox) return;
     const p=readProfile();
-    const L=window.__falStats?__falStats.get("leads"):null;
     let parts=[], cta="", href="index.html";
     if(!profileFilled(p)){
       parts.push(T("尚未填写 ① 战略档案 —— 在此之前，系统不对市场做任何判断。"));
       parts.push(T("填写目标市场与主营品类后，这里会按真实数据提示哪些区域值得优先进入。"));
       cta=T("去填 ① 战略档案 →"); href="01_战略_企业战略档案.html";
-    } else if(!L){
-      parts.push(T("① 战略档案已填写，但尚未统计到 ② 页线索池。"));
-      parts.push(T("打开 ② 全球线索获取生成线索后，这里会按你的目标区域显示真实覆盖情况。"));
-      cta=T("打开 ② 全球线索获取 →"); href="02_全球线索获取.html";
-    } else if(!L.n){
-      const reason = L.mode==="nocover"
-        ? T("档案关键词未命中任何品类族，为不塞入无关行业，此处保持为空")
-        : T("档案尚未让线索池收敛出采购方");
-      parts.push(Tv("② 页当前范围还没有线索：{reason}。",{reason:"<b>"+reason+"</b>"}));
-      parts.push(T("打开 ② 页，按页面引导补充关键词，或先看全部演示池。"));
-      cta=T("打开 ② 查看引导 →"); href="02_全球线索获取.html";
     } else {
-      const rl=Array.isArray(L.regionList)?L.regionList:[];
-      parts.push(Tv("当前范围共 {n} 家线索、覆盖 {r} 个区域。",{n:"<b>"+L.n+"</b>",r:"<b>"+rl.length+"</b>"}));
-      parts.push(L.scope==="all"
-        ? T("当前范围是全部演示池，与你的档案无关，仅用于预览界面能力。")
-        : T("线索按 ① 战略档案的主营品类与目标区域收敛。"));
-      const t=targetRegions(p);
-      const miss=t.filter(r=>rl.indexOf(r)===-1);
-      if(!t.length){
-        parts.push(T("档案尚未选择目标区域，暂不做覆盖对比。"));
-      } else if(!miss.length){
-        parts.push(Tv("你的目标区域 {t} 个均已有数据覆盖。",{t:"<b>"+t.length+"</b>"}));
+      /* 覆盖口径：与地图同源的真实管线（falcora_pipeline_v1），不再读 ② 演示池 */
+      const recs=pipeRecords(), dms=Object.keys(recs);
+      const rl=[];
+      dms.forEach(dm=>{ const rg=recs[dm].region; if(rg && rl.indexOf(rg)===-1) rl.push(rg); });
+      if(!dms.length){
+        parts.push(T("① 战略档案已填写，但还没有线索加入管线。"));
+        parts.push(T("打开 ② 全球线索获取，把线索加入管线后，这里会按你的目标区域显示真实覆盖情况。"));
+        cta=T("打开 ② 全球线索获取 →"); href="02_全球线索获取.html";
       } else {
-        parts.push(Tv("你的目标区域 {t} 个，其中 {m} 个尚未覆盖：{miss}。",
-          {t:"<b>"+t.length+"</b>",m:"<b>"+miss.length+"</b>",miss:"<b>"+rjoin(miss)+"</b>"}));
+        parts.push(Tv("当前管线共 {n} 家客户、覆盖 {r} 个区域。",{n:"<b>"+dms.length+"</b>",r:"<b>"+rl.length+"</b>"}));
+        const t=targetRegions(p);
+        const miss=t.filter(r=>rl.indexOf(r)===-1);
+        if(!t.length){
+          parts.push(T("档案尚未选择目标区域，暂不做覆盖对比。"));
+        } else if(!miss.length){
+          parts.push(Tv("你的目标区域 {t} 个均已有客户加入管线。",{t:"<b>"+t.length+"</b>"}));
+        } else {
+          parts.push(Tv("你的目标区域 {t} 个，其中 {m} 个还没有客户加入管线：{miss}。",
+            {t:"<b>"+t.length+"</b>",m:"<b>"+miss.length+"</b>",miss:"<b>"+rjoin(miss)+"</b>"}));
+        }
+        parts.push(T("以上为本机实时数据；随管线与沟通进度更新。"));
+        cta=T("打开 ② 全球线索获取 →"); href="02_全球线索获取.html";
       }
-      parts.push(T("以上为原型演示数据；真实覆盖随数据源接入更新。"));
-      cta=T("打开 ② 全球线索获取 →"); href="02_全球线索获取.html";
     }
     ibox.innerHTML=parts.join("");
     if(igo){
@@ -716,7 +768,7 @@
     }
   }
   renderInsightBanner();
-  onLangRefresh(function(){ renderInsightBanner(); });
+  onLangRefresh(function(){ renderInsightBanner(); renderLeads(); renderRiskFeed(); renderFunnel(); });
 
   /* ---------- World map ---------- */
   const svg=document.getElementById("map");
@@ -729,69 +781,180 @@
   // land
   const land=document.createElementNS(NS,"path"); land.setAttribute("d",M.path); land.setAttribute("class","land"); svg.appendChild(land);
 
+  /* ---------- 地图点位（2026-10-15 改：唯一来源 = 实际加入管线的线索） ----------
+     用户原话：「全球客户分布金点这个，应该要依据实际加入管线的来点缀，还要区分不同颜色，
+     一个颜色是加入管线，金色是已经成功开始进入沟通。」
+     · 青色点 = 已加入管线（'falcora_pipeline_v1' 有记录）
+     · 金色点 = 已启动沟通（该域名在 'falcora_seq_v1' 已有 ≥1 个勾选步骤）
+     · 无记录 → 空态引导，**不画演示点充数**
+     · 悬停仅显示公司/区域/状态 —— 不显示「锁定金额」：平台没有这个数据，不虚报 */
   const hub=[M.W/2, M.H-18];
   const tip=document.getElementById("mapTip"); const wrap=document.getElementById("mapWrap");
-  clients.forEach(cl=>{
-    const [x,y]=proj(cl.lon,cl.lat);
-    const th=document.createElementNS(NS,"line"); th.setAttribute("x1",hub[0]);th.setAttribute("y1",hub[1]);
-    th.setAttribute("x2",x);th.setAttribute("y2",y);th.setAttribute("class","thread");svg.appendChild(th);
-    const g=document.createElementNS(NS,"g"); g.setAttribute("class","client");
-    const r=3+cl.v*1.6;
-    const halo=document.createElementNS(NS,"circle"); halo.setAttribute("cx",x);halo.setAttribute("cy",y);halo.setAttribute("r",r);halo.setAttribute("class","halo");
-    const core=document.createElementNS(NS,"circle"); core.setAttribute("cx",x);core.setAttribute("cy",y);core.setAttribute("r",Math.max(2.2,r*0.5));core.setAttribute("class","core");
-    g.appendChild(halo);g.appendChild(core);
-    g.addEventListener("mouseenter",()=>{ tip.innerHTML=`<b>${cl.n}</b><small>${cl.c} · 锁定金额 $${cl.v.toFixed(1)}M</small>`; tip.style.opacity=1; });
-    g.addEventListener("mousemove",e=>{ const b=wrap.getBoundingClientRect(); tip.style.left=(e.clientX-b.left)+"px"; tip.style.top=(e.clientY-b.top)+"px"; });
-    g.addEventListener("mouseleave",()=>{ tip.style.opacity=0; });
-    svg.appendChild(g);
-  });
+  const mapEmpty=document.getElementById("mapEmpty");
+  const dotsG=document.createElementNS(NS,"g"); dotsG.setAttribute("id","mapDots"); svg.appendChild(dotsG);
+  function pipeRecords(){ try{ return JSON.parse(localStorage.getItem("falcora_pipeline_v1")||"{}")||{}; }catch(e){ return {}; } }
+  function seqStarted(dm){ try{ const sq=JSON.parse(localStorage.getItem("falcora_seq_v1")||"{}")||{}; return Object.keys(sq[dm]||{}).length>0; }catch(e){ return false; } }
+  /* 同位置防完全重叠：按域名哈希确定性微移（同一记录每次刷新偏移一致，不会跳位） */
+  function jit(dm){ let h=0; for(let i=0;i<dm.length;i++) h=(h*31+dm.charCodeAt(i))>>>0; return [ (h%7)-3, ((h>>4)%7)-3 ]; }
+  function mapPoints(){
+    const recs=pipeRecords(), out=[];
+    Object.keys(recs).forEach(dm=>{
+      const r=recs[dm]||{};
+      const geo=COUNTRY_GEO[r.flag] || REGION_GEO[r.region] || null;
+      if(!geo) return;                     /* 位置未覆盖 → 不画（宁可少画，不虚报位置） */
+      out.push({dm:dm, nm:r.nm||dm, region:r.region||"", lon:geo[0], lat:geo[1], started:seqStarted(dm)});
+    });
+    return out;
+  }
+  function renderMap(){
+    dotsG.innerHTML="";
+    const pts=mapPoints();
+    if(mapEmpty) mapEmpty.hidden = pts.length>0;
+    pts.forEach(p=>{
+      const j=jit(p.dm); const [x,y]=proj(p.lon,p.lat);
+      const px=x+j[0], py=y+j[1];
+      const th=document.createElementNS(NS,"line"); th.setAttribute("x1",hub[0]);th.setAttribute("y1",hub[1]);
+      th.setAttribute("x2",px);th.setAttribute("y2",py);
+      th.setAttribute("class", p.started?"thread thread-started":"thread"); dotsG.appendChild(th);
+      const g=document.createElementNS(NS,"g"); g.setAttribute("class","client"+(p.started?" started":""));
+      const halo=document.createElementNS(NS,"circle"); halo.setAttribute("cx",px);halo.setAttribute("cy",py);halo.setAttribute("r",5.5);halo.setAttribute("class","halo");
+      const core=document.createElementNS(NS,"circle"); core.setAttribute("cx",px);core.setAttribute("cy",py);core.setAttribute("r",2.6);core.setAttribute("class","core");
+      g.appendChild(halo);g.appendChild(core);
+      g.addEventListener("mouseenter",()=>{
+        tip.textContent="";
+        const b=document.createElement("b"); b.textContent=p.nm;
+        const s=document.createElement("small"); s.textContent=T(p.region||"区域待确认")+" · "+T(p.started?"已启动沟通":"已加入管线");
+        tip.appendChild(b); tip.appendChild(s); tip.style.opacity=1;
+      });
+      g.addEventListener("mousemove",e=>{ const b=wrap.getBoundingClientRect(); tip.style.left=(e.clientX-b.left)+"px"; tip.style.top=(e.clientY-b.top)+"px"; });
+      g.addEventListener("mouseleave",()=>{ tip.style.opacity=0; });
+      dotsG.appendChild(g);
+    });
+    return pts.length;
+  }
+  renderMap();
 
-  /* ---------- Leads ---------- */
-  const leads=[
-    {co:"Helios Industrial GmbH", from:"德国", match:94, risk:"低", rc:"行业展会", fl:"🇩🇪"},
-    {co:"Meridian Components Inc.", from:"美国", match:91, risk:"低", rc:"海关数据", fl:"🇺🇸"},
-    {co:"Sakura Precision K.K.", from:"日本", match:88, risk:"中", rc:"招标公告", fl:"🇯🇵"},
-    {co:"Atlas Retail Group", from:"英国", match:86, risk:"低", rc:"官网线索", fl:"🇬🇧"},
-    {co:"Vesta Manufacturing", from:"巴西", match:82, risk:"中", rc:"社媒监听", fl:"🇧🇷"},
-    {co:"Nordwind Trading", from:"阿联酋", match:79, risk:"高", rc:"黑名单命中·已拦截", fl:"🇦🇪"},
-  ];
-  const riskCls={低:"low",中:"mid",高:"high"};
+  /* ---------- 近期加入管线的客户（唯一来源 = falcora_pipeline_v1，与地图同源） ----------
+     2026-10-15：原 6 家写死演示公司（Helios 94% / Meridian 91% … 连同虚构的
+     「匹配度」与「风险等级」）全部删除。现在按加入时间倒序显示真实管线客户，
+     状态 chip 与地图图例同色：
+       青色 = 已加入管线；金色 = 已启动沟通（④ 触达序列已有勾选步骤）
+     没有任何记录时显示空态引导 —— 不填假客户凑数。 */
   const leadsBox=document.getElementById("leads");
-  leads.forEach(l=>{
-    const el=document.createElement("div"); el.className="lead";
-    el.innerHTML=`<div class="fl">${l.fl}</div>
-      <div class="co"><b>${l.co}</b><small>${l.from} · 来源：${l.rc}</small></div>
-      <div class="score num">${l.match}%</div>
-      <div class="risk ${riskCls[l.risk]}">${l.risk}</div>`;
-    leadsBox.appendChild(el);
-  });
+  const leadsEmpty=document.getElementById("leadsEmpty");
+  function renderLeads(){
+    if(!leadsBox) return 0;
+    leadsBox.innerHTML="";
+    const recs=pipeRecords();
+    const rows=Object.keys(recs).map(dm=>({dm:dm, r:recs[dm]||{}}))
+      .sort((a,b)=>(b.r.at||0)-(a.r.at||0)).slice(0,6);
+    if(leadsEmpty) leadsEmpty.hidden = rows.length>0;
+    rows.forEach(x=>{
+      const r=x.r, st=seqStarted(x.dm);
+      const el=document.createElement("div"); el.className="lead";
+      const fl=document.createElement("div"); fl.className="fl"; fl.textContent=r.flag||"🏳";
+      const co=document.createElement("div"); co.className="co";
+      const b=document.createElement("b"); b.textContent=r.nm||x.dm;
+      const sm=document.createElement("small");
+      sm.textContent=rv(r.region||"区域待确认")+" · "+T(r.src||"手动新增");
+      co.appendChild(b); co.appendChild(sm);
+      const chip=document.createElement("span");
+      chip.className="chip "+(st?"start":"pipe");
+      chip.textContent=T(st?"已启动沟通":"已加入管线");
+      el.appendChild(fl); el.appendChild(co); el.appendChild(chip);
+      leadsBox.appendChild(el);
+    });
+    return rows.length;
+  }
+  renderLeads();
 
-  /* ---------- Risk feed ---------- */
-  const feed=[
-    {tm:"10:24", tx:"<b>Nordwind Trading</b> 命中制裁名单 → 已自动拦截", b:"已拦截", c:"stop"},
-    {tm:"09:51", tx:"<b>Orion Ltd</b> 工商信息异常经营 → 标记复核", b:"复核", c:"rev"},
-    {tm:"昨日", tx:"<b>Brightpex</b> 关联诉讼记录 2 起 → 线索降级", b:"降级", c:"down"},
-    {tm:"昨日", tx:"某询盘邮箱 域名注册 <30天 → 标记高风险", b:"高风险", c:"rev"},
-  ];
+  /* ---------- 尽调档案动态（唯一来源 = falcora_dd_manual_v1，③ 页本机真实档案） ----------
+     2026-10-15：原 4 条写死「风险拦截」事件（Nordwind 命中制裁名单 / Orion 异常经营 /
+     Brightpex 诉讼 2 起 / 询盘邮箱域名 <30天）全部虚构，一并删除。
+     现在显示使用者在 ③ 页真实建立的尽调档案（按核查时间倒序，最多 5 条），
+     状态徽标沿用 ③ 页三态口径：未发现命中 / 需复核 / 数据未覆盖 —— 绝不输出「无风险」。 */
   const feedBox=document.getElementById("feed");
-  feed.forEach(f=>{ const el=document.createElement("div"); el.className="feed-row";
-    el.innerHTML=`<div class="tm">${f.tm}</div><div class="tx">${f.tx}</div><span class="badge ${f.c}">${f.b}</span>`; feedBox.appendChild(el); });
+  const feedEmpty=document.getElementById("feedEmpty");
+  /* overall → 徽标（与 ③ 页 overall 取值对齐；未收录的取值按「数据未覆盖」保守显示） */
+  const DD_ST={ green:["未发现命中","ok"], red:["数据未覆盖","rev"],
+                yellow:["需复核","rev"], warn:["需复核","rev"], na:["数据未覆盖","rev"] };
+  function ddRecords(){ try{ return JSON.parse(localStorage.getItem("falcora_dd_manual_v1")||"{}")||{}; }catch(e){ return {}; } }
+  function renderRiskFeed(){
+    if(!feedBox) return 0;
+    feedBox.innerHTML="";
+    const recs=ddRecords();
+    /* checked 形如 "2026-10-13 10:20" —— 同格式字典序即时间序 */
+    const rows=Object.keys(recs).map(k=>({key:k, d:recs[k]||{}}))
+      .sort((a,b)=>String(b.d.checked||"").localeCompare(String(a.d.checked||"")))
+      .slice(0,5);
+    if(feedEmpty) feedEmpty.hidden = rows.length>0;
+    rows.forEach(x=>{
+      const d=x.d, st=DD_ST[d.overall]||DD_ST.na;
+      const el=document.createElement("div"); el.className="feed-row";
+      const tm=document.createElement("div"); tm.className="tm";
+      tm.textContent=String(d.checked||"").slice(5,10)||"—";
+      const tx=document.createElement("div"); tx.className="tx";
+      const b=document.createElement("b"); b.textContent=d.nm||x.key;
+      tx.appendChild(b);
+      tx.appendChild(document.createTextNode(" "+T("已建立尽调档案")));
+      const badge=document.createElement("span");
+      badge.className="badge "+st[1]; badge.textContent=T(st[0]);
+      el.appendChild(tm); el.appendChild(tx); el.appendChild(badge);
+      feedBox.appendChild(el);
+    });
+    return rows.length;
+  }
+  renderRiskFeed();
 
-  /* ---------- Funnel ---------- */
-  const funnel=[
-    {s:"线索获取", v:1280, c:"var(--teal)"},
-    {s:"客户锁定", v:642, c:"var(--cyan)"},
-    {s:"尽调通过", v:418, c:"var(--gold)"},
-    {s:"进入商机", v:236, c:"#fff"},
-  ];
-  const maxV=funnel[0].v; const fBox=document.getElementById("funnel");
-  funnel.forEach((f,i)=>{ const w=(f.v/maxV*100).toFixed(1);
-    const el=document.createElement("div"); el.className="feed-row"; el.style.alignItems="center";
-    el.innerHTML=`<div class="tx" style="flex:0 0 92px"><b style="color:${f.c}">${f.s}</b></div>
-      <div style="flex:1"><div style="height:10px;border-radius:6px;background:linear-gradient(90deg,${f.c},transparent);width:${w}%"></div></div>
-      <div class="score num" style="color:${f.c}">${f.v}</div>`;
-    fBox.appendChild(el);
-  });
+  /* ---------- 触达推进漏斗（2026-10-15，真实口径） ----------
+     原「转化漏斗（本月）」1280 / 642 / 418 / 236 四级全为编造，删除。
+     现在全部来自本机真实数据：
+       加入管线   = falcora_pipeline_v1 记录数
+       已启动沟通 = ④ 触达序列已勾选 ≥1 步（与地图金点同源）
+       序列过半   = 已勾选 ≥3 步（SEQ 共 5 步：首触/领英/电话/展会/二次触达）
+       全部完成   = 已勾选 5 步
+     管线为空时显示空态引导，不画 0 值假进度。 */
+  const funnelBox=document.getElementById("funnel");
+  const funnelEmpty=document.getElementById("funnelEmpty");
+  function seqDoneN(dm, need){
+    try{ const sq=JSON.parse(localStorage.getItem("falcora_seq_v1")||"{}")||{};
+      return Object.keys(sq[dm]||{}).length>=need; }catch(e){ return false; }
+  }
+  function funnelData(){
+    const dms=Object.keys(pipeRecords());
+    return [
+      {s:"加入管线",          v:dms.length,                           c:"var(--teal)"},
+      {s:"已启动沟通",        v:dms.filter(dm=>seqDoneN(dm,1)).length, c:"var(--cyan)"},
+      {s:"序列过半（≥3 步）", v:dms.filter(dm=>seqDoneN(dm,3)).length, c:"var(--gold)"},
+      {s:"全部完成（5 步）",  v:dms.filter(dm=>seqDoneN(dm,5)).length, c:"#fff"},
+    ];
+  }
+  function renderFunnel(){
+    if(!funnelBox) return 0;
+    const data=funnelData();
+    if(funnelEmpty) funnelEmpty.hidden = data[0].v>0;
+    funnelBox.innerHTML="";
+    const maxV=Math.max(1,data[0].v);
+    data.forEach(f=>{
+      const w=(f.v/maxV*100).toFixed(1);
+      const el=document.createElement("div"); el.className="feed-row"; el.style.alignItems="center";
+      const lab=document.createElement("div"); lab.className="tx"; lab.style.flex="0 0 118px";
+      const lb=document.createElement("b"); lb.style.color=f.c; lb.textContent=T(f.s);
+      lab.appendChild(lb);
+      const bar=document.createElement("div"); bar.style.flex="1";
+      const inner=document.createElement("div");
+      inner.style.cssText="height:10px;border-radius:6px;background:linear-gradient(90deg,"+f.c+",transparent);width:"+w+"%";
+      bar.appendChild(inner);
+      const val=document.createElement("div"); val.className="score num"; val.style.color=f.c;
+      val.textContent=String(f.v);
+      el.appendChild(lab); el.appendChild(bar); el.appendChild(val);
+      funnelBox.appendChild(el);
+    });
+    const note=document.getElementById("funnelNote");
+    if(note) note.textContent=T("口径：加入管线 → ④ 触达序列勾选进度（共 5 步）");
+    return data[0].v;
+  }
+  renderFunnel();
 
   /* ---------- 平台能力覆盖（11 项能力矩阵） ---------- */
   const CAPS=[
