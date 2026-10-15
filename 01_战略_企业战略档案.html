@@ -102,6 +102,20 @@
   .chip.active{background:linear-gradient(135deg,rgba(94,234,212,.22),rgba(14,154,142,.08));border-color:var(--cyan);color:#eafff9}
   .chip.gold.active{background:linear-gradient(135deg,rgba(245,184,65,.25),rgba(245,184,65,.06));border-color:var(--gold);color:#fff3d6}
 
+  /* ---------- 关键词多值编辑器（2026-10-15） ----------
+     输入框下方把「已填的关键词」渲染成一颗颗可删除的 chip，
+     让使用者看得见自己到底填了几个、分别是什么 —— ② 线索池与驾驶舱地图都按这些关键词分组。 */
+  .kwchips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .kwchips:empty{display:none}
+  .kwchip{display:inline-flex;align-items:center;gap:7px;padding:6px 8px 6px 12px;border-radius:999px;
+    border:1px solid rgba(94,234,212,.45);background:linear-gradient(135deg,rgba(94,234,212,.20),rgba(14,154,142,.07));
+    color:#eafff9;font-size:12.5px;line-height:1.2}
+  .kwchip .kwx{width:18px;height:18px;border-radius:50%;border:0;background:rgba(255,255,255,.12);
+    color:#cfe9e3;cursor:pointer;display:grid;place-items:center;font-size:13px;line-height:1;padding:0}
+  .kwchip .kwx:hover{background:rgba(255,107,107,.28);color:#fff}
+  .kwhint{margin-top:8px;font-size:11.5px;color:var(--muted-2);line-height:1.6}
+  .kwhint:empty{display:none}
+
   .crow{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.5fr 34px;gap:10px;align-items:end;
     padding:11px 0;border-bottom:1px dashed var(--border)}
   .crow .del{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:transparent;
@@ -271,8 +285,10 @@
               <select class="sel" id="ind2" data-k="industry"></select>
             </div>
           </div>
-          <div class="field full"><label>主营产品 / 服务关键词</label>
-            <input class="inp" data-k="keywords" placeholder="如：工业传感器、OEM 模组、储能逆变器（用逗号分隔）"></div>
+          <div class="field full"><label>主营产品 / 服务关键词 <span class="hint">（可多个 —— 每个关键词会单独成组）</span></label>
+            <input class="inp" id="kwInput" data-k="keywords" placeholder="如：工业传感器、OEM 模组、储能逆变器（逗号 / 顿号 / 回车 都能分隔）">
+            <div class="kwchips" id="kwChips"></div>
+            <div class="kwhint" id="kwHint"></div></div>
         </div>
       </section>
 
@@ -452,6 +468,15 @@
   const $$ = s => [...document.querySelectorAll(s)];
   const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
+  /* ---- i18n 整句翻译（2026-10-15 新增）----
+     本页分析卡正文原先是「中文硬编码 + <b> 内联强调」直接拼进 innerHTML，
+     句子被 <b> 切碎成多个文本节点 → 反查字典按整节点匹配，碎片永远匹配不上，
+     切英文后大片中文残留。
+     改法：整句作 key 走 T()，动态值（含 <b> 标签）作为 {占位符} 由 Tv() 回填。
+     这样每个句子在字典里是完整的一条，9 语言都能翻。 */
+  const T = s => { try { return (window.__falT && window.__falT(s)) || s; } catch(e){ return s; } };
+  const Tv = (s, vars) => { let r = T(s); if (vars) for (const k in vars) r = r.split("{"+k+"}").join(vars[k]); return r; };
+
   /* ---- 选项数据（非常详细） ---- */
   const OPT = {
     regions:["北美(美/加)","欧盟","英国","东南亚","中东","拉美","非洲","日韩","澳洲/新西兰","中国内地","中国港澳台","其他"],
@@ -608,6 +633,45 @@
   }
   $$("[data-k]").forEach(el=>el.addEventListener("change",scheduleSave));
   const hadProfile = load();
+  /* ---- 主营产品关键词：多值编辑器 ----
+     为什么做：② 全球线索获取要「按关键词把找到的采购方分组」，驾驶舱地图也要按关键词上色。
+     原本只有一行逗号分隔文本框 —— 使用者看不见自己填了几个、删一个要动整串字，
+     于是干脆只填一个词，分组功能形同没有。现在输入框下方实时渲染成可单独删除的 chip。
+     底层仍然写回 data-k="keywords" 的「、」分隔字符串 —— 存档格式与 ② 的
+     profileTokens() 读取逻辑都不用改，向后兼容既有的本机档案。 */
+  const kwIn = $("#kwInput"), kwBox = $("#kwChips"), kwHint = $("#kwHint");
+  const KWSPLIT = /[、,，;；\/／|｜]+/;
+  function kwList(){ return String(kwIn.value||"").split(KWSPLIT).map(function(s){return s.trim();}).filter(Boolean); }
+  function kwWrite(arr){
+    const uniq=[]; arr.forEach(function(k){ if(k && uniq.indexOf(k)===-1) uniq.push(k); });
+    kwIn.value = uniq.join("、");
+    renderKw(); scheduleSave();
+  }
+  function renderKw(){
+    if(!kwBox) return;
+    const arr = kwList();
+    const del = T("移除这个关键词");
+    kwBox.innerHTML = arr.map(function(k,i){
+      return '<span class="kwchip"><span class="noi18n">'+esc(k)+'</span>'
+        +'<button type="button" class="kwx" data-i="'+i+'" title="'+esc(del)+'" aria-label="'+esc(del)+'">×</button></span>';
+    }).join("");
+    kwBox.querySelectorAll(".kwx").forEach(function(b){
+      b.onclick=function(){ const a=kwList(); a.splice(+b.dataset.i,1); kwWrite(a); };
+    });
+    if(kwHint){
+      kwHint.textContent = arr.length
+        ? Tv("已填 {n} 个关键词 —— ② 线索池与驾驶舱地图会按这 {n} 个词分别分组、分别上色。",{n:String(arr.length)})
+        : T("还没填关键词。填 2–4 个更准，例如：光学瞄准镜、红点瞄具、测距仪");
+    }
+  }
+  if(kwIn){
+    kwIn.addEventListener("input",function(){ renderKw(); scheduleSave(); });
+    kwIn.addEventListener("change",function(){ renderKw(); });
+    kwIn.addEventListener("keydown",function(e){
+      if(e.key==="Enter"){ e.preventDefault(); kwWrite(kwList()); }
+    });
+    renderKw();   /* load() 之后跑一次：把已存档的关键词渲染成 chips */
+  }
   /* 「清空档案」：把本机保存的整份档案删掉，回到空白状态 */
   $("#clearBtn").addEventListener("click",function(){
     if(!confirm("确定清空整份战略档案？本机保存的内容将被删除，且无法恢复。")) return;
@@ -634,15 +698,15 @@
   };
 
   function genGeo(regions){
-    if(!regions.length) return `<div class="verdict">请在 B 区勾选<b>目标销售区域</b>，系统将据此评估各地缘政治风险。</div>`;
+    if(!regions.length) return `<div class="verdict">${Tv("请在 B 区勾选{b}，系统将据此评估各地缘政治风险。",{b:"<b>"+T("目标销售区域")+"</b>"})}</div>`;
     const D=REGION_DATA;
     const dot=v=> v>=60?"dot-r":v>=40?"dot-y":"dot-b";
     const rows = regions.map(r=>{
       const g=D[r]||{sanction:50,political:55,trade:50,fx:55};
       const avg=Math.round((g.sanction+g.political+g.trade+g.fx)/4);
-      const lvl= avg>=60?"高":avg>=40?"中":"低";
+      const lvl= avg>=60?T("高"):avg>=40?T("中"):T("低");
       const cls= avg>=60?"dot-r":avg>=40?"dot-y":"dot-b";
-      return `<tr><td class="n">${r}</td>
+      return `<tr><td class="n">${esc(T(r))}</td>
         <td class="${dot(g.sanction)}">${g.sanction}</td>
         <td class="${dot(g.political)}">${g.political}</td>
         <td class="${dot(g.trade)}">${g.trade}</td>
@@ -651,29 +715,29 @@
     }).join("");
     const high = regions.filter(r=>{const g=D[r]||{};return (g.sanction||0)>=60||(g.political||0)>=60;});
     const verdict = high.length
-      ? `以下区域<b>地缘政治风险偏高</b>，进入前须做专项尽调与备选方案：<b>${high.join("、")}</b>。`
-      : `所选区域整体地缘风险可控，以<b>中低风险</b>为主；建议持续监控制裁名单与贸易政策变动。`;
+      ? Tv("以下区域{b1}，进入前须做专项尽调与备选方案：{b2}。",{b1:"<b>"+T("地缘政治风险偏高")+"</b>",b2:"<b>"+esc(high.map(r=>T(r)).join(T("、")))+"</b>"})
+      : Tv("所选区域整体地缘风险可控，以{b}为主；建议持续监控制裁名单与贸易政策变动。",{b:"<b>"+T("中低风险")+"</b>"});
     return `<div class="verdict">${verdict}</div>
-      <table class="matrix"><tr><th>区域</th><th>制裁</th><th>政局</th><th>贸易壁垒</th><th>汇率波动</th><th>综合</th></tr>${rows}</table>
-      <div class="note">分值越高风险越大（演示数据；真实值来自制裁名单 / 政治风险指数 / 贸易数据库，每日校准）。</div>`;
+      <table class="matrix"><tr><th>${T("区域")}</th><th>${T("制裁")}</th><th>${T("政局")}</th><th>${T("贸易壁垒")}</th><th>${T("汇率波动")}</th><th>${T("综合")}</th></tr>${rows}</table>
+      <div class="note">${T("分值越高风险越大（演示数据；真实值来自制裁名单 / 政治风险指数 / 贸易数据库，每日校准）。")}</div>`;
   }
 
   function genAccess(regions){
-    if(!regions.length) return `<div class="verdict">请在 B 区勾选<b>目标销售区域</b>，系统将列出各地<b>动态市场准入政策</b>。</div>`;
+    if(!regions.length) return `<div class="verdict">${Tv("请在 B 区勾选{b1}，系统将列出各地{b2}。",{b1:"<b>"+T("目标销售区域")+"</b>",b2:"<b>"+T("动态市场准入政策")+"</b>"})}</div>`;
     const D=REGION_DATA;
     const cards = regions.map(r=>{
-      const a=(D[r]&&D[r].access)||{certs:["待接真实源"],tariff:"—",local:"—",restrict:"—"};
+      const a=(D[r]&&D[r].access)||{certs:[T("待接真实源")],tariff:"—",local:"—",restrict:"—"};
       return `<div style="border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
-        <b style="color:var(--cyan)">${r}</b>
+        <b style="color:var(--cyan)">${esc(T(r))}</b>
         <ul class="find" style="margin-top:8px">
-          <li><b>强制认证：</b>${a.certs.join("、")}</li>
-          <li><b>关税参考：</b>${a.tariff}</li>
-          <li><b>本地化要求：</b>${a.local}</li>
-          <li><b>行业限制：</b>${a.restrict}</li>
+          <li><b>${T("强制认证")}：</b>${esc(a.certs.join(T("、")))}</li>
+          <li><b>${T("关税参考")}：</b>${esc(a.tariff)}</li>
+          <li><b>${T("本地化要求")}：</b>${esc(a.local)}</li>
+          <li><b>${T("行业限制")}：</b>${esc(a.restrict)}</li>
         </ul></div>`;
     }).join("");
     return `${cards}
-      <div class="note">🛂 数据更新：演示 · 真实版本每日从<b>各国监管官网 / 贸易数据库</b>校准，政策变更将触发预警。</div>`;
+      <div class="note">${Tv("🛂 数据更新：演示 · 真实版本每日从{b}校准，政策变更将触发预警。",{b:"<b>"+T("各国监管官网 / 贸易数据库")+"</b>"})}</div>`;
   }
 
   function genAnalyses(){
@@ -695,20 +759,28 @@
     /* 1. 报价竞争分析 */
     const diff=price-100;
     const flex = (curr.length>=2?1:0)+(inco.length>=2?1:0)+(pay.length>=2?1:0);
-    const flexLabel = flex>=2?"灵活":(flex===1?"中等":"单一/受限");
+    const flexLabel = flex>=2?T("灵活"):(flex===1?T("中等"):T("单一/受限"));
     let verdictPrice;
-    if(!hasPrice) verdictPrice='尚未填写「主流价格区间」—— 请先在 C 区选择价格带，报价竞争分析才有依据。';
-    else if(price>=120) verdictPrice=`当前价格定位为 <b>高端（高于行业均价约 ${diff}%）</b>，靠品牌/技术壁垒支撑；若壁垒不足，易被性价比竞品挤压。`;
-    else if(price<=75) verdictPrice=`当前价格定位为 <b>低位（低于行业均价约 ${Math.abs(diff)}%）</b>，利于抢量，但毛利与抗风险空间薄，需靠规模与成本优势守住。`;
-    else verdictPrice=`当前价格定位<b>贴近行业均价</b>，处于主流竞争带，胜负更取决于交付、认证与服务，而非单纯价格。`;
+    if(!hasPrice) verdictPrice=T("尚未填写「主流价格区间」—— 请先在 C 区选择价格带，报价竞争分析才有依据。");
+    else if(price>=120) verdictPrice=Tv("当前价格定位为 {b}，靠品牌/技术壁垒支撑；若壁垒不足，易被性价比竞品挤压。",{b:"<b>"+Tv("高端（高于行业均价约 {n}%）",{n:diff})+"</b>"});
+    else if(price<=75) verdictPrice=Tv("当前价格定位为 {b}，利于抢量，但毛利与抗风险空间薄，需靠规模与成本优势守住。",{b:"<b>"+Tv("低位（低于行业均价约 {n}%）",{n:Math.abs(diff)})+"</b>"});
+    else verdictPrice=Tv("当前价格定位{b}，处于主流竞争带，胜负更取决于交付、认证与服务，而非单纯价格。",{b:"<b>"+T("贴近行业均价")+"</b>"});
+    const flexTip = flex<2?T("（建议补充多币种/多术语以适配多地买家）"):"";
     const priceFind=[
-      `报价体系灵活度：币种 ${curr.length} 种 · 贸易术语 ${inco.length} 种 · 付款条款 ${pay.length} 种 → <b style="white-space:nowrap">${flexLabel}</b>${flex<2?"（建议补充多币种/多术语以适配多地买家）":""}。`,
-      hasPrice ? (`风险提示：${inco.includes("EXW")&&!inco.includes("DDP")?"仅报 EXW 把物流与清关甩给买家，跨境小B客户转化阻力大，可增 DDP/DDU；":""}${price<=75?"低位定价需严控获客成本，避免陷入纯价格战；":""}${price>=120?"高端定价必须配套强背书（认证/案例），否则询盘质量下滑。":""}`||"报价结构无明显硬伤，建议保留弹性以应对不同区域买家。") : ""
+      Tv("报价体系灵活度：币种 {c} 种 · 贸易术语 {i} 种 · 付款条款 {p} 种 → {f}{tip}。",
+         {c:curr.length, i:inco.length, p:pay.length, f:"<b style=\"white-space:nowrap\">"+flexLabel+"</b>", tip:flexTip}),
+      hasPrice ? (function(){
+        const tips=[];
+        if(inco.includes("EXW")&&!inco.includes("DDP")) tips.push(T("仅报 EXW 把物流与清关甩给买家，跨境小B客户转化阻力大，可增 DDP/DDU；"));
+        if(price<=75) tips.push(T("低位定价需严控获客成本，避免陷入纯价格战；"));
+        if(price>=120) tips.push(T("高端定价必须配套强背书（认证/案例），否则询盘质量下滑。"));
+        return tips.length ? (T("风险提示：")+tips.join("")) : T("报价结构无明显硬伤，建议保留弹性以应对不同区域买家。");
+      })() : ""
     ].filter(Boolean);
     $("#anPrice").innerHTML =
       `<div class="verdict">${verdictPrice}</div>
-       ${hasPrice?`<div class="barrow"><b>您的价位</b><div class="bar"><i style="width:${Math.min(100,price)}%"></i></div><span class="num">${price}</span></div>
-       <div class="barrow"><b>行业均价（基准＝100）</b><div class="bar"><i style="width:100%"></i></div><span class="num">100</span></div>`:""}
+       ${hasPrice?`<div class="barrow"><b>${T("您的价位")}</b><div class="bar"><i style="width:${Math.min(100,price)}%"></i></div><span class="num">${price}</span></div>
+       <div class="barrow"><b>${T("行业均价（基准＝100）")}</b><div class="bar"><i style="width:100%"></i></div><span class="num">100</span></div>`:""}
        <ul class="find">${priceFind.map(f=>`<li>${f}</li>`).join("")}</ul>`;
 
     /* 2. 市场机会分析 */
@@ -722,19 +794,25 @@
     const gap = allRegions.filter(r=>!regions.includes(r)&&unlocked.includes(certMarket_key(r)));
     function certMarket_key(r){ for(const k in certMarket) if(certMarket[k]===r) return k; return null; }
     let mVerdict = regions.length
-      ? `已覆盖 <b>${regions.length}</b> 个目标区域；尚有 <b>${untapped.length}</b> 个高匹配区域未纳入，其中 <b>${untapped[0]?untapped[0].r:""}</b> 机会评分最高。`
-      : `尚未选择目标区域，无法定位机会；请先在 B 区勾选。`;
+      ? Tv("已覆盖 {n} 个目标区域；尚有 {m} 个高匹配区域未纳入，其中 {r} 机会评分最高。",
+           {n:"<b>"+regions.length+"</b>", m:"<b>"+untapped.length+"</b>", r:"<b>"+esc(untapped[0]?T(untapped[0].r):"")+"</b>"})
+      : T("尚未选择目标区域，无法定位机会；请先在 B 区勾选。");
     const mFind=[
       mVerdict,
-      `资质已解锁市场：<b>${unlocked.join("、")||"无"}</b>${unlocked.length?"——这些市场凭现有认证可直接进入，应优先放量":""}。`,
-      untapped.length?`建议优先评估：<b>${untapped.map(u=>u.r).join("、")}</b>，其与您的品类匹配度高且当前未覆盖。`:"当前覆盖已较全面。",
-      `进入壁垒方面，您自评估的主要门槛：<b>${barriers.join("、")||"未填写"}</b>，需针对性准备（认证/本地渠道/案例）。`
+      Tv("资质已解锁市场：{list}{tip}。",
+         {list:"<b>"+esc(unlocked.length?unlocked.map(r=>T(r)).join(T("、")):T("无"))+"</b>",
+          tip:unlocked.length?T("——这些市场凭现有认证可直接进入，应优先放量"):""}),
+      untapped.length
+        ? Tv("建议优先评估：{list}，其与您的品类匹配度高且当前未覆盖。",{list:"<b>"+esc(untapped.map(u=>T(u.r)).join(T("、")))+"</b>"})
+        : T("当前覆盖已较全面。"),
+      Tv("进入壁垒方面，您自评估的主要门槛：{list}，需针对性准备（认证/本地渠道/案例）。",
+         {list:"<b>"+esc(barriers.length?barriers.map(b=>T(b)).join(T("、")):T("未填写"))+"</b>"})
     ];
     $("#anMarket").innerHTML =
       `<div class="verdict">${mVerdict}</div>
        <ul class="find">${mFind.slice(1).map(f=>`<li>${f}</li>`).join("")}</ul>
-       ${untapped.length?`<div style="margin-top:4px">${untapped.map(u=>`<div class="barrow"><b>${u.r}</b><div class="bar y"><i style="width:${u.sc}%"></i></div><span class="num">${u.sc}</span></div>`).join("")}</div>
-       <div class="note">📊 未覆盖区域的<b>机会评分为演示值</b>（未接数据源）——接入贸易数据库后按真实进口规模 / 增速 / 竞争强度重算。</div>`:""}`;
+       ${untapped.length?`<div style="margin-top:4px">${untapped.map(u=>`<div class="barrow"><b>${esc(T(u.r))}</b><div class="bar y"><i style="width:${u.sc}%"></i></div><span class="num">${u.sc}</span></div>`).join("")}</div>
+       <div class="note">${Tv("📊 未覆盖区域的{b}（未接数据源）——接入贸易数据库后按真实进口规模 / 增速 / 竞争强度重算。",{b:"<b>"+T("机会评分为演示值")+"</b>"})}</div>`:""}`;
 
     /* 3. 同行竞争分析（不预置示例竞争方：未录入时只给引导，不伪造对标） */
     const peers = comps;
@@ -749,45 +827,51 @@
       if(d==="交付"){ const ld=get("lead")||""; return !ld?"—":(ld.includes("<")?"强":"中"); }
       return "—";
     });
-    function cell(v){ const c=v==="强"?"dot-b":v==="中"?"dot-y":v==="—"?"dot-n":"dot-r"; return `<td class="${c}">${v}</td>`; }
+    /* 单元格：判断仍用中文原值，只有「显示」走 T() */
+    function cell(v){ const c=v==="强"?"dot-b":v==="中"?"dot-y":v==="—"?"dot-n":"dot-r"; return `<td class="${c}">${T(v)}</td>`; }
     if(!peers.length){
-      $("#anPeer").innerHTML = '<div class="verdict">尚未录入主要竞争对手 —— 请在 E 区「已知主要竞争对手」补充至少 2 家真实同业，同行对标才有依据。</div>';
+      $("#anPeer").innerHTML = '<div class="verdict">'+T("尚未录入主要竞争对手 —— 请在 E 区「已知主要竞争对手」补充至少 2 家真实同业，同行对标才有依据。")+'</div>';
     } else {
       const strengths=dims.filter((d,i)=>userRow[i]==="强");
       const gaps=dims.filter((d,i)=>userRow[i]==="弱");
       const unknown=dims.filter((d,i)=>userRow[i]==="—");
-      const pVerdict = `已录入 <b>${peers.length}</b> 个主要竞争对手。下表只呈现<b>您档案自评的维度强弱</b>；竞品列留空——需接入真实数据源后才能判定，不做占位评分。`;
+      const pVerdict = Tv("已录入 {n} 个主要竞争对手。下表只呈现{b}；竞品列留空——需接入真实数据源后才能判定，不做占位评分。",
+        {n:"<b>"+peers.length+"</b>", b:"<b>"+T("您档案自评的维度强弱")+"</b>"});
       const pFind=[
-        `您的相对强项维度：<b>${strengths.join("、")||"暂无明显强项"}</b>。`,
-        `您自评偏弱的维度：<b>${gaps.join("、")||"无"}</b>${gaps.length?"——若同行在这些维度更强，提案中应避开正面比价，转向您的优势叙事。":"。"}`,
-        unknown.length?`尚未评估的维度：<b>${unknown.join("、")}</b>（因对应档案未填写）。`:"",
-        `建议为前 2 名竞品建立持续监测（价格 / 认证 / 新闻），由 AI 增长总司令每周更新对标；接入数据源后自动补齐竞品列。`
+        Tv("您的相对强项维度：{list}。",{list:"<b>"+esc(strengths.length?strengths.map(d=>T(d)).join(T("、")):T("暂无明显强项"))+"</b>"}),
+        Tv("您自评偏弱的维度：{list}{tip}",{list:"<b>"+esc(gaps.length?gaps.map(d=>T(d)).join(T("、")):T("无"))+"</b>",
+           tip:gaps.length?T("——若同行在这些维度更强，提案中应避开正面比价，转向您的优势叙事。"):T("。")}),
+        unknown.length?Tv("尚未评估的维度：{list}（因对应档案未填写）。",{list:"<b>"+esc(unknown.map(d=>T(d)).join(T("、")))+"</b>"}):"",
+        T("建议为前 2 名竞品建立持续监测（价格 / 认证 / 新闻），由 AI 增长总司令每周更新对标；接入数据源后自动补齐竞品列。")
       ].filter(Boolean);
       $("#anPeer").innerHTML =
         `<div class="verdict">${pVerdict}</div>
-         <table class="matrix"><tr><th>维度</th><th>您</th>${peers.map(p=>`<th>${esc(p.n).slice(0,6)||"竞品"}</th>`).join("")}</tr>
-         ${dims.map((d,i)=>`<tr><td class="n">${d}</td>${cell(userRow[i])}${peers.map(()=>`<td class="dot-n" title="数据未覆盖 · 接入数据源后补齐">—</td>`).join("")}</tr>`).join("")}</table>
+         <table class="matrix"><tr><th>${T("维度")}</th><th>${T("您")}</th>${peers.map(p=>`<th>${esc(p.n).slice(0,6)||T("竞品")}</th>`).join("")}</tr>
+         ${dims.map((d,i)=>`<tr><td class="n">${T(d)}</td>${cell(userRow[i])}${peers.map(()=>`<td class="dot-n" title="${esc(T("数据未覆盖 · 接入数据源后补齐"))}">—</td>`).join("")}</tr>`).join("")}</table>
          <ul class="find">${pFind.map(f=>`<li>${f}</li>`).join("")}</ul>`;
     }
 
     /* 4. 替代品竞争分析（未填就不给威胁分值，避免伪造「威胁等级 35」） */
     const subLen=subs.trim().length;
     let lvl=null, lvlClass="y", lvlTxt="";
-    if(subLen===0){ lvlTxt="待补充（请填写替代品描述）"; }
-    else if(/自建|开源|标准品|通用|低价/.test(subs)){ lvl=82; lvlClass="r"; lvlTxt="高 — 存在强替代逻辑"; }
-    else { lvl=58; lvlClass="y"; lvlTxt="中 — 需关注转换成本"; }
-    const switchCost = lvl===null ? "待补充（需先填写替代品描述）" : (lvl>=80?"低（客户易转向替代品）":"中（存在一定迁移门槛）");
+    if(subLen===0){ lvlTxt=T("待补充（请填写替代品描述）"); }
+    else if(/自建|开源|标准品|通用|低价/.test(subs)){ lvl=82; lvlClass="r"; lvlTxt=T("高 — 存在强替代逻辑"); }
+    else { lvl=58; lvlClass="y"; lvlTxt=T("中 — 需关注转换成本"); }
+    const switchCost = lvl===null ? T("待补充（需先填写替代品描述）") : (lvl>=80?T("低（客户易转向替代品）"):T("中（存在一定迁移门槛）"));
     const sVerdict = subLen
-      ? `替代品威胁等级评估为 <b>${lvlTxt}</b>。${lvl>=80?"客户可能绕过您的产品直接采用替代方案，须在价值主张上拉开差距。":""}`
-      : `尚未填写替代品信息，无法评估替代威胁——建议补充后再看本项结论。`;
+      ? Tv("替代品威胁等级评估为 {b}。{tail}",{b:"<b>"+lvlTxt+"</b>", tail:lvl>=80?T("客户可能绕过您的产品直接采用替代方案，须在价值主张上拉开差距。"):""})
+      : T("尚未填写替代品信息，无法评估替代威胁——建议补充后再看本项结论。");
     const sFind=[
-      `转换成本判断：<b>${switchCost}</b>。`,
-      `缓解建议：${lvl===null?"先补全替代品描述，再据此制定应对策略。":(lvl>=80?"将卖点从「产品功能」升级为「结果 / 合规 / 风险兜底」，抬高替代难度；并用数据与案例固化粘性。":"持续强化服务、认证与定制能力，使替代成本高于节省。")}`,
-      `监控信号：客户开始比价标准品、自建产线新闻、开源方案成熟度——任一出现即触发预警。`
+      Tv("转换成本判断：{b}。",{b:"<b>"+switchCost+"</b>"}),
+      Tv("缓解建议：{tail}",{tail: lvl===null
+          ? T("先补全替代品描述，再据此制定应对策略。")
+          : (lvl>=80 ? T("将卖点从「产品功能」升级为「结果 / 合规 / 风险兜底」，抬高替代难度；并用数据与案例固化粘性。")
+                     : T("持续强化服务、认证与定制能力，使替代成本高于节省。"))}),
+      T("监控信号：客户开始比价标准品、自建产线新闻、开源方案成熟度——任一出现即触发预警。")
     ];
     $("#anSub").innerHTML =
       `<div class="verdict">${sVerdict}</div>
-       ${lvl===null?"":`<div class="barrow"><b>威胁等级</b><div class="bar ${lvlClass}"><i style="width:${lvl}%"></i></div><span class="num">${lvl}</span></div>`}
+       ${lvl===null?"":`<div class="barrow"><b>${T("威胁等级")}</b><div class="bar ${lvlClass}"><i style="width:${lvl}%"></i></div><span class="num">${lvl}</span></div>`}
        <ul class="find">${sFind.map(f=>`<li>${f}</li>`).join("")}</ul>`;
 
     $("#anGeo").innerHTML = genGeo(regions);
@@ -817,88 +901,116 @@
     const price=priceRaw?parseInt(priceRaw,10):NaN;
     const hasPrice=!isNaN(price);
     const exportShare=get("exportShare")||"";
-    const who = cn||en||"贵司";
-    const kwTxt = kws.length?kws.join("、"):"（未填写）";
-    const regTxt = regions.length?regions.join("、"):"（未选区域）";
-    const buyerType = custTypes.length?custTypes.join(" / "):"（未选客户类型）";
-    const buyerSize = custSizes.length?custSizes.join(" / "):"（未选规模偏好）";
-    const buyerRole = roles.length?roles.join(" / "):"（未选决策角色）";
-    const chanTxt = channels.length?channels.join("、"):"（未选渠道）";
-    const coreKw = kws[0]||"主营品类";
+    const who = cn||en||T("贵司");
+    const kwTxt = kws.length?kws.join(T("、")):T("（未填写）");
+    const regTxt = regions.length?regions.map(r=>T(r)).join(T("、")):T("（未选区域）");
+    const buyerType = custTypes.length?custTypes.map(c=>T(c)).join(" / "):T("（未选客户类型）");
+    const buyerSize = custSizes.length?custSizes.map(c=>T(c)).join(" / "):T("（未选规模偏好）");
+    const buyerRole = roles.length?roles.map(r=>T(r)).join(" / "):T("（未选决策角色）");
+    const chanTxt = channels.length?channels.map(c=>T(c)).join(T("、")):T("（未选渠道）");
+    const coreKw = kws[0]||T("主营品类");
 
     /* 1 定位与主张 —— ⚠️ pos / price 未填时不得编造，改用「尚未填写」引导态 */
-    const posTxt = pos ? `以 <b>${esc(pos)}</b> 定位` : `<b>产品定位尚未填写</b>（B 区可选）`;
+    const posTxt = pos ? Tv("以 {b} 定位",{b:"<b>"+esc(T(pos))+"</b>"})
+                       : Tv("{b}（B 区可选）",{b:"<b>"+T("产品定位尚未填写")+"</b>"});
     const priceTxt = hasPrice
-      ? `、<b>${price>=120?"高于":price<=75?"低于":"贴近"}行业均价</b> 的价格带`
-      : `、<b>价格带尚未填写</b>（C 区可选）`;
-    const posBox = `<div class="sbox"><h4><span class="n">1</span>定位与主张</h4><p>
-      <b>${esc(who)}</b> ${posTxt}${priceTxt}，进入 <b>${regTxt}</b>；
-      主营关键词：<b>${esc(kwTxt)}</b>。
-      ${kws.length?`建议把「<b>${esc(kws[0])}</b>」做成可被搜索、可被询盘的<b>品类词</b>，其余关键词作为长尾与交叉销售补充。`:"建议先补全主营关键词——它是②线索匹配与④内容生成的共同锚点。"}
-      ${usp?`差异化主张：「<b>${esc(usp)}</b>」。`:"尚未填写核心差异化卖点，提案与报价缺少锚点，建议补齐。"}
+      ? Tv("、{b} 的价格带",{b:"<b>"+T(price>=120?"高于行业均价":price<=75?"低于行业均价":"贴近行业均价")+"</b>"})
+      : Tv("、{b}（C 区可选）",{b:"<b>"+T("价格带尚未填写")+"</b>"});
+    const posSentence = Tv("{who}{pos}{price}，进入 {reg}；{kwLabel}{kw}。",
+      {who:"<b>"+esc(who)+"</b>", pos:posTxt, price:priceTxt,
+       reg:"<b>"+esc(regTxt)+"</b>", kwLabel:T("主营关键词："), kw:"<b>"+esc(kwTxt)+"</b>"});
+    const kwAdvice = kws.length
+      ? Tv("建议把「{b1}」做成可被搜索、可被询盘的{b2}，其余关键词作为长尾与交叉销售补充。",
+           {b1:"<b>"+esc(kws[0])+"</b>", b2:"<b>"+T("品类词")+"</b>"})
+      : T("建议先补全主营关键词——它是②线索匹配与④内容生成的共同锚点。");
+    const uspTxt = usp ? Tv("差异化主张：「{b}」。",{b:"<b>"+esc(usp)+"</b>"})
+                       : T("尚未填写核心差异化卖点，提案与报价缺少锚点，建议补齐。");
+    const posBox = `<div class="sbox"><h4><span class="n">1</span>${T("定位与主张")}</h4><p>
+      ${posSentence}
+      ${kwAdvice}
+      ${uspTxt}
     </p></div>`;
 
     /* 2 目标采购方画像 */
-    const buyerBox = `<div class="sbox"><h4><span class="n">2</span>目标采购方画像</h4><p>
-      目标采购方＝<b>${buyerType}</b>，规模偏好 <b>${buyerSize}</b>，决策角色 <b>${buyerRole}</b>，主要触达渠道 <b>${chanTxt}</b>。
-      ②「全球线索获取」应<b>只保留对「${esc(kws.slice(0,2).join(" / ")||"主营品类")}」有实际采购需求</b>的企业（采购方 / 使用方 / 集成方），
-      排除纯同业竞争者、上游供应商与无采购行为的企业。
-      采购触发信号：扩产或新建产线、认证更新、进入新市场、供应商切换、招标公告、展会采购团。
+    const buyerSentence = Tv("目标采购方＝{t}，{sl} {s}，{rl} {r}，{cl} {c}。",
+      {t:"<b>"+esc(buyerType)+"</b>", sl:T("规模偏好"), s:"<b>"+esc(buyerSize)+"</b>",
+       rl:T("决策角色"), r:"<b>"+esc(buyerRole)+"</b>",
+       cl:T("主要触达渠道"), c:"<b>"+esc(chanTxt)+"</b>"});
+    const buyerScope = Tv("②「全球线索获取」应{b}的企业（{roles}），排除纯同业竞争者、上游供应商与无采购行为的企业。",
+      {b:"<b>"+Tv("只保留对「{kw}」有实际采购需求",{kw:esc(kws.slice(0,2).join(" / ")||T("主营品类"))})+"</b>",
+       roles:T("采购方 / 使用方 / 集成方")});
+    const buyerBox = `<div class="sbox"><h4><span class="n">2</span>${T("目标采购方画像")}</h4><p>
+      ${buyerSentence}
+      ${buyerScope}
+      ${T("采购触发信号：扩产或新建产线、认证更新、进入新市场、供应商切换、招标公告、展会采购团。")}
     </p></div>`;
 
     /* 3 竞争态势判断 */
     const cs=[];
     cs.push(comps.length
-      ? `已录入 <b>${comps.length}</b> 个主要竞争对手：<b>${comps.slice(0,3).map(c=>esc(c.n)).join("、")}</b>${comps.length>3?" 等":""}。`
-      : `主要竞争对手<b>尚未录入</b>——同行对标暂缺，请至少补 2 家真实同业，对标结论才可用。`);
-    if(!hasPrice) cs.push("主流价格区间<b>尚未填写</b>——无法判断我方所处价格带，价格竞争结论暂缺（请在 C 区选择价格带）。");
-    else if(price>=120) cs.push("我方处<b>高端价格带</b>：需以认证、技术与案例背书支撑溢价，否则易被性价比竞品挤压。");
-    else if(price<=75) cs.push("我方处<b>低位价格带</b>：抢量有利但毛利薄，须靠规模与成本护城河守住。");
-    else cs.push("我方价格<b>贴近行业均价</b>：胜负取决于交付、认证与服务，而非单纯比价。");
-    cs.push(`技术壁垒自评：<b>${tech.length?tech.join("、"):"未填写"}</b>；资质认证：<b>${certs.length?certs.join("、"):"未填写"}</b>。`);
-    if(barriers.length) cs.push(`自评进入壁垒：<b>${barriers.join("、")}</b>——须逐项准备应对（认证 / 本地渠道 / 案例 / 关系）。`);
+      ? Tv("已录入 {n} 个主要竞争对手：{names}{tail}",
+           {n:"<b>"+comps.length+"</b>",
+            names:"<b>"+comps.slice(0,3).map(c=>esc(c.n)).join(T("、"))+"</b>",
+            tail:comps.length>3?T(" 等。"):T("。")})
+      : Tv("主要竞争对手{b}——同行对标暂缺，请至少补 2 家真实同业，对标结论才可用。",{b:"<b>"+T("尚未录入")+"</b>"}));
+    if(!hasPrice) cs.push(Tv("主流价格区间{b}——无法判断我方所处价格带，价格竞争结论暂缺（请在 C 区选择价格带）。",{b:"<b>"+T("尚未填写")+"</b>"}));
+    else if(price>=120) cs.push(Tv("我方处{b}：需以认证、技术与案例背书支撑溢价，否则易被性价比竞品挤压。",{b:"<b>"+T("高端价格带")+"</b>"}));
+    else if(price<=75) cs.push(Tv("我方处{b}：抢量有利但毛利薄，须靠规模与成本护城河守住。",{b:"<b>"+T("低位价格带")+"</b>"}));
+    else cs.push(Tv("我方价格{b}：胜负取决于交付、认证与服务，而非单纯比价。",{b:"<b>"+T("贴近行业均价")+"</b>"}));
+    cs.push(Tv("技术壁垒自评：{t}；资质认证：{c}。",
+      {t:"<b>"+esc(tech.length?tech.map(x=>T(x)).join(T("、")):T("未填写"))+"</b>",
+       c:"<b>"+esc(certs.length?certs.map(x=>T(x)).join(T("、")):T("未填写"))+"</b>"}));
+    if(barriers.length) cs.push(Tv("自评进入壁垒：{b}——须逐项准备应对（认证 / 本地渠道 / 案例 / 关系）。",
+      {b:"<b>"+esc(barriers.map(x=>T(x)).join(T("、")))+"</b>"}));
 
     /* 4 战略路径（三阶段） */
-    const p1=`在 <b>${esc(regions[0]||"首选区域")}</b> 中选 1 个「认证已解锁 + 竞争强度低」的细分市场做<b>样板案例</b>；把「<b>${esc(coreKw)}</b>」做成可询盘的内容资产；在②按「采购方 + 匹配度 ≥ 85」筛出 20–30 家，逐个走③尽调。目标：跑通 3–5 个可复制的询盘→报价闭环。`;
-    const p2=`补齐关键认证与资质以解锁更多区域（当前认证：<b>${certs.length?certs.join("、"):"未填写"}</b>）；从所选渠道中收敛出 2 个主力渠道并跑通首单；对前 2 名竞品建立价格 / 认证 / 新闻的<b>周度监测</b>。`;
-    const p3=`围绕 <b>${tech.length?esc(tech[0]):"技术壁垒"}</b> 与差异化卖点构建不可替代性；针对替代方案抬高客户切换成本；以 <b>${esc(coreKw)}</b> 的品类心智对齐战略意图达成度。`;
+    const p1=Tv("在 {r} 中选 1 个「认证已解锁 + 竞争强度低」的细分市场做{b1}；把「{kw}」做成可询盘的内容资产；在②按「采购方 + 匹配度 ≥ 85」筛出 20–30 家，逐个走③尽调。{tail}",
+      {r:"<b>"+esc(regions[0]?T(regions[0]):T("首选区域"))+"</b>", b1:"<b>"+T("样板案例")+"</b>",
+       kw:"<b>"+esc(coreKw)+"</b>", tail:T("目标：跑通 3–5 个可复制的询盘→报价闭环。")});
+    const p2=Tv("补齐关键认证与资质以解锁更多区域（当前认证：{c}）；从所选渠道中收敛出 2 个主力渠道并跑通首单；对前 2 名竞品建立价格 / 认证 / 新闻的{b}。",
+      {c:"<b>"+esc(certs.length?certs.map(x=>T(x)).join(T("、")):T("未填写"))+"</b>", b:"<b>"+T("周度监测")+"</b>"});
+    const p3=Tv("围绕 {t} 与差异化卖点构建不可替代性；针对替代方案抬高客户切换成本；以 {kw} 的品类心智对齐战略意图达成度。",
+      {t:"<b>"+esc(tech.length?T(tech[0]):T("技术壁垒"))+"</b>", kw:"<b>"+esc(coreKw)+"</b>"});
 
     /* 5 待验证假设 */
     const asm=[];
-    if(!kws.length) asm.push("主营产品 / 服务关键词未填写 → 线索匹配与内容生成缺少锚点");
-    if(!comps.length) asm.push("主要竞争对手未录入 → 同行对标无法展开");
-    if(!intent) asm.push("核心战略意图未填写 → 战略路径缺少可量化目标");
-    if(certs.length<2) asm.push("资质认证偏少 → 可进入市场受限，建议优先补目标区域的强制认证");
-    if(!subs) asm.push("替代品描述为空 → 替代威胁无法评估");
-    if(!exportShare) asm.push("年出口额占比未填 → 海外市场依赖度未知");
-    if(!asm.length) asm.push("关键输入较完整 → 建议补充真实产能 / 财务数据以提升预测精度");
-    asm.push("区域地缘与准入分值为演示值 → 接入真实数据源后需重新校准");
+    if(!kws.length) asm.push(T("主营产品 / 服务关键词未填写 → 线索匹配与内容生成缺少锚点"));
+    if(!comps.length) asm.push(T("主要竞争对手未录入 → 同行对标无法展开"));
+    if(!intent) asm.push(T("核心战略意图未填写 → 战略路径缺少可量化目标"));
+    if(certs.length<2) asm.push(T("资质认证偏少 → 可进入市场受限，建议优先补目标区域的强制认证"));
+    if(!subs) asm.push(T("替代品描述为空 → 替代威胁无法评估"));
+    if(!exportShare) asm.push(T("年出口额占比未填 → 海外市场依赖度未知"));
+    if(!asm.length) asm.push(T("关键输入较完整 → 建议补充真实产能 / 财务数据以提升预测精度"));
+    asm.push(T("区域地缘与准入分值为演示值 → 接入真实数据源后需重新校准"));
 
     /* 6 边界与免责 */
-    const edge=`<p>本页分析基于<b>您填写的档案</b>即时合成，属<b>决策辅助</b>而非结论，且不含尚未接入的第三方数据源。
-      区域风险与准入政策为演示值，接源后将标注来源与更新日期。
-      <b>不构成法律、财务或投资建议</b>，亦不承诺获客或转化结果。</p>`;
+    const edge=`<p>${Tv("本页分析基于{b1}即时合成，属{b2}而非结论，且不含尚未接入的第三方数据源。",
+        {b1:"<b>"+T("您填写的档案")+"</b>", b2:"<b>"+T("决策辅助")+"</b>"})}
+      ${T("区域风险与准入政策为演示值，接源后将标注来源与更新日期。")}
+      ${Tv("{b}，亦不承诺获客或转化结果。",{b:"<b>"+T("不构成法律、财务或投资建议")+"</b>"})}</p>`;
 
-    const posInVerdict = pos ? `用 <b>${esc(pos)}</b> 定位的 ` : "";
+    const posInVerdict = pos ? Tv("用 {b} 定位的 ",{b:"<b>"+esc(T(pos))+"</b>"}) : "";
     /* 关键词未填时不写「主营品类 打」，避免出现悬空的占位词 + 空格 */
-    const objPart = kws.length ? `<b>${esc(coreKw)}</b> 打` : `主营品类打`;
-    const gapNote = (!pos||!hasPrice) ? `（定位与价格带尚未填写，补全后结论更准）` : "";
+    const objPart = kws.length ? Tv("{b} 打",{b:"<b>"+esc(coreKw)+"</b>"}) : T("主营品类打");
+    const gapNote = (!pos||!hasPrice) ? T("（定位与价格带尚未填写，补全后结论更准）") : "";
     $("#anStrategy").innerHTML =
-      `<div class="verdict">一句话结论：在 <b>${regTxt}</b>，${posInVerdict}${objPart}「<b>认证 + 交付确定性</b>」，
-        避开纯比价，先立样板再复制。${gapNote}${intent?`战略意图：<b>${esc(intent)}</b>。`:""}</div>
+      `<div class="verdict">${Tv("一句话结论：在 {r}，{pos}{obj}「{b}」，避开纯比价，先立样板再复制。{gap}{intent}",
+         {r:"<b>"+esc(regTxt)+"</b>", pos:posInVerdict, obj:objPart,
+          b:"<b>"+T("认证 + 交付确定性")+"</b>", gap:gapNote,
+          intent:intent?Tv("战略意图：{b}。",{b:"<b>"+esc(intent)+"</b>"}):""})}</div>
        <div class="sgrid">${posBox}${buyerBox}</div>
-       <div class="sbox" style="margin-top:14px"><h4><span class="n">3</span>竞争态势判断</h4>
+       <div class="sbox" style="margin-top:14px"><h4><span class="n">3</span>${T("竞争态势判断")}</h4>
          <ul class="find">${cs.map(x=>`<li>${x}</li>`).join("")}</ul></div>
-       <div class="sbox" style="margin-top:14px"><h4><span class="n">4</span>战略路径（分阶段）</h4>
+       <div class="sbox" style="margin-top:14px"><h4><span class="n">4</span>${T("战略路径（分阶段）")}</h4>
          <div class="stagelist">
-           <div class="stg"><span class="ph">阶段一 · 立标杆</span><div>${p1}</div></div>
-           <div class="stg"><span class="ph">阶段二 · 扩通道</span><div>${p2}</div></div>
-           <div class="stg"><span class="ph">阶段三 · 筑壁垒</span><div>${p3}</div></div>
+           <div class="stg"><span class="ph">${T("阶段一 · 立标杆")}</span><div>${p1}</div></div>
+           <div class="stg"><span class="ph">${T("阶段二 · 扩通道")}</span><div>${p2}</div></div>
+           <div class="stg"><span class="ph">${T("阶段三 · 筑壁垒")}</span><div>${p3}</div></div>
          </div></div>
        <div class="sgrid" style="margin-top:14px">
-         <div class="sbox"><h4><span class="n">5</span>待验证假设</h4>
+         <div class="sbox"><h4><span class="n">5</span>${T("待验证假设")}</h4>
            <ul class="assume">${asm.map(x=>`<li>${x}</li>`).join("")}</ul></div>
-         <div class="sbox"><h4><span class="n">6</span>边界与免责</h4>${edge}</div>
+         <div class="sbox"><h4><span class="n">6</span>${T("边界与免责")}</h4>${edge}</div>
        </div>`;
   }
 
@@ -943,19 +1055,49 @@
      避免出现「不是使用者填的内容」的分析结果（那正是造成混乱的根源）。
      仅当本机已有使用者自己保存过的档案时，才按该档案自动生成。 */
   function showGuide(){
-    const g='<div class="verdict">尚未生成 —— 请先填写上方档案（A–E 区），再点右上角「⚡ 生成竞争分析」。</div>';
+    const g='<div class="verdict">'+T("尚未生成 —— 请先填写上方档案（A–E 区），再点右上角「⚡ 生成竞争分析」。")+'</div>';
     ["anPrice","anMarket","anPeer","anSub","anGeo","anAccess","anStrategy"].forEach(function(id){
       const el=document.getElementById(id); if(el) el.innerHTML=g;
     });
-    const s=$("#genStatus"); s.classList.remove("ok"); s.innerHTML='<span>未生成</span>';
+    const s=$("#genStatus"); s.classList.remove("ok"); s.innerHTML='<span>'+T("未生成")+'</span>';
+  }
+  function renderStatus(){
+    if(hadProfile){
+      $("#genStatus").classList.add("ok");
+      $("#genStatus").innerHTML='<span>'+T("已生成 7 项分析")+'</span><span class="num">· '+stamp()+'</span>';
+    }
   }
   if(hadProfile){
     genAnalyses();
-    $("#genStatus").classList.add("ok");
-    $("#genStatus").innerHTML='<span>已生成 7 项分析</span><span class="num">· '+stamp()+'</span>';
+    renderStatus();
   } else {
     showGuide();
   }
+
+  /* 切语言时重绘分析卡 —— 必须「延后注册」
+     本页内联 script 在 app-i18n.js 之前执行，此刻 window.__falOnRefresh 还不存在
+     （直接调会是 undefined，等于没注册）。故等 window load（所有脚本就位）后再登记。
+     为什么必须重绘而不是靠 DOM 扫描：分析卡句子里混了使用者填的数据
+     （公司名 / 关键词 / 区域），整句含插值 → 反查字典匹配不到，
+     只有重新跑一遍 genAnalyses() 才能用新语言渲染。 */
+  /* 语言切换重绘 —— 注册要抢在 app-i18n.js 的 boot()（DOMContentLoaded → refreshAll）
+     之前完成，否则首屏直接以英文打开时赶不上第一次刷新，分析卡与关键词提示语会残留中文。
+     本内联 script 在 app-i18n.js 之前执行，此刻 __falOnRefresh 还不存在 → 短轮询等它出现；
+     若 data-lang 已被设置（boot 已跑过），立刻补跑一次，两头都不漏。 */
+  (function(){
+    var fn = function(){
+      if(hadProfile){ genAnalyses(); renderStatus(); } else { showGuide(); }
+      if(kwIn) renderKw();   /* 关键词提示语含 {n} 插值 → DOM 扫描匹配不到，切语言必须重绘 */
+    };
+    if(window.__falOnRefresh){ window.__falOnRefresh(fn); }
+    else{
+      var n=0, t=setInterval(function(){
+        if(++n>75){ clearInterval(t); return; }        /* ~3s 兜底，绝不无限轮询 */
+        if(window.__falOnRefresh){ clearInterval(t); window.__falOnRefresh(fn); fn(); }
+      }, 40);
+    }
+    if(document.documentElement.getAttribute("data-lang")) fn();
+  })();
 })();
 </script>
 <script src="app-update.js"></script>
