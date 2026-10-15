@@ -271,6 +271,15 @@
     background:rgba(94,234,212,.08);color:var(--cyan);font-weight:650;font-size:13px;cursor:pointer;font-family:inherit}
   .plan.hot .pcta button{background:var(--cyan);color:#06262B;border-color:var(--cyan)}
   .price-note{font-size:11.5px;color:var(--muted-2);padding:0 18px 16px;line-height:1.6}
+  /* ---------- 试用 / 套餐状态条（v47 付费模块） ---------- */
+  .trial-bar{display:flex;align-items:center;gap:10px;margin:0 18px 14px;padding:11px 15px;border-radius:13px;font-size:12.4px;line-height:1.45}
+  .trial-bar[hidden]{display:none}
+  .trial-bar.trial{background:rgba(245,184,65,.12);border:1px solid rgba(245,184,65,.4);color:var(--gold)}
+  .trial-bar.ended{background:rgba(255,107,107,.10);border:1px solid rgba(255,107,107,.4);color:#ff9a9a}
+  .trial-bar .tb-ic{font-size:15px;flex:0 0 auto}
+  .trial-bar .tb-tx{flex:1 1 auto}
+  .trial-bar .tb-btn{margin-left:auto;flex:0 0 auto;padding:7px 14px;border-radius:9px;border:1px solid var(--gold);background:var(--gold);color:#06262B;font-weight:700;cursor:pointer}
+  .trial-bar .tb-btn:hover{filter:brightness(1.06)}
   .price-note span{display:block}
 
   /* ---------- 席位说明 ---------- */
@@ -367,7 +376,7 @@
         <input placeholder="搜索企业 / 域名 / 联系人 / 风险关键词…" />
       </div>
       <div class="top-right">
-        <span class="pill">旗舰版 · 试用</span>
+        <span class="pill" id="planPill">免费体验版 · 试用</span>
         <div class="icon-btn" title="通知">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
         </div>
@@ -486,6 +495,7 @@
           <span class="dot" style="background:var(--gold);box-shadow:0 0 0 4px rgba(245,184,65,.16)"></span><h3>套餐与价格</h3>
           <span class="tag">席位费 + 查询点数 双轨制</span>
         </div>
+        <div class="trial-bar" id="trialBar" hidden></div>
         <div class="seat-def">
           <span class="sd-t">「席位」是什么？</span>
           <span class="sd-p hl">席位 = 一个可以登录使用本平台的账号，按「人」算，不按「公司」算。</span>
@@ -499,6 +509,7 @@
           <span>免费版锁定的是「商业数据源」而非功能 —— 名片扫描与免费名单筛查全开放，商业数据源查询为付费墙。</span>
           <span>点数包 ¥500 / 500 点，月度额度不足时补购。</span>
           <span>价格与折扣力度均为待验证假设，正式售卖前需以真实数据源成本复核。</span>
+          <span>免费体验版为 7 天专业版全功能试用，到期自动降级为免费版（保留 L1 公开查询与名片扫描，商业数据源与高级模块锁定）。</span>
         </div>
       </section>
     </div>
@@ -1056,13 +1067,13 @@
 
   /* ---------- 套餐与价格 ---------- */
   const PLANS=[
-    {name:"免费体验版", price:"¥0", unit:"", desc:"尝鲜验证 · 体验完整链路", hot:false, cta:"免费开始",
-     feats:["1 席位","名片扫描 20 张/月（不耗点数）","5 次基础尽调（仅公开免费名单）","① 目标市场选择 · ③ 企业身份核验"]},
-    {name:"专业版", price:"¥999", unit:"/ 月", desc:"中小出口企业 · 六模块全开", hot:true, cta:"选择专业版", badge:"推荐",
+    {tier:"trial", name:"免费体验版", price:"¥0", unit:"", desc:"7 天专业版全功能试用 · 到期降级", hot:false, cta:"免费开始",
+     feats:["7 天专业版全功能试用","含商业数据源查询点数","六模块全开（含高级模块）","到期自动降级为免费版"]},
+    {tier:"pro", name:"专业版", price:"¥999", unit:"/ 月", desc:"中小出口企业 · 六模块全开", hot:true, cta:"选择专业版", badge:"推荐",
      feats:["3 席位","每月 500 查询点数","六模块全开（除旗舰功能）","② 海关提单反查 · ③ 商业名单筛查"]},
-    {name:"企业版", price:"¥2,999", unit:"/ 月", desc:"成长型出口企业 · 多品牌与权限", hot:false, cta:"选择企业版",
+    {tier:"biz", name:"企业版", price:"¥2,999", unit:"/ 月", desc:"成长型出口企业 · 多品牌与权限", hot:false, cta:"选择企业版",
      feats:["10 席位","每月 2,000 查询点数","多品牌 · 角色权限 · 持续监控","③ 股权穿透与关联网络"]},
-    {name:"旗舰版", price:"定制报价", unit:"", desc:"大型企业 · API 与私有化", hot:false, cta:"联系顾问", adv:true,
+    {tier:"flag", name:"旗舰版", price:"定制报价", unit:"", desc:"大型企业 · API 与私有化", hot:false, cta:"联系顾问", adv:true,
      feats:["不限席位 · 定制点数","API · 私有化部署","专属数据源接入","专属顾问服务"]}
   ];
   const plansBox=document.getElementById("plans");
@@ -1073,7 +1084,7 @@
       <div class="pprice num">${p.price}<small>${p.unit}</small></div>
       <div class="pdesc">${p.desc}</div>
       <ul>${p.feats.map(f=>`<li><span>${f}</span></li>`).join("")}</ul>
-      <div class="pcta"><button type="button"${p.adv?' data-adv="1"':""}>${p.cta}</button></div>`;
+      <div class="pcta"><button type="button" data-tier="${p.tier}"${p.adv?' data-adv="1"':""}>${p.cta}</button></div>`;
     plansBox.appendChild(el);
   });
 
@@ -1089,7 +1100,10 @@
   }
   plansBox.addEventListener("click",e=>{
     const b=e.target.closest("button"); if(!b) return;
-    if(b.hasAttribute("data-adv")){ openAdv(); return; }
+    const tier=b.getAttribute("data-tier");
+    if(tier==="flag"){ openAdv(); return; }
+    if(tier==="pro"||tier==="biz"){ simulateUpgrade(tier); return; }
+    if(tier==="trial"){ handleTrialCta(); return; }
     ctaToast("演示环境 —— 尚未接入支付流程。正式售卖前此处将跳转开通页。");
   });
   advModal.addEventListener("click",e=>{ if(e.target.closest("[data-close]")) closeAdv(); });
@@ -1112,6 +1126,54 @@
   }
 
   /* ---------- CTA 轻提示 ---------- */
+  /* ---------- 权益 / 试用引擎（v47 付费模块演示） ---------- */
+  const PLAN_KEY="falcora_plan_v1", TRIAL_DAYS=7;
+  function loadPlan(){ try{ return JSON.parse(localStorage.getItem(PLAN_KEY)); }catch(e){ return null; } }
+  function savePlan(p){ try{ localStorage.setItem(PLAN_KEY, JSON.stringify(p)); }catch(e){} }
+  function getPlan(){
+    let p=loadPlan();
+    if(!p){ p={tier:"trial", trialStart:Date.now(), demo:false}; savePlan(p); }
+    if(p.tier==="trial" && Date.now()-p.trialStart > TRIAL_DAYS*864e5){
+      p.tier="free"; p.downgradedAt=Date.now(); savePlan(p);
+    }
+    return p;
+  }
+  function trialLeft(p){ if(!p||p.tier!=="trial") return 0; return Math.max(0, TRIAL_DAYS-Math.floor((Date.now()-p.trialStart)/864e5)); }
+  function tierName(t){ return t==="pro"?"专业版":t==="biz"?"企业版":t==="flag"?"旗舰版 · 定制":"免费版 · 受限"; }
+  function T_(s){ return (window.__falT?window.__falT(s):s); }
+  function renderPlanPill(){
+    const p=getPlan(), pill=document.getElementById("planPill"); if(!pill) return;
+    const t = p.tier==="trial"
+      ? T_("专业版试用")+" · "+T_("试用中")+" "+trialLeft(p)+" "+T_("天剩余")
+      : T_(tierName(p.tier));
+    pill.textContent=t;
+  }
+  function renderTrialBar(){
+    const p=getPlan(), bar=document.getElementById("trialBar"); if(!bar) return;
+    if(p.tier==="trial"){
+      bar.hidden=false; bar.className="trial-bar trial";
+      bar.innerHTML='<span class="tb-ic">⏳</span><span class="tb-tx">'+esc(T_("专业版全功能试用进行中"))+" · "+trialLeft(p)+" "+esc(T_("天剩余"))+'</span>';
+    } else if(p.tier==="free"){
+      bar.hidden=false; bar.className="trial-bar ended";
+      bar.innerHTML='<span class="tb-ic">🔒</span><span class="tb-tx">'+esc(T_("您的 7 天全功能试用已结束"))+"："+esc(T_("已降级为免费版，保留 L1 公开查询与名片扫描，商业数据源与高级模块已锁定"))+'</span><button class="tb-btn" id="tbUp" type="button">'+esc(T_("升级专业版"))+'</button>';
+    } else { bar.hidden=true; }
+  }
+  function simulateUpgrade(tier){
+    const p=getPlan(); p.tier=tier; p.demo=true; savePlan(p);
+    ctaToast(T_("演示：已模拟开通")+" "+T_(tierName(tier))+T_("（未接真实支付）"));
+    renderPlanPill(); renderTrialBar();
+  }
+  function handleTrialCta(){
+    const p=getPlan();
+    if(p.tier==="trial"){ ctaToast(T_("试用进行中，无需重复开通")); }
+    else if(p.tier==="free"){ p.tier="trial"; p.trialStart=Date.now(); p.demo=false; savePlan(p); ctaToast(T_("已重新激活 7 天试用（演示）")); renderPlanPill(); renderTrialBar(); }
+    else { ctaToast(T_("当前为付费套餐")); }
+  }
+  document.addEventListener("click",function(e){ const b=e.target.closest("#tbUp"); if(b){ simulateUpgrade("pro"); } });
+  function renderPlanUI(){ renderPlanPill(); renderTrialBar(); }
+  window.__falRefreshCbs=window.__falRefreshCbs||[]; window.__falRefreshCbs.push(renderPlanUI);
+  document.addEventListener("DOMContentLoaded", renderPlanUI);
+
   function ctaToast(msg){
     let el=document.getElementById("ctaToast");
     if(!el){ el=document.createElement("div"); el.id="ctaToast"; document.body.appendChild(el); }

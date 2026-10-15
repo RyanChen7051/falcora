@@ -249,7 +249,9 @@
   .csec{border:1px solid var(--border);border-radius:13px;padding:12px 15px;background:rgba(0,0,0,.16)}
   .csec > h4{font-size:12px;color:var(--muted-2);letter-spacing:.6px;margin-bottom:9px;display:flex;align-items:center;gap:8px}
   .csec > h4 .lay{margin-left:auto;font-size:10.5px}
-  .crow{display:grid;grid-template-columns:88px 1fr auto;gap:10px;align-items:center;
+  /* 标签列 88 → 104px（v46）：L3 新增「对方职务」在 88px 里会折成两行，
+     看起来像断字。加宽后所有既有行仍单行显示，只有更长的标签受益。 */
+  .crow{display:grid;grid-template-columns:104px 1fr auto;gap:10px;align-items:center;
     padding:7px 0;border-bottom:1px dashed rgba(126,154,160,.14);font-size:13px}
   .crow:last-child{border-bottom:0}
   .crow .k{color:var(--muted)}
@@ -318,6 +320,35 @@
   /* 「示例」标记：凡是非真实主体的样本行都挂这个角标，永不省略 */
   .sflag{display:inline-block;margin-left:7px;padding:1px 7px;border-radius:6px;vertical-align:middle;
     border:1px solid rgba(245,184,65,.5);background:rgba(245,184,65,.14);color:var(--gold);font-size:10.5px;font-weight:600}
+  /* ===== v46 · L3「客户关系档案」视觉体系 =====
+     三种来源必须一眼可分：L1 公开（青）· L2 示例（金）· L3 已录入（绿）。
+     绿色专门留给「使用者自己录进来的资料」—— 它是关系资产，不是平台的空白。 */
+  .rflag{display:inline-block;margin-left:7px;padding:1px 7px;border-radius:6px;vertical-align:middle;
+    border:1px solid rgba(52,211,153,.45);background:rgba(52,211,153,.14);color:#7de3b6;font-size:10.5px;font-weight:600}
+  /* 档案完整度条：一眼看清「平台做什么 / 你做什么」 */
+  .covbar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:11px}
+  .covbar .cv{display:flex;flex-direction:column;gap:3px;padding:9px 11px;border-radius:11px;
+    border:1px solid var(--border);background:rgba(0,0,0,.18)}
+  .covbar .cv b{font-size:11px;letter-spacing:.5px;color:var(--muted-2);font-weight:700}
+  .covbar .cv span{font-size:11.5px;color:var(--ink);line-height:1.45}
+  .covbar .cv.on{border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.09)}
+  .covbar .cv.on b,.covbar .cv.on span{color:#7de3b6}
+  /* L3 区绿色主题 */
+  .csec.l3sec{border-color:rgba(52,211,153,.26);background:rgba(52,211,153,.05)}
+  .csec.l3sec > h4{color:#7de3b6}
+  .l3lede{font-size:11.5px;color:var(--muted-2);line-height:1.6;margin-bottom:9px;
+    border-left:2px solid rgba(52,211,153,.35);padding-left:11px}
+  /* 「待您录入」= 行动召唤，而不是灰掉的空白 */
+  .l3add{padding:4px 10px;border-radius:8px;border:1px dashed rgba(52,211,153,.45);
+    background:rgba(52,211,153,.07);color:#7de3b6;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit}
+  .l3add:hover{background:rgba(52,211,153,.16)}
+  .cform select,.cform textarea{width:100%;padding:9px 11px;border-radius:9px;border:1px solid var(--border);
+    background:rgba(0,0,0,.24);color:var(--ink);font-family:inherit;font-size:12.5px;outline:0;resize:vertical}
+  .cform select:focus,.cform textarea:focus{border-color:var(--border-2);box-shadow:0 0 0 3px rgba(94,234,212,.1)}
+  .cform select option{background:#0B2632;color:#EAF4F6}
+  /* 「L2+L3 已建档」徽章（列表页「联系可用性」列） */
+  .b-l3on{background:rgba(52,211,153,.14);color:#7de3b6;border:1px solid rgba(52,211,153,.34)}
+  @media(max-width:520px){.covbar{grid-template-columns:1fr}}
   .scopebar .sb-note{margin-top:7px;padding-top:7px;border-top:1px dashed rgba(255,255,255,.10);
     font-size:11.5px;color:var(--muted-2);line-height:1.7}
 </style>
@@ -974,6 +1005,22 @@ function contactsOf(l){
   return {};
 }
 
+/* ================= L3「客户关系档案」字段模型（2026-10-15 v46） =================
+   产品定位（写死在代码里，避免以后又走偏）：
+     · L1 = 公开企业信息  → **平台能力**，自由检索
+     · L2 = 企业职能联系方式 → **平台能力**，接入数据源后自动填充并标来源
+     · L3 = 个人 / 即时通讯 → **使用者的关系资产** —— 与企业级对接后逐步拿到，
+            由使用者手动录入、沉淀在本机。平台不抓取、不推断、不买卖。
+   所以 L3 区**不能**表现成一片「未覆盖」的空白 —— 那是使用者的资产，不是产品的缺口。
+   录入入口必须一直在，且支持多次追加更新（对接是渐进的）。
+   ⚠️ 本机存储键 falcora_contacts_v1；不写管线记录、不进 KPI 虚报。 */
+const L3_FIELDS=["person","title","phone","email","whatsapp","wechat","telegram"];
+const L3_LABELS={person:"姓名",title:"职务 / 决策角色",phone:"手机 / 电话",email:"私人邮箱",
+  whatsapp:"WhatsApp",wechat:"WeChat",telegram:"Telegram"};
+const L3_SRCS=["名片","展会","客户留资","邮件签名","企业对接","其他"];
+function l3Count(o){ if(!o) return 0; return L3_FIELDS.filter(k=>String(o[k]||"").trim()).length; }
+function l3Focus(id){ const e=document.getElementById(id); if(e){ e.focus(); if(e.scrollIntoView) e.scrollIntoView({block:"center",behavior:"smooth"}); } }
+
 /* 当前线索池：按档案生成 / 或全量演示池 */
 function currentPool(){
   const p = readProfile();
@@ -1431,6 +1478,12 @@ function render(){
       const hasPerson=(own.person||card.person||c.person||'').trim();
       const hasPhone=(own.phone||card.tel||c.cp||'').trim();
       const hint=hasPerson||hasPhone;
+      /* L3 建档数 > 0 → 「联系可用性」升级为绿色徽章：平台给的 L2 职能 + 你自己录的 L3，
+         这才是完整客户档案 —— 也是这个产品真正在替使用者积累的东西。 */
+      const l3n=l3Count(own);
+      const covTxt = l3n ? (l.contact==='L2'?'L2 + L3 已建档':'L3 已建档')
+                         : (l.contact==='L1'?'L1 公开':l.contact==='L2'?'L2 职能':l.contact==='L3'?'L3 自备':'未覆盖');
+      const covCls = l3n ? 'b-l3on' : ('b-'+l.contact);
       const szTxt={S:'小微',M:'中型',L:'大型'}[l.size]||'';
       const needNA = !l.kw || l.kw==='—';
       const riskCls = l.risk==='na' ? 'b-none' : 'b-'+l.risk;
@@ -1440,7 +1493,7 @@ function render(){
         <div class="need">${needNA?'<span class="needna">待验证</span>':esc(l.need)}<small title="${esc(l.why||'')}">${esc(l.why||'')}</small>${needNA?'':'<span class="kwb"><span>命中：</span><span class="noi18n">'+esc(l.kw)+'</span></span>'}</div>
         <div class="mbar">${l.match==null?'<span class="vna">待核查</span>':`<div class="bar"><i style="width:${l.match}%"></i></div><b>${l.match}</b>`}</div>
         <div><span class="badge ${riskCls}">${riskTxt}</span></div>
-        <div><span class="badge b-${l.contact}">${l.contact==='L1'?'L1 公开':l.contact==='L2'?'L2 职能':l.contact==='L3'?'L3 自备':'未覆盖'}</span></div>
+        <div><span class="badge ${covCls}">${covTxt}</span></div>
         <div class="act"><button class="mini ${added?'added':''}" data-dm="${l.dm}" ${added?'disabled':''}>${added?'✓ 已加入':'加入管线'}</button><button class="mini" data-cm="${l.dm}" data-nm="${l.nm}">联系方式</button>${l.card?'<button class="mini" data-card="'+l.dm+'">名片</button>':'<button class="mini ghost" data-dd="'+l.dm+'" data-nm="'+esc(l.nm)+'" data-rg="'+esc(l.region)+'" data-ind="'+esc(l.ind)+'">→ 核查</button>'}</div>
       </div>`;
     }).join("");
@@ -1589,9 +1642,10 @@ document.getElementById("exportBtn").onclick=()=>{
   if(!state.added.size){alert("尚未加入任何管线线索。");return;}
   const rows=allLeads().filter(l=>state.added.has(l.dm));
   const q=x=>'"'+String(x==null?"":x).replace(/"/g,'""')+'"';
-  const head=["公司","域名","区域","行业","规模","采购方类型","采购需求品类","命中关键词","命中依据","匹配度","风险","联系可用性","窗口人岗位","企业电话","部门邮箱","人名","WhatsApp","WeChat","Telegram","来源"];
+  const head=["公司","域名","区域","行业","规模","采购方类型","采购需求品类","命中关键词","命中依据","匹配度","风险","联系可用性","职能窗口岗位","企业电话","部门邮箱","人名","职务 / 决策角色","WhatsApp","WeChat","Telegram","备注","资料来源","公司主页","数据来源"];
   const body=rows.map(l=>{const c=contactsOf(l);const o=loadOwn()[l.dm]||{};
-    return [l.nm,l.dm,l.region,l.ind,l.size,l.btype||"",l.need||"",l.kw||"",l.why||"",l.match,l.risk,l.contact,c.role||"",o.phone||c.cp||"",o.email||c.ce||"",o.person||c.person||"",o.whatsapp||c.wa||"",o.wechat||c.wc||"",o.telegram||c.tg||"",c.src||l.src].map(q).join(",");});
+    const cov=l3Count(o) ? (l.contact==="L2"?"L2 + L3 已建档":"L3 已建档") : l.contact;
+    return [l.nm,l.dm,l.region,l.ind,l.size,l.btype||"",l.need||"",l.kw||"",l.why||"",l.match,l.risk,cov,c.role||"",o.phone||c.cp||"",o.email||c.ce||"",o.person||c.person||"",o.title||"",o.whatsapp||c.wa||"",o.wechat||c.wc||"",o.telegram||c.tg||"",o.note||"",o.src||"",o.site||"",c.src||l.src].map(q).join(",");});
   const csv="\ufeff"+[head.map(q).join(",")].concat(body).join("\n");
   const blob=new Blob([csv],{type:"text/csv"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="FALCORA_管线线索_演示.csv";a.click();
 };
@@ -1603,37 +1657,73 @@ function saveOwn(o){try{localStorage.setItem(CKEY,JSON.stringify(o))}catch(e){}}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 const LAYER_TXT={L1:"L1 公开",L2:"L2 职能",L3:"L3 自备",none:"未覆盖"};
 function lb(layer){return '<span class="badge b-'+layer+'">'+(LAYER_TXT[layer]||layer)+'</span>'}
-/* cRow(键, 值, 层级, 空占位文案, 是否示例值)
-   ⚠️ 「示例」角标必须挂在**值的 span 内部**：`.crow` 是 `88px 1fr auto` 三列 grid，
+/* cRow(键, 值, 层级, 空占位文案, 是否示例值, 是否使用者自录)
+   ⚠️ 角标（示例 / 已录入）必须挂在**值的 span 内部**：`.crow` 是 `104px 1fr auto` 三列 grid，
       往 grid 里再塞一个子元素会把列数撑破、整行错位。 */
-function cRow(k,v,layer,naTxt,isSample){const has=v&&String(v).trim();
+function cRow(k,v,layer,naTxt,isSample,isOwn){const has=v&&String(v).trim();
   return '<div class="crow"><span class="k">'+esc(k)+'</span>'
     +'<span class="v'+(has?'':' na')+'">'+esc(has||(naTxt||"需自备"))
-    +(isSample&&has?'<span class="sflag">'+T("示例")+'</span>':'')+'</span>'
+    +(isSample&&has?'<span class="sflag">'+T("示例")+'</span>':'')
+    +(isOwn&&has?'<span class="rflag">'+T("已录入")+'</span>':'')+'</span>'
     +lb(layer)+'</div>';}
+/* L3 行的两种形态 —— 空值不再是「灰掉的空白」，而是「待您录入」的行动召唤：
+     ① 已录入 → 值 + 绿色「已录入 · 日期」角标（多次录入取最近一次日期）
+     ② 未录入 → 「＋ 待您录入」按钮，点击跳到下方表单对应输入框并聚焦
+   角标同样必须挂在 .v 的 span 内部（.crow 是三列 grid）。 */
+function cRowL3(k,v,own,focusId){
+  const has=v&&String(v).trim();
+  if(has){
+    const when=(own&&own.at)?(' · '+esc(own.at)):'';
+    return '<div class="crow"><span class="k">'+esc(k)+'</span>'
+      +'<span class="v">'+esc(v)+'<span class="rflag">'+T("已录入")+when+'</span></span>'
+      +lb("L3")+'</div>';
+  }
+  return '<div class="crow"><span class="k">'+esc(k)+'</span>'
+    +'<span class="v na"><button type="button" class="l3add" data-focus="'+esc(focusId)+'">'+T("＋ 待您录入")+'</button></span>'
+    +lb("L3")+'</div>';
+}
 function cval(id){const e=document.getElementById(id);return e?e.value.trim():""}
 function openCM(dm,nm){
   const l=allLeads().find(x=>x.dm===dm)||{nm:nm||dm,dm:dm,region:"",ind:"",contact:"none"};
-  const c=contactsOf(l); const own=loadOwn()[dm]||{};
+  const c=contactsOf(l); const own=loadOwn()[dm]||{}; const k=l.card||{};
   document.getElementById("cmName").textContent=l.nm;
   document.getElementById("cmDom").innerHTML=[l.dm,l.region,l.ind,l.btype].filter(Boolean).map(function(x){return "<span>"+esc(x)+"</span>";}).join(" · ");
-  const role=c.role||"";
-  const person=own.person||c.person||"";
-  const cp=own.phone||c.cp||"";
-  const ce=own.email||c.ce||"";
-  const wa=own.whatsapp||c.wa||"";
-  const wc=own.wechat||c.wc||"";
-  const tg=own.telegram||c.tg||"";
+  const role=c.role||"";                                   /* 职能窗口岗位 = L2（平台给出「该找哪个岗位」） */
+  /* ⚠️ L2 与 L3 的值**绝不能互相顶替**（2026-10-15 v46 修）：
+     · L2（企业电话 / 部门邮箱）= **平台字段** —— 目前只有示例线索由 sampleL2() 生成；
+     · L3（手机 / 电话 / 私人邮箱 / IM / 姓名 / 职务）= **使用者自备** —— 本机补录优先，其次名片建档。
+     旧写法 `own.phone||c.cp` 会让使用者自己录的真实号码顶到 L2 行上、还被挂「示例」角标 →
+     等于把「你自己核实的资料」冒充成「平台的示例数据」，两个方向都是误导。 */
+  const cp=c.cp||"";                                       /* 企业电话（L2 · 平台） */
+  const ce=c.ce||"";                                       /* 部门邮箱（L2 · 平台） */
+  const person=own.person||k.person||c.person||"";
+  const title=own.title||"";
+  const pPhone=own.phone||k.tel||"";                       /* L3 · 手机 / 电话 */
+  const pMail=own.email||k.email||"";                      /* L3 · 私人邮箱 */
+  const wa=own.whatsapp||"";
+  const wc=own.wechat||"";
+  const tg=own.telegram||"";
+  const note=own.note||"";
+  const osrc=own.src||"";
+  const osite=own.site||"";
+  /* L3 展示/计数的合并视图：本机补录 + 名片建档（两者都是使用者自备） */
+  const l3own={person:person,title:title,phone:pPhone,email:pMail,whatsapp:wa,wechat:wc,telegram:tg,at:own.at||""};
   const cov=l.contact;
   /* ⚠️ L2 与 L3 的「空」性质完全不同，绝不能共用同一句占位文案（2026-10-15 修）：
      · L2 企业公开职能联系方式 = **平台能力** —— 接入数据源后由平台填充，须标来源；
-     · L3 个人联系方式        = **用户自备** —— 平台不抓取、不推断、不买卖。
+     · L3 个人联系方式        = **使用者的关系资产** —— 由您录入并沉淀，平台不抓取、不推断、不买卖。
      旧版把两者都写成「需自备」，等于把平台的能力说成使用者的义务 →
      使用者看到「连企业电话都要我自己找」，会误以为这个产品拿不到任何联系方式。 */
   const isSample=!!l.sample;   /* 示例线索：L2 给的是**标注清楚的示例值**（见 sampleL2） */
   const naL2=T("待数据源接入");
-  const naL3=T("需自备（L3）");
+  const n3=l3Count(l3own), tot3=L3_FIELDS.length;
   let h="";
+  /* ---- 档案完整度条：一眼看清「平台做什么 / 你做什么」 ---- */
+  h+='<div class="covbar">'
+    +'<div class="cv"><b>L1</b><span>'+T("公开信息 · 已覆盖")+'</span></div>'
+    +'<div class="cv"><b>L2</b><span>'+T("企业职能 · 待数据源接入")+'</span></div>'
+    +'<div class="cv'+(n3?' on':'')+'"><b>L3</b><span>'+T("关系档案")+' · '+n3+'/'+tot3+' '+T("已录入")+'</span></div>'
+    +'</div>';
   if(cov==="none") h+='<div class="warnbox">'+T("该线索目前仅有域名（L1 公开信息）。企业职能联系方式（L2）由平台在接入数据源后自动填充；个人联系方式（L3）平台不抓取、不推断，需您自备（名片 / 展会 / 客户留资）。「数据未覆盖」既不等于「不存在」，也不等于「无风险」。")+'</div>';
   else if(isSample) h+='<div class="samplebox">'+T("以下 L2 企业职能联系方式为「示例 · 非真实」，仅用于演示接入数据源后的呈现形态，不代表任何真实企业的实际联络信息。L3 个人联系方式平台不抓取、不推断，需您自备。")+'</div>';
   /* 采购需求与命中依据（为什么它是「您的」采购方） */
@@ -1643,41 +1733,73 @@ function openCM(dm,nm){
     +'<div class="crow"><span class="k">需求品类</span><span class="v'+(needNA?" na":"")+'">'+esc(needNA?"待验证（数据未覆盖）":l.need)+'</span>'+lb("L1")+'</div>'
     +'<div class="crow"><span class="k">命中关键词</span><span class="v'+(needNA?" na":"")+'">'+esc(needNA?"—":l.kw)+'</span>'+lb("L1")+'</div>'
     +'<div class="crow"><span class="k">命中依据</span><span class="v">'+esc(l.why||"—")+'</span>'+lb("L1")+'</div></div>';
-  h+='<div class="csec"><h4><span>联系窗口人</span><span class="lay">'+lb("L2")+'</span></h4>'
-    +cRow("岗位",role,"L2",naL2,isSample)
-    +cRow("人名",person,"L3",naL3)+'</div>';
   h+='<div class="csec"><h4><span>企业职能联系方式</span><span class="lay">'+lb("L2")+'</span></h4>'
+    /* 职能窗口岗位 = 平台给出的「该找哪个岗位」（L2 职能情报），
+       与下面 L3 区「对方职务」是两个不同的东西：前者是线索情报，后者是你实际对接的这个人的头衔。 */
+    +cRow("职能窗口岗位",role,"L2",naL2,isSample)
     +cRow("企业电话",cp,"L2",naL2,isSample)
     +cRow("部门邮箱",ce,"L2",naL2,isSample)
     /* 官网 = L1 公开信息。线索本身就有域名（弹窗副标题已显示该域名），
        这一栏空着反而自相矛盾 → 直接用线索域名回填（示例域名，页脚已声明）。 */
     +cRow("官网",c.web||l.dm,"L1","—")
-    +cRow("公司主页",c.li||"","L1","—")
+    /* 公司主页（LinkedIn 等）= 唯一性地址，**无法确定性生成** —— 编一个极可能指向
+       真实存在的其它公司页，比留空更糟。故：空态说清「平台待接入」，并允许使用者自行补录。 */
+    +cRow("公司主页",osite,"L1",T("待数据源接入 · 可自行补录"),false,!!osite)
     +'<div class="cnote">'+T("L2 = 企业公开的采购 / 销售职能联系方式，由平台在接入数据源后填充并标注来源；L3 = 个人联系方式，平台只接受您自备。")+'</div>'+'</div>';
-  h+='<div class="csec"><h4><span>个人 / 即时通讯</span><span class="lay">'+lb("L3")+'</span></h4>'
-    +cRow("WhatsApp",wa,"L3",naL3)
-    +cRow("WeChat",wc,"L3",naL3)
-    +cRow("Telegram",tg,"L3",naL3)+'</div>';
+  /* ---------- L3：客户关系档案（使用者的关系资产，不是平台的空白） ---------- */
+  h+='<div class="csec l3sec"><h4><span>客户关系档案</span><span class="lay">'+lb("L3")+'</span></h4>'
+    +'<div class="l3lede">'+T("与企业级对接后逐步拿到的资料，由您录入、沉淀在本机 —— 平台不抓取、不推断、不买卖。")+'</div>'
+    +cRowL3("姓名",person,l3own,"cfPerson")
+    +cRowL3("对方职务",title,l3own,"cfTitle")
+    +cRowL3("手机 / 电话",pPhone,l3own,"cfPhone")
+    +cRowL3("私人邮箱",pMail,l3own,"cfEmail")
+    +cRowL3("WhatsApp",wa,l3own,"cfWa")
+    +cRowL3("WeChat",wc,l3own,"cfWc")
+    +cRowL3("Telegram",tg,l3own,"cfTg")
+    +(note?'<div class="crow"><span class="k">备注</span><span class="v">'+esc(note)+'<span class="rflag">'+T("已录入")+'</span></span>'+lb("L3")+'</div>':'')
+    +(osrc?'<div class="crow"><span class="k">资料来源</span><span class="v">'+esc(osrc)+'<span class="rflag">'+T("已录入")+'</span></span>'+lb("L3")+'</div>':'')
+    +'</div>';
   h+='<div class="cnote"><span>数据来源</span> <b>'+esc(c.src||"—")+'</b></div>'
     +'<div class="cnote">个人联系方式（人名 / 手机 / 私人邮箱 / 即时通讯）属 L3，平台只接受用户自备（名片 / 展会 / 客户留资），不抓取、不买卖、不推断。</div>';
-  h+='<div class="csec"><h4><span>补录联系方式（L3 · 仅存本机）</span></h4>'
+  /* ---------- 录入 / 更新表单：入口常在，支持对接过程中的多次追加 ---------- */
+  h+='<div class="csec"><h4><span>录入 / 更新 L3 资料</span><span class="lay" id="cfCount">'+n3+'/'+tot3+'</span></h4>'
     /* 这里只回填「使用者自己上次补录的内容」——
        绝不用任何演示 / 预设值预填，否则会分不清哪些是自己填的。 */
+    +'<div class="cnote" style="margin-bottom:9px">'+T("对接过程中随时补录，重复录入会覆盖更新；只存本机，不上传、不同步。")+'</div>'
     +'<div class="cform">'
-    +'<label>人名<input id="cfPerson" value="'+esc(own.person||"")+'" placeholder="对方姓名" /></label>'
-    +'<label>电话 / 手机<input id="cfPhone" value="'+esc(own.phone||"")+'" placeholder="含国家码" /></label>'
-    +'<label>邮箱<input id="cfEmail" value="'+esc(own.email||"")+'" placeholder="name@company.com" /></label>'
+    +'<label>姓名<input id="cfPerson" value="'+esc(own.person||"")+'" placeholder="对方姓名" /></label>'
+    +'<label>对方职务<input id="cfTitle" value="'+esc(own.title||"")+'" placeholder="例：采购总监 · 决策人" /></label>'
+    +'<label>手机 / 电话<input id="cfPhone" value="'+esc(own.phone||"")+'" placeholder="含国家码" /></label>'
+    +'<label>私人邮箱<input id="cfEmail" value="'+esc(own.email||"")+'" placeholder="name@company.com" /></label>'
     +'<label>WhatsApp<input id="cfWa" value="'+esc(own.whatsapp||"")+'" placeholder="含国家码" /></label>'
     +'<label>WeChat<input id="cfWc" value="'+esc(own.wechat||"")+'" placeholder="wechat id" /></label>'
     +'<label>Telegram<input id="cfTg" value="'+esc(own.telegram||"")+'" placeholder="@handle" /></label>'
-    +'</div><div class="cfoot"><button class="mini" id="cfSave">保存补录</button><span class="cnote" id="cfTip" style="display:none">✓ 已保存到本机</span></div></div>';
+    +'<label>资料来源<select id="cfSrc">'
+      +['','名片','展会','客户留资','邮件签名','企业对接','其他'].map(function(s){
+          return '<option value="'+s+'"'+(s===(own.src||'')?' selected':'')+'>'+(s?s:'未指定')+'</option>';}).join('')
+      +'</select></label>'
+    +'<label class="full">备注（对接进展 / 关注点）<textarea id="cfNote" rows="2" placeholder="例：2026-09 展会认识，负责北美采购，关注交期与认证">'+esc(own.note||'')+'</textarea></label>'
+    +'<label class="full">公司主页 / LinkedIn（公开信息 · 可自行补录）<input id="cfSite" value="'+esc(own.site||"")+'" placeholder="https://" /></label>'
+    +'</div><div class="cfoot"><button class="mini" id="cfSave">保存到本机</button><button class="mini ghost" id="cfClear">清空本机资料</button><span class="cnote" id="cfTip" style="display:none">✓ 已保存到本机</span></div></div>';
   h+='<div class="cbar"><button class="btn" id="cmAdd">加入管线</button><button class="btn ghost" id="cmDD">进入尽调核查 →</button></div>';
   document.getElementById("cmBody").innerHTML=h;
+  /* 「＋ 待您录入」→ 跳到表单对应输入框并聚焦（把空白变成行动） */
+  document.querySelectorAll("#cmBody [data-focus]").forEach(function(b){ b.onclick=function(){ l3Focus(b.dataset.focus); }; });
   document.getElementById("cfSave").onclick=()=>{
     const o=loadOwn();
-    o[dm]={person:cval("cfPerson"),phone:cval("cfPhone"),email:cval("cfEmail"),whatsapp:cval("cfWa"),wechat:cval("cfWc"),telegram:cval("cfTg")};
+    /* 只存使用者自己填的内容；at = 最近一次录入日期（对接是渐进的，故记录时间） */
+    o[dm]={person:cval("cfPerson"),title:cval("cfTitle"),phone:cval("cfPhone"),email:cval("cfEmail"),
+      whatsapp:cval("cfWa"),wechat:cval("cfWc"),telegram:cval("cfTg"),
+      src:cval("cfSrc"),note:cval("cfNote"),site:cval("cfSite"),
+      at:new Date().toISOString().slice(0,10)};
     saveOwn(o); render(); openCM(dm,l.nm);
-    const t=document.getElementById("cfTip"); if(t){t.style.display="inline";setTimeout(()=>{if(t)t.style.display="none";},1600);}
+    const t=document.getElementById("cfTip"); if(t){t.style.display="inline";setTimeout(()=>{if(t)t.style.display="none";},1800);}
+    toast("已存入本机 · 仅您可见（L3）");
+  };
+  document.getElementById("cfClear").onclick=()=>{
+    if(!window.confirm(Tf("确定清空「{n}」在本机保存的 L3 资料吗？此操作不可撤销。",{n:l.nm}))) return;
+    const o=loadOwn(); delete o[dm]; saveOwn(o); render(); openCM(dm,l.nm);
+    toast("已清空该线索的本机 L3 资料");
   };
   document.getElementById("cmAdd").onclick=()=>{state.added.add(dm);updateFunnel();render();showSaved();closeCM();};
   document.getElementById("cmDD").onclick=()=>{location.href="03_客户尽调与风险核查.html?co="+encodeURIComponent(dm)+"&nm="+encodeURIComponent(l.nm);};
@@ -1730,6 +1852,9 @@ function runVerify(){
   /* 4) 联系可用性分层 */
   const lyr={L1:0,L2:0,L3:0,none:0};
   all.forEach(l=>{lyr[l.contact]=(lyr[l.contact]||0)+1;});
+  /* 5) L3 建档进度（使用者自备的关系资产 —— 只统计本机 falcora_contacts_v1 里真实录入的） */
+  const l3done=all.filter(l=>l3Count(own[l.dm])>0).length;
+  const l3items=all.reduce((s,l)=>s+l3Count(own[l.dm]),0);
 
   const uniq=Object.keys(byDm).length;
   const el=document.getElementById("vfyBody");
@@ -1739,6 +1864,7 @@ function runVerify(){
     '<div class="vrow"><span class="lab">邮箱格式通过 / 免费邮箱 / 疑似无效</span><b>'+mOk+' / '+mFree+' / '+mBad+'</b></div>'+
     '<div class="vrow"><span class="lab">电话 E.164 合规</span><b>'+tOk+' / '+tN+'</b></div>'+
     '<div class="vrow"><span class="lab">L2 职能联系 / L3 自备 / 未覆盖</span><b>'+lyr.L2+' / '+lyr.L3+' / '+lyr.none+'</b></div>'+
+    '<div class="vrow"><span class="lab">已录入 L3 关系档案（线索 / 字段）</span><b>'+l3done+' / '+l3items+'</b></div>'+
     '<div class="vbar"><i style="width:'+(all.length?Math.round((mOk+mFree+mBad)/all.length*100):0)+'%"></i></div>'+
     '<div class="cnote2">邮箱与电话<b>只做格式与域名一致性校验</b>；未接入 MX 查询与实投验证前，一律标「未验证」，<b>不标「有效」</b>。</div>'+
     (dups.length?'<div class="duplist">'+dups.slice(0,4).map((d,i)=>
