@@ -157,11 +157,15 @@
   .thread{stroke:rgba(94,234,212,.12); stroke-width:.8; fill:none}
   .thread-started{stroke:rgba(245,184,65,.18); stroke-width:.8; fill:none}
   .client{cursor:pointer}
-  /* 默认（青色）= 已加入管线；.started（金色）= 已启动沟通 —— 用户 2026-10-15 要求二态分色 */
-  .client .core{fill:var(--cyan); stroke:#fff; stroke-width:.5}
-  .client .halo{fill:var(--cyan); opacity:.22; transform-origin:center; transform-box:fill-box; animation:pulse 2.6s ease-in-out infinite}
-  .client.started .core{fill:var(--gold); stroke:#fff; stroke-width:.5}
-  .client.started .halo{fill:var(--gold); opacity:.28; transform-origin:center; transform-box:fill-box; animation:pulse 2.6s ease-in-out infinite}
+  /* 2026-10-15 升级为**二维编码**：
+     · 填充色 --kwc = 带来这家客户的**关键词**（① 战略档案里填的词，一词一色）
+     · 金色外圈      = 已启动沟通
+     原先是青 / 金二态，但「颜色」只有一个维度，装不下「关键词 + 状态」两条信息 ——
+     所以状态改由外圈表达，把填充色让给关键词分组。未标关键词的点用中性灰。 */
+  .client .core{fill:var(--kwc,var(--cyan)); stroke:#fff; stroke-width:.5}
+  .client .halo{fill:var(--kwc,var(--cyan)); opacity:.22; transform-origin:center; transform-box:fill-box; animation:pulse 2.6s ease-in-out infinite}
+  .client .ring{display:none}
+  .client.started .ring{display:block; fill:none; stroke:var(--gold); stroke-width:1.2; opacity:.95}
   @keyframes pulse{0%,100%{transform:scale(1); opacity:.30}50%{transform:scale(2.1); opacity:0}}
   /* 无管线记录时的诚实空态（不画演示点充数） */
   .map-empty{
@@ -181,6 +185,12 @@
   .legend{display:flex; gap:18px; align-items:center; padding:4px 16px 14px; font-size:12px; color:var(--muted); flex-wrap:wrap}
   .legend i{width:9px; height:9px; border-radius:50%; background:var(--cyan); display:inline-block; margin-right:6px; vertical-align:middle}
   .legend i.l-start{background:var(--gold)}
+  /* 关键词图例：色点 + 关键词 + 该词下几家；金圈表示已启动沟通（与地图上一致） */
+  .legend i.l-ring{background:transparent; border:2px solid var(--gold); width:11px; height:11px}
+  .legend .lg-kw{display:inline-flex; align-items:center; gap:0}
+  .legend .lg-kw b{font-weight:600; color:var(--ink); margin-left:-2px}
+  .legend .lg-kw u{text-decoration:none; color:var(--muted-2); margin-left:5px}
+  .legend .lg-note{color:var(--muted-2)}
 
   .leads{display:flex; flex-direction:column}
   .lead{display:flex; align-items:center; gap:12px; padding:13px 18px; border-bottom:1px solid var(--border)}
@@ -423,11 +433,12 @@
             <div class="map-tip" id="mapTip"></div>
             <div class="map-empty" id="mapEmpty" hidden>
               <b>还没有线索加入管线</b>
-              <span>到 ② 全球线索获取 把线索加入管线后，这里会按国家/区域标注点位；金色 = 已启动沟通。</span>
+              <span>到 ② 全球线索获取 把线索加入管线后，这里会按国家/区域标注点位；点的颜色 = 带来这家客户的关键词，金色外圈 = 已启动沟通。</span>
               <a class="sb-btn pri" href="02_全球线索获取.html">前往 ② 加入管线</a>
             </div>
           </div>
-          <div class="legend"><span><i></i>已加入管线</span><span><i class="l-start"></i>已启动沟通</span><span style="color:var(--muted-2)">点位按国家/区域示意 · 悬停查看客户与状态</span></div>
+          <!-- 图例由 renderMap() 动态生成：关键词一词一色 + 已启动沟通金圈 -->
+          <div class="legend" id="mapLegend"></div>
         </div>
 
         <div class="panel">
@@ -719,6 +730,8 @@
   /* 整句作 key + {x} 占位符（与 02 页 Tv 同规）：绝不把一句话拆成多个文本节点 */
   function T(zh){ try{ return (window.__falT && window.__falT(zh)) || zh; }catch(e){ return zh; } }
   function Tv(zh,vars){ var s=T(zh); if(vars) for(var k in vars) s=s.split("{"+k+"}").join(vars[k]); return s; }
+  /* 关键词是使用者自己输入的自由文本 → 进 DOM 前必须转义，防 XSS / 防标签破坏布局 */
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){ return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]; }); }
   /* 区域名是「数据值」→ 走 app-vals.js 的 __falVal 本地化（与 ② 页一致）；
      没有收录的值（如大洋洲）保持中文原文，绝不编造译名。 */
   function rv(r){ try{ return (window.__falVal && window.__falVal(r)) || r; }catch(e){ return r; } }
@@ -784,10 +797,14 @@
   /* ---------- 地图点位（2026-10-15 改：唯一来源 = 实际加入管线的线索） ----------
      用户原话：「全球客户分布金点这个，应该要依据实际加入管线的来点缀，还要区分不同颜色，
      一个颜色是加入管线，金色是已经成功开始进入沟通。」
-     · 青色点 = 已加入管线（'falcora_pipeline_v1' 有记录）
-     · 金色点 = 已启动沟通（该域名在 'falcora_seq_v1' 已有 ≥1 个勾选步骤）
+     2026-10-15 再改（用户：「找到的客户也要依据不同关键词做清楚区分，地图上的点也要清楚
+     区分，可以用不同颜色的点来呈现」）→ 颜色只有一个维度，装不下「关键词 + 状态」两条信息，
+     于是改成二维编码：
+     · **填充色** = 带来这家客户的**关键词**（① 战略档案填的词，一词一色，图例列出）
+     · **金色外圈** = 已启动沟通（该域名在 'falcora_seq_v1' 已有 ≥1 个勾选步骤）
+     · 未标关键词（如展会名片 / 手动新增未填） → 中性灰，图例单列
      · 无记录 → 空态引导，**不画演示点充数**
-     · 悬停仅显示公司/区域/状态 —— 不显示「锁定金额」：平台没有这个数据，不虚报 */
+     · 悬停仅显示公司/区域/关键词/状态 —— 不显示「锁定金额」：平台没有这个数据，不虚报 */
   const hub=[M.W/2, M.H-18];
   const tip=document.getElementById("mapTip"); const wrap=document.getElementById("mapWrap");
   const mapEmpty=document.getElementById("mapEmpty");
@@ -796,40 +813,86 @@
   function seqStarted(dm){ try{ const sq=JSON.parse(localStorage.getItem("falcora_seq_v1")||"{}")||{}; return Object.keys(sq[dm]||{}).length>0; }catch(e){ return false; } }
   /* 同位置防完全重叠：按域名哈希确定性微移（同一记录每次刷新偏移一致，不会跳位） */
   function jit(dm){ let h=0; for(let i=0;i<dm.length;i++) h=(h*31+dm.charCodeAt(i))>>>0; return [ (h%7)-3, ((h>>4)%7)-3 ]; }
+  /* ---------- 关键词配色（一词一色）----------
+     用户原话：「找到的客户也要依据不同关键词做清楚区分，地图上的点也要清楚的区分，
+     可以用不同颜色的点来呈现。」
+     颜色顺序先按 ① 战略档案里填关键词的**顺序**固定下来 —— 这样同一个词在任何页面、
+     任何刷新后都是同一个颜色，不会今天绿明天紫。管线里出现的、档案里已删掉的词
+     排在后面继续分配。颜色用尽（>10 个关键词）的一律落中性灰，并在图例里明说，
+     绝不两个词共用一色造成误读。 */
+  const KWPALETTE = ["#5EEAD4","#60A5FA","#A78BFA","#F472B6","#FB923C","#A3E635","#F87171","#22D3EE","#FBBF24","#C084FC"];
+  const KWGRAY = "#94A3B8";
+  function profileKws(){
+    try{
+      const st = JSON.parse(localStorage.getItem("falcora_strategy_profile_v1")||"null") || {};
+      return String(st.keywords||"").split(/[、,，;；\/／|｜\s]+/).map(s=>s.trim()).filter(Boolean);
+    }catch(e){ return []; }
+  }
+  function kwColorMap(pts){
+    const order = [];
+    profileKws().forEach(k=>{ if(order.indexOf(k)===-1) order.push(k); });
+    pts.forEach(p=>{ const k=(p.kw||"").trim(); if(k && k!=="—" && order.indexOf(k)===-1) order.push(k); });
+    const map = {};
+    order.forEach((k,i)=>{ map[k] = i < KWPALETTE.length ? KWPALETTE[i] : KWGRAY; });
+    return {map:map, order:order, overflow: order.length - KWPALETTE.length};
+  }
   function mapPoints(){
     const recs=pipeRecords(), out=[];
     Object.keys(recs).forEach(dm=>{
       const r=recs[dm]||{};
       const geo=COUNTRY_GEO[r.flag] || REGION_GEO[r.region] || null;
       if(!geo) return;                     /* 位置未覆盖 → 不画（宁可少画，不虚报位置） */
-      out.push({dm:dm, nm:r.nm||dm, region:r.region||"", lon:geo[0], lat:geo[1], started:seqStarted(dm)});
+      out.push({dm:dm, nm:r.nm||dm, region:r.region||"", kw:(r.kw||"").trim(),
+                lon:geo[0], lat:geo[1], started:seqStarted(dm)});
     });
     return out;
+  }
+  function renderLegend(pts, cmap){
+    const el=document.getElementById("mapLegend"); if(!el) return;
+    if(!pts.length){ el.innerHTML='<span class="lg-note">'+T("点位按国家 / 区域示意 · 悬停查看客户与状态")+'</span>'; return; }
+    const cnt={}; let none=0;
+    pts.forEach(p=>{ const k=(p.kw||"").trim(); if(k && k!=="—") cnt[k]=(cnt[k]||0)+1; else none++; });
+    let h="";
+    cmap.order.forEach(k=>{
+      if(!cnt[k]) return;                  /* 图例只列地图上真的有的词 */
+      h += '<span class="lg-kw"><i style="background:'+cmap.map[k]+'"></i><b class="noi18n">'+esc(k)+'</b><u>'+cnt[k]+'</u></span>';
+    });
+    if(none) h += '<span class="lg-kw"><i style="background:'+KWGRAY+'"></i><b>'+T("未标关键词")+'</b><u>'+none+'</u></span>';
+    h += '<span><i class="l-ring"></i>'+T("已启动沟通")+'</span>';
+    if(cmap.overflow>0) h += '<span class="lg-note">'+Tv("关键词超过 {n} 个，超出的统一显示灰色（不共用颜色，避免误读）",{n:String(KWPALETTE.length)})+'</span>';
+    el.innerHTML=h;
   }
   function renderMap(){
     dotsG.innerHTML="";
     const pts=mapPoints();
+    const cmap=kwColorMap(pts);
     if(mapEmpty) mapEmpty.hidden = pts.length>0;
     pts.forEach(p=>{
       const j=jit(p.dm); const [x,y]=proj(p.lon,p.lat);
       const px=x+j[0], py=y+j[1];
+      const kw=(p.kw||"").trim(); const hasKw = !!kw && kw!=="—";
+      const col = hasKw ? (cmap.map[kw] || KWGRAY) : KWGRAY;
       const th=document.createElementNS(NS,"line"); th.setAttribute("x1",hub[0]);th.setAttribute("y1",hub[1]);
       th.setAttribute("x2",px);th.setAttribute("y2",py);
       th.setAttribute("class", p.started?"thread thread-started":"thread"); dotsG.appendChild(th);
       const g=document.createElementNS(NS,"g"); g.setAttribute("class","client"+(p.started?" started":""));
+      g.setAttribute("style","--kwc:"+col);      /* 填充色 = 关键词分组色 */
       const halo=document.createElementNS(NS,"circle"); halo.setAttribute("cx",px);halo.setAttribute("cy",py);halo.setAttribute("r",5.5);halo.setAttribute("class","halo");
       const core=document.createElementNS(NS,"circle"); core.setAttribute("cx",px);core.setAttribute("cy",py);core.setAttribute("r",2.6);core.setAttribute("class","core");
-      g.appendChild(halo);g.appendChild(core);
+      const ring=document.createElementNS(NS,"circle"); ring.setAttribute("cx",px);ring.setAttribute("cy",py);ring.setAttribute("r",4.8);ring.setAttribute("class","ring");
+      g.appendChild(halo);g.appendChild(core);g.appendChild(ring);   /* ring 只在 .started 下可见（CSS 控制） */
       g.addEventListener("mouseenter",()=>{
         tip.textContent="";
         const b=document.createElement("b"); b.textContent=p.nm;
-        const s=document.createElement("small"); s.textContent=T(p.region||"区域待确认")+" · "+T(p.started?"已启动沟通":"已加入管线");
+        const s=document.createElement("small");
+        s.textContent=T(p.region||"区域待确认")+" · "+(hasKw ? kw+" · " : "")+T(p.started?"已启动沟通":"已加入管线");
         tip.appendChild(b); tip.appendChild(s); tip.style.opacity=1;
       });
       g.addEventListener("mousemove",e=>{ const b=wrap.getBoundingClientRect(); tip.style.left=(e.clientX-b.left)+"px"; tip.style.top=(e.clientY-b.top)+"px"; });
       g.addEventListener("mouseleave",()=>{ tip.style.opacity=0; });
       dotsG.appendChild(g);
     });
+    renderLegend(pts, cmap);
     return pts.length;
   }
   renderMap();
