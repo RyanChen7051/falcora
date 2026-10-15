@@ -28,8 +28,12 @@
   var STORE = 'falcora_lang';
   var SKIP_TAGS = /^(SCRIPT|STYLE|TEXTAREA|CODE|PRE)$/;
   /* .draft-b = ④ 内容工坊的可编辑草稿正文：内容本身即为目标语言（或用户手改），
-     不参与界面文案反查翻译，避免把用户编辑的内容改掉。 */
-  var SKIP_SEL = '.lang-picker,.lang-toast,#updateBtn,.draft-b';
+     不参与界面文案反查翻译，避免把用户编辑的内容改掉。
+     .noi18n (2026-10-15) = 使用者自填的「关键词」等业务数据：绝不做机器翻译 ——
+     否则字典里恰好收录过的词（如「光学瞄准镜」）会被翻成英文，没收录的（如「红点瞄具」）
+     原样保留，同一屏出现半英文半中文的混乱观感；且关键词是分组键，翻掉后与
+     ① 档案里存的原文对不上。需要翻译的是包裹它的 UI 标签，不是数据本身。 */
+  var SKIP_SEL = '.lang-picker,.lang-toast,#updateBtn,.draft-b,.noi18n';
 
   function norm(s) { return String(s).replace(/\s+/g, ' ').trim(); }
 
