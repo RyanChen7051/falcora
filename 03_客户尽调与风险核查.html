@@ -219,7 +219,7 @@
         <input id="q" placeholder="搜索公司 / 域名 / 名单关键词…" />
       </div>
       <div class="top-right">
-        <span class="pill">演示数据 · 三态输出</span>
+        <span class="pill">三态输出 · L1/L2/L3</span>
         <div class="icon-btn">⚙</div>
       </div>
     </header>
@@ -235,6 +235,8 @@
         <button class="btn sm" id="exportBtn">导出尽调报告</button>
       </div>
 
+      <div class="empty" id="ddEmpty" hidden>尚无尽调档案 · 点击「＋ 核查新主体」对任意交易对手做身份核验与名单筛查；本原型未接入真实数据源，结果仅作框架演示。</div>
+      <div id="ddDetail">
       <div class="verdict" id="verdict"></div>
 
       <div class="idcard">
@@ -267,9 +269,9 @@
             </div>
           </div>
         </div>
-      </div>
+      </div><!-- /ddDetail -->
 
-      <div class="foot">演示数据 · 所有核查结果、来源与主体均为示例，不对应真实公司；严格遵循 L1/L2/L3 分层与三态输出原则。</div>
+      <div class="foot">本原型未接入真实数据源，结果仅作框架演示；严格遵循 L1/L2/L3 分层与三态输出原则。</div>
     </div>
   </main>
 </div>
@@ -328,175 +330,7 @@ const EXPORT_DEF = [
   ["许可要求","无需出口许可","—"]
 ];
 
-const DOSSIERS = {
-  "northwind-ind.com":{
-    nm:"Northwind Industrial Co.", dm:"northwind-ind.com", flag:"🇺🇸", region:"北美", ind:"工业设备",
-    overall:"green", checked:"2026-10-13 10:20",
-    advice:"身份、名单、出口管制、诉讼、舆情五类均<b>未发现命中</b>，覆盖度较高，建议进入正常商务推进。<b>信用与财务健康</b>数据源未接入 → 若要给账期，请另行索取财报或委托信用报告。签约前请对<b>最终受益人（UBO）</b>做一次书面确认。",
-    idt:{st:"clear", cov:"6/6 项已核对", srcs:"州务卿登记 / 公开工商库 / 企业官网",
-      rows:[["企业名称","Northwind Industrial Co.","match","与登记名称一致"],
-            ["注册号","CORP #67812345","match","公开登记可查"],
-            ["注册地","美国 · 伊利诺伊州","match","与官网地址一致"],
-            ["成立日期","2009-04-17","match","存续 17 年"],
-            ["经营状态","Active（存续）","match","无异常标记"],
-            ["法定代表人 / 董事","M. Halvorsen","match","公开登记披露"]]},
-    sanc:{st:"clear", cov:"8/8 名单已覆盖", upd:"2026-10-11",
-      lists:[["OFAC SDN","clear",0],["OFAC 50% Rule","clear",0],["BIS Entity List","clear",0],["BIS MEU","clear",0],
-             ["EU Consolidated","clear",0],["UK OFSI","clear",0],["UN SC Consolidated","clear",0],["中国商务部 不可靠实体清单","clear",0]],
-      f:["未发现命中任何制裁或出口管制名单","未发现同名或近似名实体需要人工复核"]},
-    ec:{st:"clear", cov:"5/5 项已核对", srcs:"各国出口管制公开清单 / 商品编码库",
-      rows:EXPORT_DEF, f:["出口目的地与最终用途均不在管制范围"]},
-    cr:{st:"na", cov:"数据源未接入", srcs:"邓白氏 / 各国工商年报 / 公开财报 / 银行付款记录",
-      dims:[["实缴资本","—"],["营收规模","—"],["经营年限","17 年（据注册日）"],["付款记录","—"],["财务风险评分","—"]],
-      f:["该法域财务与信用数据源未接入 → 数据未覆盖，不做推测","建议：索取近 2 年财报 / 委托信用报告后再给账期"]},
-    lit:{st:"clear", cov:"主要法域已覆盖", srcs:"PACER / 公开法院记录",
-      f:["未发现公开诉讼或判决记录"]},
-    sen:{st:"clear", cov:"近 24 个月 · 检索 46 条", srcs:"公开新闻 / 监管公告 / 行业媒体",
-      items:[["扩建伊利诺伊仓储中心，预计增员 80 人","行业媒体","2026-06-18","正面","低"],
-             ["发布新一代工业传感器模组","企业新闻稿","2026-02-04","中性","低"]],
-      f:["未发现负面舆情、监管处罚或劳资纠纷"]},
-    rel:{st:"na", cov:"未覆盖", srcs:"公开股权库",
-      f:["该法域最终受益人信息未接入 → 需客户提供或委托尽调"]},
-    cert:{st:"clear", cov:"部分覆盖", srcs:"认证机构公开库",
-      f:["UL 认证有效（公开库可查）","ISO 9001 待客户提供证书编号复核"]}
-  },
-
-  "rheinmasch.de":{
-    nm:"RheinMasch GmbH", dm:"rheinmasch.de", flag:"🇩🇪", region:"欧盟", ind:"工业设备",
-    overall:"green", checked:"2026-10-13 10:20",
-    advice:"身份、名单、出口管制、诉讼、舆情、资质六类均<b>未发现命中</b>，且工商与认证信息完整，是本次样本中<b>覆盖度最高</b>的主体。建议正常推进；如需给账期，仍建议加做<b>信用与财务健康</b>专项（本模块数据源未接入）。",
-    idt:{st:"clear", cov:"6/6 项已核对", srcs:"Handelsregister / 公开工商库 / 企业官网",
-      rows:[["企业名称","RheinMasch GmbH","match","与登记名称一致"],
-            ["注册号","HRB 118472","match","商业登记可查"],
-            ["注册地","德国 · 北威州","match","与登记一致"],
-            ["成立日期","1998-11-03","match","存续 27 年"],
-            ["经营状态","在营（存续）","match","无异常标记"],
-            ["法定代表人 / 董事","K. Brandt","match","登记披露"]]},
-    sanc:{st:"clear", cov:"8/8 名单已覆盖", upd:"2026-10-11",
-      lists:[["OFAC SDN","clear",0],["OFAC 50% Rule","clear",0],["BIS Entity List","clear",0],["BIS MEU","clear",0],
-             ["EU Consolidated","clear",0],["UK OFSI","clear",0],["UN SC Consolidated","clear",0],["中国商务部 不可靠实体清单","clear",0]],
-      f:["未发现命中任何名单"]},
-    ec:{st:"clear", cov:"5/5 项已核对", srcs:"EU 两用物项清单 / 各国出口管制库",
-      rows:[["产品类别","精密传动部件","非管制"],["出口目的地","中国内地 · 东南亚","非受制裁地区"],
-            ["最终用途","工业产线集成","非军事最终用途"],["最终用户","制造商自用","非军事最终用户"],
-            ["许可要求","无需出口许可","—"]],
-      f:["不属于两用物项管制范围"]},
-    cr:{st:"clear", cov:"4/5 项已覆盖", srcs:"德国联邦公报（Bundesanzeiger）/ 公开年报",
-      dims:[["实缴资本","€ 250 万","已披露"],["营收规模","€ 4,100 万（FY2024）","年报披露"],["经营年限","27 年","据注册日"],
-            ["付款记录","—","未接入"],["财务风险评分","低（据年报）","按公开财报测算"]],
-      f:["公开年报显示连续 3 年营收增长，负债率处于行业中位","付款记录未接入 → 该维度数据未覆盖"]},
-    lit:{st:"clear", cov:"已覆盖", srcs:"公开法院记录",
-      f:["未发现诉讼记录"]},
-    sen:{st:"clear", cov:"近 24 个月 · 检索 38 条", srcs:"公开新闻 / 行业媒体",
-      items:[["获 TÜV 体系认证复评通过","认证公告","2026-05-09","正面","低"]],
-      f:["未发现负面舆情"]},
-    rel:{st:"clear", cov:"已覆盖", srcs:"公开股权库 / 联邦公报",
-      f:["股权结构清晰，无异常关联方"]},
-    cert:{st:"clear", cov:"已覆盖", srcs:"TÜV / CE 公开库",
-      f:["CE 认证有效","TÜV 体系认证有效"]}
-  },
-
-  "sunrise-industries.com":{
-    nm:"Sunrise Industries Pte Ltd", dm:"sunrise-industries.com", flag:"🇸🇬", region:"东南亚", ind:"电子制造",
-    overall:"yellow", checked:"2026-10-13 10:20",
-    advice:"筛查出现<b>需复核项</b>：名单库中存在<b>同名 / 近似名实体</b>，系统无法自动判定是否同一主体，须人工比对地址与注册号后再决定。<b>不要据此认定为命中，也不要据此认定安全。</b>另：该法域财务数据源未接入。",
-    idt:{st:"warn", cov:"4/6 项已核对", srcs:"当地 ACRA 公开登记 / 企业官网",
-      rows:[["企业名称","Sunrise Industries Pte Ltd","match","与登记名称一致"],
-            ["注册号","201812345K","match","登记可查"],
-            ["注册地","新加坡","match","与登记一致"],
-            ["成立日期","2018-06-22","match","存续 8 年"],
-            ["经营状态","—","na","公开库未返回状态字段"],
-            ["法定代表人 / 董事","—","na","该字段未接入 → 数据未覆盖"]]},
-    sanc:{st:"warn", cov:"8/8 名单已覆盖", upd:"2026-10-11",
-      lists:[["OFAC SDN","warn",1],["OFAC 50% Rule","clear",0],["BIS Entity List","clear",0],["BIS MEU","clear",0],
-             ["EU Consolidated","warn",1],["UK OFSI","clear",0],["UN SC Consolidated","clear",0],["中国商务部 不可靠实体清单","clear",0]],
-      f:["<b>疑似命中需复核</b>：OFAC SDN 中存在名称高度相似的实体「Sunrise Industries Ltd.」，登记地不同 → 需人工比对注册号与地址",
-         "EU Consolidated 存在同类近似名实体 1 条，同样需人工复核",
-         "系统<b>不做自动判定</b>：既不能认定为同一主体，也不能排除"]},
-    ec:{st:"warn", cov:"4/5 项已核对", srcs:"各国出口管制公开清单",
-      rows:[["产品类别","电子模组 / PCB 组装","部分需判定"],["出口目的地","新加坡 · 马来西亚","非受制裁地区"],
-            ["最终用途","待客户书面确认","未核实"],["最终用户","待确认","未核实"],
-            ["许可要求","视最终用途而定","需补充资料"]],
-      f:["最终用途与最终用户未取得书面确认 → 无法排除转口风险"]},
-    cr:{st:"na", cov:"数据源未接入", srcs:"邓白氏 / 当地工商年报",
-      dims:[["实缴资本","—"],["营收规模","—"],["经营年限","8 年（据注册日）"],["付款记录","—"],["财务风险评分","—"]],
-      f:["该法域财务与信用数据源未接入 → 数据未覆盖"]},
-    lit:{st:"na", cov:"未覆盖", srcs:"—",
-      f:["该法域司法记录未接入 → 数据未覆盖"]},
-    sen:{st:"clear", cov:"近 24 个月 · 检索 21 条", srcs:"公开新闻 / 行业媒体",
-      items:[["扩产第二产线，主攻汽车电子","行业媒体","2025-11-02","正面","低"]],
-      f:["未发现负面舆情"]},
-    rel:{st:"na", cov:"未覆盖", srcs:"公开股权库",
-      f:["未接入 → 需客户提供"]},
-    cert:{st:"na", cov:"未覆盖", srcs:"认证机构公开库",
-      f:["未检索到有效认证记录 → 数据未覆盖"]}
-  },
-
-  "gulftech.ae":{
-    nm:"GulfTech Trading LLC", dm:"gulftech.ae", flag:"🇦🇪", region:"中东", ind:"新能源",
-    overall:"yellow", checked:"2026-10-13 10:20",
-    advice:"存在需复核项：一份<b>关联方司法记录</b>，且 <b>BIS 名单未覆盖</b>、信用财务数据未接入。建议报价前要求对方补充说明，并对 <b>UBO</b> 做穿透核查；<b>覆盖补齐前不要据以判断为「无风险」</b>。",
-    idt:{st:"clear", cov:"5/6 项已核对", srcs:"自由区登记 / 公开工商库",
-      rows:[["企业名称","GulfTech Trading LLC","match","与登记名称一致"],
-            ["注册号","DXB-FZ-448210","match","自由区登记可查"],
-            ["注册地","阿联酋 · 迪拜自由区","match","与登记一致"],
-            ["成立日期","2014-02-11","match","存续 12 年"],
-            ["经营状态","正常，许可证在有效期内","match","—"],
-            ["法定代表人 / 董事","—","na","该字段未接入 → 数据未覆盖"]]},
-    sanc:{st:"warn", cov:"7/8 名单已覆盖", upd:"2026-10-11",
-      lists:[["OFAC SDN","clear",0],["OFAC 50% Rule","clear",0],["BIS Entity List","na",0],["BIS MEU","na",0],
-             ["EU Consolidated","clear",0],["UK OFSI","clear",0],["UN SC Consolidated","clear",0],["中国商务部 不可靠实体清单","clear",0]],
-      f:["已覆盖名单未发现命中","<b>BIS Entity List / MEU 数据未覆盖</b> → 该两项结论不成立，需人工复核"]},
-    ec:{st:"clear", cov:"5/5 项已核对", srcs:"各国出口管制公开清单",
-      rows:[["产品类别","光伏组件 / 储能柜","非管制"],["出口目的地","阿联酋 · 沙特","非受制裁地区"],
-            ["最终用途","分布式电站","非军事最终用途"],["最终用户","工程商自用","非军事最终用户"],
-            ["许可要求","无需出口许可","—"]],
-      f:["未发现出口管制风险"]},
-    cr:{st:"na", cov:"数据源未接入", srcs:"邓白氏 / 当地工商年报",
-      dims:[["实缴资本","—"],["营收规模","—"],["经营年限","12 年（据注册日）"],["付款记录","—"],["财务风险评分","—"]],
-      f:["该法域财务与信用数据源未接入 → 数据未覆盖"]},
-    lit:{st:"hit", cov:"部分覆盖", srcs:"公开法院记录",
-      f:["<b>命中 1 起</b>：2024 年合同纠纷（关联公司名下，金额未披露）","该记录登记在关联方，非本主体直接被告 → 需核实关联关系"]},
-    sen:{st:"clear", cov:"近 24 个月 · 检索 33 条", srcs:"公开新闻",
-      items:[["中标 12MW 分布式光伏项目","行业媒体","2026-03-27","正面","低"]],
-      f:["未发现重大负面舆情"]},
-    rel:{st:"warn", cov:"部分覆盖", srcs:"公开股权库",
-      f:["识别到 2 家关联公司，其中 1 家见「诉讼」项","UBO 未穿透 → 需客户提供或委托尽调"]},
-    cert:{st:"na", cov:"未覆盖", srcs:"认证机构公开库",
-      f:["新能源产品认证记录未接入 → 需客户提供"]}
-  },
-
-  "saharabuild.ma":{
-    nm:"Sahara Build Supplies", dm:"saharabuild.ma", flag:"🇲🇦", region:"非洲", ind:"建材",
-    overall:"red", checked:"2026-10-13 10:20",
-    advice:"<b>核查覆盖不足</b>：该法域多数数据源未接入，<b>无法给出风险结论</b>。建议：① 要求对方提供注册与资质文件；② 委托当地持牌机构现场尽调；③ 如需先行推进，采用<b>预付款 + 分批交付</b>控制敞口。<b>覆盖补齐前不要据此判断为「无风险」。</b>",
-    idt:{st:"na", cov:"1/6 项已核对", srcs:"公开工商库（覆盖有限）",
-      rows:[["企业名称","Sahara Build Supplies","na","未接入当地登记库 → 无法核实"],
-            ["注册号","—","na","未覆盖"],["注册地","摩洛哥","na","仅知国别"],
-            ["成立日期","—","na","未覆盖"],["经营状态","—","na","未覆盖"],
-            ["法定代表人 / 董事","—","na","未覆盖"]]},
-    sanc:{st:"na", cov:"仅 2/8 名单可查", upd:"2026-10-11",
-      lists:[["OFAC SDN","clear",0],["OFAC 50% Rule","na",0],["BIS Entity List","na",0],["BIS MEU","na",0],
-             ["EU Consolidated","na",0],["UK OFSI","na",0],["UN SC Consolidated","clear",0],["中国商务部 不可靠实体清单","na",0]],
-      f:["仅 OFAC SDN 与 UN SC 两项可查，均未发现命中","其余 6 项<b>数据未覆盖</b> → 不能据此认定名单干净"]},
-    ec:{st:"na", cov:"3/5 项已核对", srcs:"各国出口管制公开清单",
-      rows:[["产品类别","建材 / 钢结构件","一般非管制"],["出口目的地","摩洛哥","非受制裁地区"],
-            ["最终用途","—","未核实"],["最终用户","—","未核实"],["许可要求","—","需补充资料"]],
-      f:["最终用途与最终用户未核实"]},
-    cr:{st:"na", cov:"数据源未接入", srcs:"—",
-      dims:[["实缴资本","—"],["营收规模","—"],["经营年限","—"],["付款记录","—"],["财务风险评分","—"]],
-      f:["该法域财务与信用数据源未接入 → 数据未覆盖"]},
-    lit:{st:"na", cov:"未覆盖", srcs:"—",
-      f:["该法域司法记录未接入 → 数据未覆盖"]},
-    sen:{st:"na", cov:"极少量 · 检索 1 条", srcs:"公开新闻",
-      items:[["仅检索到 1 条公司介绍，无实质信息","企业自述","2024-08-15","中性","—"]],
-      f:["公开信息极少，不足以支撑舆情判断"]},
-    rel:{st:"na", cov:"未覆盖", srcs:"—",
-      f:["未接入 → 需客户提供"]},
-    cert:{st:"na", cov:"未覆盖", srcs:"—",
-      f:["无认证记录可查"]}
-  }
-};
+const DOSSIERS = {};
 
 /* 状态字典 */
 const ST  = {clear:["未发现命中","clear"], hit:["发现命中","hit"], na:["数据未覆盖","na"], warn:["需复核","warn"]};
@@ -558,12 +392,19 @@ const QP = new URLSearchParams(location.search);
 const qco = QP.get("co");
 const manual = loadManual();
 Object.keys(manual).forEach(k => { if (!DOSSIERS[k]) DOSSIERS[k] = manual[k]; });
-if (qco && !DOSSIERS[qco]) DOSSIERS[qco] = naDossier(QP.get("nm") || qco, qco, QP.get("rg") || "", QP.get("ind") || "", "");
+if (qco && !DOSSIERS[qco]) {
+  const qd = naDossier(QP.get("nm") || qco, qco, QP.get("rg") || "", QP.get("ind") || "", "");
+  DOSSIERS[qco] = qd;
+  /* 落盘（2026-10-15）：从 ② 带入的档案必须持久化 —— 否则刷新即丢，
+     且 ② 页漏斗「已建尽调档案」与驾驶舱「尽调档案」KPI 都会漏计它。 */
+  const qm = loadManual(); qm[qco] = qd; saveManual(qm);
+}
 
-/* 跨页统计上报（app-stats.js）：尽调档案真实条数 → 驾驶舱 KPI 实时计算，不硬编码。
-   2026-10-14 之前驾驶舱写死「本周拦截风险 47 条」，与本页实际档案数严重不符。
-   建档/新增档案后都要重报，否则从 ② 页带参数跳进来时驾驶舱还是旧数。 */
-function reportDD(){ if(window.__falStats) window.__falStats.set("dd", {n: Object.keys(DOSSIERS).length}); }
+/* 跨页统计上报（app-stats.js）：**仅**上报使用者手动建立/带入的尽调档案实数。
+   2026-10-14 之前驾驶舱写死「本周拦截风险 47 条」，与本页实际档案数严重不符；
+   2026-10-15 用户「所有演示的数据都要消除」—— 又一处漏网：原实现把 2 份演示
+   DOSSIERS 一并计入，驾驶舱「尽调档案」= 演示 + 手动混合。现在只报 manual 实数。 */
+function reportDD(){ if(window.__falStats) window.__falStats.set("dd", {n: Object.keys(loadManual()).length}); }
 reportDD();
 
 /* ---------- 渲染 ---------- */
@@ -628,7 +469,17 @@ function body(c, key){
 }
 
 function render(dm){
+  const empty = document.getElementById("ddEmpty");
+  const detail = document.getElementById("ddDetail");
   const c = DOSSIERS[dm] || Object.values(DOSSIERS)[0];
+  if(!c){
+    /* 2026-10-15 用户「消除所有演示数据」：演示档案已清空，无档案时显示诚实空态而非崩溃 */
+    if(empty) empty.hidden = false;
+    if(detail) detail.hidden = true;
+    return;
+  }
+  if(empty) empty.hidden = true;
+  if(detail) detail.hidden = false;
   const [ovLab, ovCls, ovIc] = OV[c.overall];
   const counts = {clear:0, hit:0, na:0, warn:0};
   CHK_ORDER.forEach(k => { counts[c[k].st] = (counts[c[k].st]||0) + 1; });
@@ -688,13 +539,20 @@ buildPicker();
 picker.onchange = () => render(picker.value);
 
 document.getElementById("rerun").onclick = () => {
+  if(!DOSSIERS[picker.value]){ toast("当前没有可重新核查的档案"); return; }
   DOSSIERS[picker.value].checked = nowStr();
+  /* 落盘（2026-10-15）：重新核查的时间戳要持久化 —— 否则刷新即丢，
+     驾驶舱「尽调档案动态」里这条档案的时间还是旧的。仅手动档案落盘，
+     2 份演示档案不写本机存储（演示数据不进使用者数据层）。 */
+  const mm = loadManual();
+  if (mm[picker.value]) { mm[picker.value] = DOSSIERS[picker.value]; saveManual(mm); }
   render(picker.value);
 };
 
 document.getElementById("exportBtn").onclick = () => {
   const c = DOSSIERS[picker.value];
-  const lines = ["FALCORA 尽调报告（演示）", "公司," + c.nm, "域名," + c.dm, "区域," + c.region, "行业," + c.ind,
+  if(!c){ toast("当前没有可导出的档案"); return; }
+  const lines = ["FALCORA 尽调报告", "公司," + c.nm, "域名," + c.dm, "区域," + c.region, "行业," + c.ind,
     "核查时点," + c.checked, "综合结论," + OV[c.overall][0], ""];
   lines.push("【主体信息核验】" + c.idt.cov + " / 数据源: " + c.idt.srcs);
   c.idt.rows.forEach(r => lines.push("  - " + r[0] + ": " + r[1] + "  [" + MARK[r[2]] + "] " + r[3]));
