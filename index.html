@@ -616,7 +616,7 @@
   }
   function kpiModel(){
     const R=kpiRead();
-    /* v=null → 诚实空态（仅「管线启动沟通率」分母 0 时出现） */
+    /* v=null → 渲染为 0（仅「管线启动沟通率」分母 0 时出现；0 是诚实计数，非占位） */
     return [
       {lab:"加入管线",       v:R.pipeN,   unit:"家", tag:"实时统计"},
       {lab:"已启动沟通",     v:R.started, unit:"家", tag:"实时统计", gold:true},
@@ -637,15 +637,15 @@
       const el=document.createElement("div");
       el.className="kpi"+(k.gold?" gold":"");
       if(k.title) el.title=k.title;
-      const empty = (k.v===null);
-      /* 值：空态用字典文案，否则 Intl 数字（含 % 后缀） */
-      const valTxt = empty ? "尚未统计" : (k.dec===undefined ? kpiNum(k.v,0) : kpiNum(k.v,k.dec)+(k.suffix||""));
-      /* 副行：来源标签 + 单位（单位与标签都是独立文本节点，各自命中字典） */
+      /* 无数据 = 真实计数 0：从未操作过，计数为 0 是诚实值，不是缺失；
+         因此任何 KPI（含「管线启动沟通率」分母 0 时）一律显示 0，绝不用「尚未统计」占位。
+         数字本体仍独立成节点，中文标签/单位不拼进数字串。 */
+      const v = (k.v===null ? 0 : k.v);
       el.innerHTML='<div class="lab">'+k.lab+'</div>'
-        + '<div class="val num'+(empty?" dim":"")+'" data-t="'+(empty?"":k.v)+'" data-dec="'+(k.dec||0)+'" data-suf="'+(k.suffix||"")+'" data-empty="'+(empty?1:0)+'">'
-        + (empty ? '<span class="na">尚未统计</span>' : "0") + '</div>'
+        + '<div class="val num" data-t="'+v+'" data-dec="'+(k.dec||0)+'" data-suf="'+(k.suffix||"")+'" data-empty="0">'
+        + "0" + '</div>'
         + '<div class="sub"><span class="tag">'+k.tag+'</span>'
-        + (empty ? "" : '<span class="num u">'+k.unit+'</span>')
+        + (k.unit ? '<span class="num u">'+k.unit+'</span>' : '')
         + '</div>';
       kpiBox.appendChild(el);
     });
@@ -685,7 +685,7 @@
   /* KPI 注脚：口径声明（诚实标注，不用「演示中」糊弄） */
   (function(){
     const note=document.getElementById("kpiNote");
-    if(note) note.textContent=T("以上数字均由本机可验证的数据实时计算：不使用任何预设值；对应模块尚未打开时显示「尚未统计」，绝不回退默认数字。");
+    if(note) note.textContent=T("以上数字均由本机可验证的数据实时计算：不使用任何预设值；对应操作尚未发生时显示 0（真实计数，并非默认或演示数字）。");
   })();
 
   /* ---------- AI 洞察横幅（2026-10-15 起：① 档案 × 真实管线覆盖，零演示池数字） ---------- */
