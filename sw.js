@@ -521,8 +521,19 @@
          · 修法：① 超时延至 6s；② 第一次失败后自动等 1.2s 重试一次；③ 两次均失败且
            `navigator.onLine === true` 时返回 `true`（软通过）——本页已加载成功、GitHub Pages
            地址稳定，不阻断刷新。避免误报后用户必须手动再按一次。
-         · 只改 `app-update.js`，已在 PRECACHE 列表 → 升 CACHE 确保旧缓存失效。 */
-const CACHE = 'falcora-v52';
+         · 只改 `app-update.js`，已在 PRECACHE 列表 → 升 CACHE 确保旧缓存失效。
+  v53 — **修关键词搜索逻辑 bug**（2026-10-19，用户反馈：「关键字已经换成蓝牙耳机，
+        而为出现的客户还有战术装备」）：
+         · 根因：`genLeads()` 中当 `hits.length===0`（没有任何族的关键词命中用户输入）
+           时，`kw` 错误回退到 `tokens[0]`（用户输入词）。这导致所有生成的线索都被打上
+           用户输入的关键词标签——战术装备线索也标成「蓝牙耳机」，筛选/搜索都漏出错误结果。
+         · 修法：`kw` 回退逻辑改为 `tokens.length ? "—" : f.lab`。`"—"` 表示「不由任何
+           关键词带来」，会被 `kwHit()` 正确过滤（`k!=="—"` 为 false），`fillKw()` 也不显示
+           该 chip。用户选关键词 chip 时，无关线索被正确过滤。
+         · 数据层：给 `electronics` 族补充音频/耳机相关词（耳机/蓝牙/音频/TWS/音响/
+           扬声器/穿戴/智能穿戴/无线/射频/充电/电池/电声/声学/喇叭/耳麦/降噪），
+           让「蓝牙耳机」正确命中 electronics 族，不再空转。 */
+const CACHE = 'falcora-v53';
 const PRECACHE = [
   './',
   './app-design.css?v=3',
