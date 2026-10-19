@@ -70,3 +70,28 @@
   window.__falRefreshCbs = window.__falRefreshCbs || [];
   window.__falOnRefresh = function (fn) { if (typeof fn === "function") window.__falRefreshCbs.push(fn); };
 })();
+
+/* ==========================================================================
+   决策链角色归槽（② ⑤ 共用，2026-10-19）
+   —— 职称是自由文本，必须归到固定四槽才能算「缺谁」。规则只放这一份，
+      避免 ②（录入时提示缺口）与 ⑤（深挖时展示缺口）两处正则漂移。
+   —— 顺序即优先级：Director / VP / Head of 先判决策者，再判技术、采购。
+      例如 "Head of Procurement" → 决策者（他能拍板采购），"Procurement Manager" → 守门人。
+   ========================================================================== */
+(function () {
+  var RULES = [
+    /* ⚠️ 2026-10-19 补：原正则只认缩写 "ceo"，匹配不到最常见的全称
+       "Chief Executive Officer" → 决策链覆盖永远少一槽。补 chief executive / co-founder。
+       顺序即优先级，改动任一条都必须同步 ⑤ 页的兜底副本（ROLE_RULES）。 */
+    { r: "决策者", re: /(ceo|chief executive|\bcto\b|\bcoo\b|\bcfo\b|\bcio\b|president|owner|founder|co-founder|managing director|general manager|vice president|\bvp\b|head of|director|geschäftsführer|总经理|总裁|董事长|创始人|合伙人|负责人)/i },
+    { r: "影响者", re: /(engineer|technical|technolog|quality|\bqa\b|\bqc\b|r&d|technisch|技术|质量|研发|工程|工艺)/i },
+    { r: "守门人", re: /(procurement|purchas|buyer|sourcing|supply chain|admin|assistant|采购|行政|助理|供应链)/i },
+    { r: "使用者", re: /(operator|production|install|service|maintenance|sales|使用|操作|生产|安装|售后|销售)/i }
+  ];
+  window.__falRoleOrder = ["决策者", "影响者", "使用者", "守门人"];
+  window.__falRoleOf = function (title) {
+    var t = String(title || "");
+    for (var i = 0; i < RULES.length; i++) { if (RULES[i].re.test(t)) return RULES[i].r; }
+    return null;
+  };
+})();
