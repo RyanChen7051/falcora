@@ -100,6 +100,7 @@
   .search svg{position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:.5}
   .top-right{display:flex; align-items:center; gap:12px; margin-left:auto}
   .pill{font-size:12px; padding:7px 13px; border-radius:999px; background:linear-gradient(135deg,rgba(245,184,65,.22),rgba(245,184,65,.06)); color:var(--gold); border:1px solid rgba(245,184,65,.3); font-weight:600}
+  .pill.owner{background:linear-gradient(135deg,rgba(245,184,65,.38),rgba(245,184,65,.12)); border-color:rgba(245,184,65,.62); box-shadow:0 0 0 3px rgba(245,184,65,.10); letter-spacing:.4px}
   .icon-btn{width:38px; height:38px; border-radius:11px; border:1px solid var(--border); background:rgba(0,0,0,.2); display:grid; place-items:center; cursor:pointer; color:var(--muted)}
   .icon-btn:hover{color:var(--ink); border-color:var(--border-2)}
 
@@ -275,6 +276,7 @@
   .trial-bar{display:flex;align-items:center;gap:10px;margin:0 18px 14px;padding:11px 15px;border-radius:13px;font-size:12.4px;line-height:1.45}
   .trial-bar[hidden]{display:none}
   .trial-bar.trial{background:rgba(245,184,65,.12);border:1px solid rgba(245,184,65,.4);color:var(--gold)}
+  .trial-bar.owner{background:rgba(245,184,65,.10);border:1px solid rgba(245,184,65,.42);color:var(--gold)}
   .trial-bar.ended{background:rgba(255,107,107,.10);border:1px solid rgba(255,107,107,.4);color:#ff9a9a}
   .trial-bar .tb-ic{font-size:15px;flex:0 0 auto}
   .trial-bar .tb-tx{flex:1 1 auto}
@@ -1134,11 +1136,43 @@
 
   /* ---------- CTA 轻提示 ---------- */
   /* ---------- 权益 / 试用引擎（v47 付费模块演示） ---------- */
-  const PLAN_KEY="falcora_plan_v1", TRIAL_DAYS=7;
+  const PLAN_KEY="falcora_plan_v1", OWNER_KEY="falcora_owner_v1", TRIAL_DAYS=7;
   function loadPlan(){ try{ return JSON.parse(localStorage.getItem(PLAN_KEY)); }catch(e){ return null; } }
   function savePlan(p){ try{ localStorage.setItem(PLAN_KEY, JSON.stringify(p)); }catch(e){} }
+  /* 创始人授权（v54）：本静态原型无后端，凭证只存本机 localStorage，不上传、不共享。
+     激活：在本站地址后加 ?owner=1（或 #owner），写入后自动清理地址栏；
+     解除：加 ?owner=0，回到 7 天试用 / 免费版，便于给合作方演示试用流程。 */
+  function ownerFlag(){
+    try{
+      const u=new URL(location.href);
+      let v=u.searchParams.get("owner");
+      if(v===null && u.hash==="#owner") v="1";
+      if(v==="1"||v==="0"){
+        if(v==="1") localStorage.setItem(OWNER_KEY,"1"); else localStorage.removeItem(OWNER_KEY);
+        u.searchParams.delete("owner");
+        const qs=u.searchParams.toString();
+        try{ history.replaceState(null,"",u.pathname+(qs?"?"+qs:"")+(u.hash==="#owner"?"":u.hash)); }catch(e2){}
+        return v==="1";
+      }
+      return localStorage.getItem(OWNER_KEY)==="1";
+    }catch(e){ return false; }
+  }
+  const PAID_TIERS=["pro","biz","flag"];
   function getPlan(){
     let p=loadPlan();
+    if(ownerFlag()){
+      /* 创始人：永久有效，不参与 7 天试用，也不会到期降级 */
+      let ch=false;
+      if(!p){ p={}; ch=true; }
+      if(PAID_TIERS.indexOf(p.tier)<0){ p.tier="pro"; ch=true; }
+      if(p.founder!==true){ p.founder=true; p.demo=false; ch=true; }
+      if(!p.founderSince){ p.founderSince=Date.now(); ch=true; }
+      if(ch) savePlan(p);
+      return p;
+    }
+    if(p && p.founder){ /* 已解除创始人授权：降级为免费版，线索/联系人数据一律保留 */
+      p.founder=false; p.tier="free"; p.downgradedAt=Date.now(); savePlan(p);
+    }
     if(!p){ p={tier:"trial", trialStart:Date.now(), demo:false}; savePlan(p); }
     if(p.tier==="trial" && Date.now()-p.trialStart > TRIAL_DAYS*864e5){
       p.tier="free"; p.downgradedAt=Date.now(); savePlan(p);
@@ -1150,14 +1184,24 @@
   function T_(s){ return (window.__falT?window.__falT(s):s); }
   function renderPlanPill(){
     const p=getPlan(), pill=document.getElementById("planPill"); if(!pill) return;
-    const t = p.tier==="trial"
-      ? T_("专业版试用")+" · "+T_("试用中")+" "+trialLeft(p)+" "+T_("天剩余")
-      : T_(tierName(p.tier));
-    pill.textContent=t;
+    pill.classList.toggle("owner", !!p.founder);
+    if(p.founder){
+      pill.textContent=T_(tierName(p.tier))+" · "+T_("永久有效");
+      pill.title=T_("创始人账号 · 永久有效，不参与 7 天试用与到期降级");
+    } else if(p.tier==="trial"){
+      pill.textContent=T_("专业版试用")+" · "+T_("试用中")+" "+trialLeft(p)+" "+T_("天剩余");
+      pill.removeAttribute("title");
+    } else {
+      pill.textContent=T_(tierName(p.tier));
+      pill.removeAttribute("title");
+    }
   }
   function renderTrialBar(){
     const p=getPlan(), bar=document.getElementById("trialBar"); if(!bar) return;
-    if(p.tier==="trial"){
+    if(p.founder){
+      bar.hidden=false; bar.className="trial-bar owner";
+      bar.innerHTML='<span class="tb-ic">👑</span><span class="tb-tx">'+esc(T_("创始人账号 · 永久有效"))+"："+esc(T_("不参与 7 天试用与到期降级，全部模块与商业数据源保持开放"))+'</span>';
+    } else if(p.tier==="trial"){
       bar.hidden=false; bar.className="trial-bar trial";
       bar.innerHTML='<span class="tb-ic">⏳</span><span class="tb-tx">'+esc(T_("专业版全功能试用进行中"))+" · "+trialLeft(p)+" "+esc(T_("天剩余"))+'</span>';
     } else if(p.tier==="free"){
