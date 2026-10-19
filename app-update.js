@@ -79,14 +79,51 @@
        现在改为：刷新前先探测一次；连不上就**不刷新**，只给出明确提示。 */
     function probe() {
       return new Promise(function (res) {
-        var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-        var done = false;
-        var t = setTimeout(function () { if (!done) { done = true; if (ctl) { try { ctl.abort(); } catch (e) {} } res(false); } }, 4500);
-        try {
-          fetch('./index.html?__probe=' + Date.now(), { cache: 'no-store', signal: ctl ? ctl.signal : undefined })
-            .then(function (r) { if (!done) { done = true; clearTimeout(t); res(!!r && r.ok); } })
-            .catch(function () { if (!done) { done = true; clearTimeout(t); res(false); } });
-        } catch (e) { if (!done) { done = true; clearTimeout(t); res(false); } }
+        function attempt(isRetry) {
+          var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+          var done = false;
+          var t = setTimeout(function () {
+            if (!done) {
+              done = true;
+              if (ctl) { try { ctl.abort(); } catch (e) {} }
+              if (!isRetry) {
+                /* 第一次超时：等 SW 预缓存喘口气，1.2s 后重试 */
+                setTimeout(function () { attempt(true); }, 1200);
+              } else {
+                /* 两次均失败。若浏览器认为在线且本页已加载成功，
+                   极大概率是 probe 与 SW 预缓存抢带宽的偶发假死（已知缺陷）。
+                   GitHub Pages 地址稳定，不阻断刷新，避免「地址已失效」误报。 */
+                res(navigator.onLine);
+              }
+            }
+          }, 6000);
+          try {
+            fetch('./index.html?__probe=' + Date.now(), { cache: 'no-store', signal: ctl ? ctl.signal : undefined })
+              .then(function (r) {
+                if (!done) { done = true; clearTimeout(t); res(!!r && r.ok); }
+              })
+              .catch(function () {
+                if (!done) {
+                  done = true; clearTimeout(t);
+                  if (!isRetry) {
+                    setTimeout(function () { attempt(true); }, 1200);
+                  } else {
+                    res(navigator.onLine);
+                  }
+                }
+              });
+          } catch (e) {
+            if (!done) {
+              done = true; clearTimeout(t);
+              if (!isRetry) {
+                setTimeout(function () { attempt(true); }, 1200);
+              } else {
+                res(navigator.onLine);
+              }
+            }
+          }
+        }
+        attempt(false);
       });
     }
 
