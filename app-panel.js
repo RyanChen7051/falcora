@@ -111,6 +111,31 @@
     try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {}
   }
   function raw(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+  /* ---------- 创始人授权（v55）：应用内激活 ----------
+     为什么不能只靠 ?owner=1：macOS「加入程序坞 / 安装为应用」是**独立存储容器**，
+     浏览器里写进 localStorage 的凭证，装到 Dock 的应用读不到（整份档案都是空的）。
+     所以这里提供一个「在应用内输入授权码」的入口，任何容器都能激活。
+     码不存明文，只比对 djb2 指纹；纯本机校验，不上传。 */
+  var OWNER_KEY = "falcora_owner_v1";
+  var OWNER_HASH = "d8c1b0c3"; /* FALCORA-CPO-2026 */
+  function isOwner() { try { return localStorage.getItem(OWNER_KEY) === "1"; } catch (e) { return false; } }
+  function ownerHash(s) {
+    s = String(s == null ? "" : s).trim().toUpperCase().replace(/\s+/g, "");
+    var h = 5381;
+    for (var i = 0; i < s.length; i++) { h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; }
+    return h.toString(16);
+  }
+  function setOwnerPlan(on) {
+    var p = rd("falcora_plan_v1", null) || {};
+    if (on) {
+      p.tier = "pro"; p.founder = true; p.demo = false;
+      if (!p.founderSince) p.founderSince = Date.now();
+    } else {
+      p.founder = false; p.tier = "free"; p.downgradedAt = Date.now();
+    }
+    wr("falcora_plan_v1", p);
+  }
   function profile() {
     return rd(KEY.profile, null) || rd(KEY.profileOld, null) || {};
   }
@@ -226,6 +251,7 @@
     + '.fg-tag{font-size:10.5px;padding:3px 8px;border-radius:999px;font-weight:700;white-space:nowrap;flex:0 0 auto}'
     + '.fg-tag.demo{background:rgba(245,184,65,.13);color:var(--gold,#F5B841);border:1px solid rgba(245,184,65,.3)}'
     + '.fg-tag.real{background:rgba(52,211,153,.13);color:var(--good,#34D399);border:1px solid rgba(52,211,153,.28)}'
+    + '.fg-tag.own{background:rgba(245,184,65,.16);color:var(--gold,#F5B841);border:1px solid rgba(245,184,65,.42)}'
     + '.fg-acts{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}'
     + '.fg-btn{padding:9px 15px;border-radius:10px;border:1px solid var(--border,rgba(126,154,160,.16));background:rgba(0,0,0,.2);'
     + 'color:var(--ink,#E9F3F4);font-size:12.5px;font-weight:650;font-family:inherit;cursor:pointer;transition:.16s}'
@@ -665,12 +691,36 @@
 
   function secPlan() {
     var h = "";
+    var own = isOwner();
+    /* 创始人授权卡：Dock / 独立容器里也能激活，不依赖网址参数 */
+    h += '<div class="fg-sec"><div class="fg-t">创始人授权</div><div class="fg-card">';
+    h += '<div class="fg-row"><span class="fg-k">状态</span><span class="fg-v' + (own ? "" : " na") + '">'
+      + '<span class="noi18n">' + esc(own ? (T("已激活") + " · " + T("永久有效")) : T("未激活")) + '</span></span></div>';
+    if (own) {
+      h += '<div class="fg-note noi18n" style="margin-top:10px">'
+        + esc(T("授权只存本机；换设备或换浏览器（含「加入程序坞」的独立容器）需重新激活一次。")) + '</div>';
+      h += '<div class="fg-acts"><button class="fg-btn dg" id="falOwnerOff">' + esc(T("解除授权")) + '</button></div>';
+    } else {
+      h += '<input class="fg-sel" id="falOwnerCode" type="password" autocomplete="off" '
+        + 'placeholder="' + esc(T("输入创始人授权码")) + '" style="margin-top:10px" />';
+      h += '<div class="fg-note noi18n" style="margin-top:9px">'
+        + esc(T("授权码只在本机校验，不上传服务器。")) + '</div>';
+      h += '<div class="fg-acts"><button class="fg-btn pri" id="falOwnerOn">' + esc(T("激活")) + '</button></div>';
+      h += '<div class="fg-note noi18n" id="falOwnerMsg" style="margin-top:8px;color:#FF9A9A"></div>';
+    }
+    h += '</div></div>';
+
     h += '<div class="fg-sec"><div class="fg-t">当前套餐</div><div class="fg-card">';
     h += '<div class="fg-row"><span class="fg-k">套餐</span><span class="fg-v">专业版</span>'
-      + '<span class="fg-tag demo">演示值</span></div>';
-    h += '<div class="fg-row"><span class="fg-k">价格</span><span class="fg-v">¥999 / 月</span></div>';
+      + (own ? '<span class="fg-tag own">' + esc(T("创始人")) + '</span>' : '<span class="fg-tag demo">演示值</span>') + '</div>';
+    h += '<div class="fg-row"><span class="fg-k">价格</span><span class="fg-v">' + (own ? "—" : "¥999 / 月") + '</span></div>';
     h += '<div class="fg-row"><span class="fg-k">席位</span><span class="fg-v">3 席位</span></div>';
-    h += '<div class="fg-note" style="margin-top:11px">原型没有后端计费，本组数字全部为演示值，不代表任何真实账务。</div>';
+    if (own) {
+      h += '<div class="fg-note noi18n" style="margin-top:11px">'
+        + esc(T("创始人账号：专业版永久有效，不参与 7 天试用与到期降级。")) + '</div>';
+    } else {
+      h += '<div class="fg-note" style="margin-top:11px">原型没有后端计费，本组数字全部为演示值，不代表任何真实账务。</div>';
+    }
     h += '</div></div>';
 
     h += '<div class="fg-sec"><div class="fg-t">查询点数</div><div class="fg-card">';
@@ -726,6 +776,28 @@
 
   /* ---------- 齿轮事件 ---------- */
   function wireGear() {
+    /* 创始人授权：激活 / 解除（v55） */
+    var oOn = gearBody.querySelector("#falOwnerOn");
+    if (oOn) oOn.addEventListener("click", function () {
+      var inp = gearBody.querySelector("#falOwnerCode");
+      var msg = gearBody.querySelector("#falOwnerMsg");
+      if (ownerHash(inp ? inp.value : "") === OWNER_HASH) {
+        try { localStorage.setItem(OWNER_KEY, "1"); } catch (e) {}
+        setOwnerPlan(true);
+        if (msg) msg.style.color = "#5EEAD4", msg.textContent = T("已激活，正在刷新…");
+        setTimeout(function () { location.reload(); }, 450);
+      } else {
+        if (msg) msg.textContent = T("授权码不正确");
+        if (inp) { inp.value = ""; inp.focus(); }
+      }
+    });
+    var oOff = gearBody.querySelector("#falOwnerOff");
+    if (oOff) oOff.addEventListener("click", function () {
+      try { localStorage.removeItem(OWNER_KEY); } catch (e) {}
+      setOwnerPlan(false);
+      setTimeout(function () { location.reload(); }, 300);
+    });
+
     var ls = gearBody.querySelector("#falLangSel");
     if (ls) ls.addEventListener("change", function () {
       try { localStorage.setItem(KEY.lang, ls.value); } catch (e) {}
