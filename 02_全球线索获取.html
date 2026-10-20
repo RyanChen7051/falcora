@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <script src="app-stats.js"></script>
+<!-- 2026-10-20 v58：真实企业名录（DNS + HTTPS 实测），必须在页内脚本前加载 -->
+<script src="data-real-companies.js"></script>
 <script src="app-vals.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#0B2632" />
@@ -163,8 +165,14 @@
   .card-h .tag{margin-left:auto;font-size:11px;color:var(--muted-2);letter-spacing:1px}
   .card-b{padding:6px 18px 16px}
 
-  .lhead,.lrow{display:grid;grid-template-columns:2.85fr 1.7fr 0.9fr 0.45fr 0.75fr 1.85fr;gap:10px;align-items:center}
+  /* 2026-10-20 v58：风险 / 联系可用性两列原为 0.45fr / 0.75fr，中文「未核查」「L1 公开」刚好，
+     英文 "Not screened" / "L1 Public" 直接压到相邻列上（徽章 white-space:nowrap 撑破格子）。
+     处理：从「公司」与「操作」两列各让出一点宽度给这两列，并只对这两列的徽章
+     收紧内边距 + 允许换行 —— 中文单行、英文两行，两种语言都不再互相压字。 */
+  .lhead,.lrow{display:grid;grid-template-columns:2.6fr 1.5fr 0.85fr 0.86fr 1fr 1.25fr;gap:10px;align-items:center}
   .lhead > div,.lrow > div{min-width:0}
+  .lrow > div:nth-child(4) .badge,.lrow > div:nth-child(5) .badge{
+    max-width:100%;white-space:normal;line-height:1.3;text-align:center;justify-content:center;padding:3px 7px}
   .lhead{font-size:11.5px;color:var(--muted-2);letter-spacing:.6px;padding:12px 18px;border-bottom:1px solid var(--border);text-transform:uppercase}
   .lrow{padding:11px 18px;border-bottom:1px solid var(--border);font-size:13px;transition:.15s}
   .lrow:hover{background:rgba(94,234,212,.04)}
@@ -173,6 +181,12 @@
   .co .flag{font-size:18px;flex:0 0 auto}
   .co .nm{font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .co .dm{font-size:11px;color:var(--muted-2)}
+  /* 2026-10-20 v58：域名做成可点链接，指向**实测能打开的那条 URL**（不是拼 https://）。
+     使用者质疑「给了网址却连不上」—— 那就让网址本身可点、可验证。 */
+  .co a.dmlink{color:var(--muted-2);text-decoration:none;border-bottom:1px dashed rgba(255,255,255,.18);cursor:pointer}
+  .co a.dmlink:hover{color:var(--good);border-bottom-color:rgba(52,211,153,.55)}
+  .co a.dmlink.rch-warn{color:#FCD34D;border-bottom-color:rgba(252,211,77,.35)}
+  .co a.dmlink.rch-off{color:#F87171;border-bottom-color:rgba(248,113,113,.35)}
   .meta{font-size:12px;color:var(--muted);line-height:1.4}
   .meta b{color:var(--ink);font-weight:600}
   .mbar{display:flex;align-items:center;gap:7px}
@@ -1063,54 +1077,79 @@ function matchFamilies(p){
    填 3 个关键词就得到 3 组客户，② 可按词筛选、驾驶舱地图按词上色。
    若该族只是靠品类 / 行业命中（没有任何关键词直接命中），退回首关键词 ——
    此时分组依据其实是品类，范围条会如实说明。 */
+/* ================= 线索池数据源（2026-10-20 v58：从「生成」改为「真实名录」）=================
+   ⚠️ 为什么推翻旧实现（用户 2026-10-20：「你提供的企业网址根本连不上，要你何用」）：
+     旧版用 `PRE × suf` 确定性拼接公司名与域名（Northwind + Electronics = northwindelectronics.com），
+     DNS 实测 10/10 NXDOMAIN —— **全是编的**，还做成了可点外链。
+   现改为读 `data-real-companies.js` 的真实名录：
+     · 域名真实性：Google DNS-over-HTTPS 查 A 记录，Status=0 才算真实注册；
+     · 可达性：curl 实测 HTTPS 状态码（200/301 可打开；403/429 站点反爬；000 本机未连通）；
+     · 命中依据：抓官网首页 <title> 作为一手出处。
+   平台**不再生成任何公司**：名录里有多少就出多少，没覆盖就明说「未覆盖」，不塞假数据。 */
+const CC_FLAG = {US:"🇺🇸",CA:"🇨🇦",DE:"🇩🇪",AT:"🇦🇹",SE:"🇸🇪",PL:"🇵🇱",SI:"🇸🇮",
+  BE:"🇧🇪",CZ:"🇨🇿",IT:"🇮🇹",RO:"🇷🇴",GR:"🇬🇷",UK:"🇬🇧",JP:"🇯🇵",NL:"🇳🇱",FR:"🇫🇷"};
+
+/* 「官网可达性」→ 人话（可翻译）。三态，绝不合并成一档：
+   200/301 = 我们真的打开过；403/429 = 域名真实但站点反爬；0 = 本机网络没连上（域名仍真实）。
+   ⚠️ 0 与「域名不存在」必须区分 —— 前者是我们的网络问题，后者才是假数据。 */
+function reachNote(rc){
+  rc = Number(rc) || 0;
+  if(rc >= 200 && rc < 400) return Tv("官网实测可达（HTTP {code}）", {code:String(rc)});
+  if(rc === 403 || rc === 429) return Tv("官网反爬（HTTP {code}），域名真实，需人工打开", {code:String(rc)});
+  if(!rc) return T("本机网络未连通，域名真实，需人工核验");
+  return Tv("官网返回 HTTP {code}，需人工核验", {code:String(rc)});
+}
+/* 命中依据 = 我们**真实拿到手**的那条证据：官网原文标题 + 实测状态。
+   不写「行业趋势」「外采比例高」这类无法复核的判断句 —— 那是编的。 */
+function whyFromReal(r){
+  const parts = [];
+  if(r.title) parts.push(Tv("官网原文：{t}", {t:r.title}));
+  parts.push(reachNote(r.reach));
+  return parts.join(" · ");
+}
+function realToLead(r, f, kw){
+  const cats = [f.lab];
+  const a1 = adjFam(f.id, 0);
+  if(a1 && cats.indexOf(a1.lab) === -1) cats.push(a1.lab);
+  return {
+    nm:r.nm, dm:r.dm, url:r.url||("https://"+r.dm), flag:CC_FLAG[r.cc]||"🏳",
+    region:r.region, ind:r.ind||f.ind, size:"",
+    match:null, risk:"na",
+    /* 只有 L1 公开信息（公司 / 官网 / 国家）—— 没有任何联系方式，绝不冒充 L2 */
+    contact:"L1", src:"公开品牌名录 · 官网实测", sample:false, real:true,
+    btype:r.btype, need:r.need,
+    chan:"registry",
+    kw:kw, why:whyFromReal(r), cats:cats, reach:r.reach, cc:r.cc,
+    /* hay = 可搜索文本（中英双语 + 域名 + 官网标题）。使用者输 "scope" / "瞄准镜"
+       / "vortex" 都能命中 —— 这是「关键字搜索」真正可用的前提。 */
+    hay:r.hay||""
+  };
+}
+
 function genLeads(fams, regions, hitsByFam, tokens){
   hitsByFam = hitsByFam || {}; tokens = tokens || [];
+  const REAL = window.FAL_REAL || [];
   const out = [];
-  fams.slice(0,2).forEach(function(f, fi){
-    /* 目标市场：优先 ① 档案勾选的区域；没勾就用该族的主力市场。最多 2 个 */
-    const mk = (regions && regions.length ? regions : f.mk).slice(0,2);
+  fams.slice(0,2).forEach(function(f){
     const hits = (hitsByFam[f.id] || []).filter(Boolean);
-    f.b.forEach(function(b, bi){
-      mk.forEach(function(rg, ri){
-        const idx = fi*100 + bi*10 + ri;              /* 确定性索引：刷新后不错位 */
-        const arr = REGMAP[rg] || [];
-        const geo = arr.length ? arr[ri % arr.length] : ["","", "com", ""];
-        const pre = PRE[idx % PRE.length];
-        const suf = f.suf[bi % f.suf.length];
-        const nm  = pre + " " + suf;
-        /* 2026-10-20 v57：示例域名改用 RFC 2606 保留 TLD `.example`。
-           ⚠️ 旧写法 `<slug>.<国家 TLD>` 会拼出**看起来像真的、实际 100% 不存在**的域名
-           （2026-10-20 实测 10/10 NXDOMAIN），而弹窗与「公开渠道核验」还把它渲染成
-           可点外链 → 用户点开必然打不开，等于用假网址骗人。
-           `.example` 是 IANA 保留域，永远不解析，一眼可辨是示例，也不会误伤任何真实企业。 */
-        const dm  = (pre + suf).toLowerCase().replace(/[^a-z0-9]/g,"") + ".example";
-        const cats = [f.lab];
-        const a1 = adjFam(f.id, 0);
-        if(a1 && cats.indexOf(a1.lab) === -1) cats.push(a1.lab);
-        /* 采购代理 / 贸易的经营范围横跨全行业 → 挂「全产业」通配类别 */
-        if(String(b[0]).indexOf("采购代理") !== -1) cats.push(ALLCAT);
-        out.push({
-          nm:nm, dm:dm, flag:geo[0], region:rg, ind:f.ind,
-          size:["M","L","S","M"][bi % 4],
-          match:null, risk:"na", contact:"L2", src:"示例样本", sample:true,
-          btype:b[0], need:b[1],
-          /* 渠道（2026-10-19）：按采购方类型分配，让「从哪找到的」成为可筛维度。
-             ⚠️ 与 src 分开：src 是「这条是不是示例」，chan 是「从哪个渠道来」，
-                两者不能互相冒充。 */
-          chan: chanOf(b[0], idx),
-          /* 轮换索引刻意用 (bi + ri*2)：若用 (bi*2+ri)，当命中 2 个词时
-             「关键词」会与「目标市场」完全重合（北美全是词 A、欧盟全是词 B），
-             看起来像关键词和国家绑死，是假的。按画像交错 → 每个市场里各词都有。
-             ⚠️ 如果用户填了关键词但该族没有任何关键词命中（hits.length===0），
-                绝不能回退到 tokens[0]（用户输入词）——这会让无关线索被错误标记为
-                与该词相关，导致筛选/搜索都漏出错误结果。此时应标 "—" 表示「不由
-                任何关键词带来」，可被 kwHit 正确过滤。*/
-          kw: hits.length ? hits[(bi + ri*2) % hits.length] : (tokens.length ? "—" : f.lab),
-          why:b[3],
-          cats:cats
-        });
-      });
+    REAL.filter(function(r){ return r.famId === f.id; }).forEach(function(r, ri){
+      /* 档案勾了目标市场就只出该市场；没勾则全出（不按区域硬造） */
+      if(regions && regions.length && regions.indexOf(r.region) === -1) return;
+      out.push(realToLead(r, f, hits.length ? hits[ri % hits.length] : (tokens.length ? "—" : f.lab)));
     });
+  });
+  return out;
+}
+
+/* 「全部线索」= 真实名录全量（不按档案收敛，供「查看全部线索」用） */
+function allRealLeads(){
+  const REAL = window.FAL_REAL || [];
+  const famById = {};
+  FAM.forEach(function(f){ famById[f.id] = f; });
+  const out = [];
+  REAL.forEach(function(r){
+    const f = famById[r.famId];
+    if(f) out.push(realToLead(r, f, r.kw));
   });
   return out;
 }  /* /genLeads */
@@ -1162,7 +1201,9 @@ function officialSources(l){
   const out=[];
   /* 2026-10-20 v57：示例线索不再给「公司官网」链接。
      它的域名是 `.example` 保留域，点开必然打不开 —— 给一个死链比不给更糟。 */
-  if(dm && !(l && l.sample)) out.push({nm:T("公司官网"), url:"https://"+dm, tag:"L1"});
+  /* 2026-10-20 v58：真实线索用**实测过的那条 URL**（有的站只开 http 或要 www 前缀），
+     不再一律拼 https:// —— 拼错协议头点开就是「连不上」，等于又给了一个死链。 */
+  if(dm && !(l && l.sample)) out.push({nm:T("公司官网"), url:(l && l.url) || ("https://"+dm), tag:"L1"});
   const list=REGISTRY[(l&&l.region)]||REGISTRY["*"];
   (list||[]).forEach(function(r){
     out.push({nm:r[0], url:r[1]+(r[2]?encodeURIComponent(nm):""), tag:"L2"});
@@ -1260,7 +1301,8 @@ function importedLeads(){
 /* 当前范围内的线索 + 自备名单（名片 / 导入的真实线索）——
    自备名单永远并入、且排在最前：那是使用者自己明确要跟的，不该被平台侧筛选或范围藏起来。 */
 function allLeads(){
-  const base = (state.scope === "all") ? LEADS : currentPool().leads;
+  /* 2026-10-20 v58：「全部池」= 真实名录全量（旧版 LEADS 是空数组，按钮点了等于没数据） */
+  const base = (state.scope === "all") ? allRealLeads() : currentPool().leads;
   return importedLeads().concat(base);
 }
 
@@ -1638,8 +1680,18 @@ function kwHit(l, sel){
 }
 
 function pass(l){
-  const qOk = !state.q || (l.nm.toLowerCase().includes(state.q)||l.dm.toLowerCase().includes(state.q)||l.region.includes(state.q)||l.ind.toLowerCase().includes(state.q)
-    ||String(l.btype||"").toLowerCase().includes(state.q)||String(l.need||"").toLowerCase().includes(state.q)||String(l.kw||"").toLowerCase().includes(state.q));
+  /* 2026-10-20 v58：搜索框改为「全文命中」—— 中英文品牌名 / 域名 / 官网标题 / 品类词
+     都算命中（真实名录的 hay 字段里带了 scope、rifle、plate carrier 等英文同义词）。
+     旧版只匹配 6 个字段且全是中文，输入 "scope" 一条都搜不出来 —— 那是搜索不可用。 */
+  const q = String(state.q||"").trim().toLowerCase();
+  const qOk = !q || (String(l.nm||"").toLowerCase().includes(q)
+    || String(l.dm||"").toLowerCase().includes(q)
+    || String(l.region||"").includes(q)
+    || String(l.ind||"").toLowerCase().includes(q)
+    || String(l.btype||"").toLowerCase().includes(q)
+    || String(l.need||"").toLowerCase().includes(q)
+    || String(l.kw||"").toLowerCase().includes(q)
+    || String(l.hay||"").toLowerCase().includes(q));
   /* 2026-10-20 v57：自备线索（展会名片 / 导入的真实线索）**不受平台侧筛选条件限制**。
      它们是使用者自己明确要跟的名单，不是平台按档案筛出来的；若被关键词 / 行业 / 匹配度
      过滤掉，就会出现「刚导入就看不见」的假失败 —— 用户会以为导入没成功。
@@ -1724,13 +1776,22 @@ function emptyDiagnosis(){
 
   /* ① 池子本身为空 —— 与筛选无关 */
   if(!base.length){
+    /* 2026-10-20 v58：真实名录只覆盖「光学瞄准镜 / 战术装备」两类，
+       其他行业一定为空。必须说清覆盖范围，并给出唯一能立刻补数据的动作（导入自备名单）。 */
+    const covN = (window.FAL_REAL_META || {}).total || 0;
+    const covTxt = covN
+      ? Tv("当前真实名录共 {n} 家，覆盖「光学瞄准镜 / 战术装备」两类（2026-10-20 实测可达）。你的主营行业若不在其中，这里就是空的 —— 平台不会编造公司来填满它。",
+           {n:"<b>"+covN+"</b>"})
+      : "";
+    const impBtn2 = '<button class="sb-btn pri" id="diagImport">'+T("导入我自己的真实名单")+'</button>';
     if(state.scope==="all"){
       return diagBox(T("全部线索池当前为空"),
-        T("本机没有可展示的线索：原型未接入外部数据源，演示数据也已按你的要求清除。切回「按我的档案筛选」可由 ① 战略档案收敛生成示例样本，或先做「名片建档」把线下拿到的名片录进来。"),
-        toProfile + '<a class="sb-btn" href="01_战略_企业战略档案.html" style="text-decoration:none">'+T("前往填写战略档案")+'</a>');
+        covTxt + " " + T("你可以把手上已有的客户 / 目标客户域名导入进来，平台会逐条真实探测可达性，连得上的才入池。"),
+        impBtn2 + '<a class="sb-btn" href="01_战略_企业战略档案.html" style="text-decoration:none">'+T("前往填写战略档案")+'</a>');
     }
     return diagBox(T("当前范围池为空"),
-      T("本机没有可展示的线索，请先补全 ① 战略档案或做名片建档。"), toReset);
+      covTxt + " " + T("请先在 ① 战略档案里填主营关键词与品类；若你的行业不在名录覆盖内，用「导入真实线索」把自备名单放进来。"),
+      impBtn2 + toReset);
   }
   /* ② 没设任何条件却 0 命中 ⇒ 是范围本身的问题，不是筛选 */
   if(!active.length){
@@ -1794,10 +1855,13 @@ function render(){
       +'<a class="sb-btn pri" href="01_战略_企业战略档案.html" style="text-decoration:none">'+T("前往填写战略档案")+'</a>'
       +'<button class="sb-btn" id="guideAll">'+T("查看全部线索")+'</button></div></div>';
   } else if(state.scope==="profile" && pool.mode==="nocover"){
-    list.innerHTML='<div class="guidebox"><b>'+T("你的主营品类在当前演示库中未覆盖")+'</b>'
-      +'<span>'+T("已按档案匹配，但没有命中任何品类族 —— 为了不塞给你无关行业，这里保持为空。真实环境会由数据源按关键词检索后返回结果，或回档案补充更具体的关键词。")+'</span>'
+    /* 2026-10-20 v58：真实名录只覆盖光学 / 战术装备，其他行业必然「未覆盖」——
+       不编数据填充，直接说清覆盖范围 + 给导入入口。 */
+    list.innerHTML='<div class="guidebox"><b>'+T("你的主营品类不在当前真实名录覆盖内")+'</b>'
+      +'<span>'+Tv("当前真实名录共 {n} 家，覆盖「光学瞄准镜 / 战术装备」两类（2026-10-20 实测可达）。平台不会为了填满列表而编造公司 —— 你的行业需要你自己的名单。",{n:"<b>"+((window.FAL_REAL_META||{}).total||0)+"</b>"})+'</span>'
       +'<div style="margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
-      +'<a class="sb-btn pri" href="01_战略_企业战略档案.html" style="text-decoration:none">'+T("回档案补充关键词")+'</a>'
+      +'<button class="sb-btn pri" id="diagImport">'+T("导入我自己的真实名单")+'</button>'
+      +'<a class="sb-btn" href="01_战略_企业战略档案.html" style="text-decoration:none">'+T("回档案补充关键词")+'</a>'
       +'<button class="sb-btn" id="guideAll">'+T("查看全部线索")+'</button></div></div>';
   } else if(!state.searched){
     /* 未点「开始搜索」→ 引导态（不是空白，也不是一份来路不明的列表） */
@@ -1840,9 +1904,19 @@ function render(){
       /* 渠道徽章：让「这条是从哪来的」在列表层就可见，不必点开弹窗 */
       const chInfo = chanById(l.chan||"registry");
       const chBadge = chInfo ? `<span class="badge b-ch" title="${esc(T('线索渠道'))}">${esc(T(chInfo.nm))}</span>` : '';
+      /* 域名：真实线索渲染成可点外链，指向实测能打开的那条 URL；
+         反爬 / 本机不通的用黄 / 红虚线提示 —— 点之前就知道会发生什么，不至于又踩一次「连不上」。 */
+      const rcls = !l.real ? '' : ((l.reach>=200&&l.reach<400) ? '' : ((l.reach===403||l.reach===429) ? ' rch-warn' : ' rch-off'));
+      const dmHTML = l.real
+        ? `<a class="dm dmlink${rcls}" href="${esc(l.url||('https://'+l.dm))}" target="_blank" rel="noopener noreferrer" title="${esc(T("点击打开官网 · 实测地址"))}">${esc(l.dm)}</a>`
+        : `<div class="dm">${esc(l.dm)}</div>`;
+      /* 命中关键词：真实名录的 kw 是**平台定义**的品类词（瞄准镜 / 战术装备），
+         应当翻译；自备线索（名片 / 导入）的 kw 是使用者自己的业务字段，绝不机器翻译。
+         2026-10-20 v58：原来一律 `.noi18n` → 英文态残留中文「瞄准镜」。 */
+      const kwTxt = (l.card || l.imp) ? l.kw : T(l.kw);
       return `<div class="lrow">
-        <div class="co"><span class="flag">${l.flag}</span><div style="min-width:0"><div class="nm" data-cm="${l.dm}" data-nm="${l.nm}" title="点击查看联系方式与命中依据">${l.nm}</div>${l.sample?'<span class="sflag" title="示例样本 · 公司名由系统按品类确定性生成，不对应任何真实企业">示例</span>':''}<div class="dm">${l.dm}</div><div class="dm2"><span>${l.region}</span><span> · </span><span>${l.ind}</span>${szTxt?`<span> · </span><span>${szTxt}</span>`:''}</div><div class="btline"><span class="badge b-bt">${l.btype||'—'}</span>${chBadge}</div>${hint?`<button class="link-co" data-cm="${l.dm}" data-nm="${l.nm}" title="${esc(Tf("已录入 {n} 位联系人",{n:ppl.length}))}">☎ ${esc(hint)}${more}</button>`:''}</div></div>
-        <div class="need">${needNA?'<span class="needna">待验证</span>':esc(l.need)}<small title="${esc(l.why||'')}">${esc(l.why||'')}</small>${needNA?'':'<span class="kwb"><span>命中：</span><span class="noi18n">'+esc(l.kw)+'</span></span>'}</div>
+        <div class="co"><span class="flag">${l.flag}</span><div style="min-width:0"><div class="nm" data-cm="${l.dm}" data-nm="${l.nm}" title="点击查看联系方式与命中依据">${l.nm}</div>${l.sample?'<span class="sflag" title="示例样本 · 公司名由系统按品类确定性生成，不对应任何真实企业">示例</span>':''}${dmHTML}<div class="dm2"><span>${l.region}</span><span> · </span><span>${l.ind}</span>${szTxt?`<span> · </span><span>${szTxt}</span>`:''}</div><div class="btline"><span class="badge b-bt">${l.btype||'—'}</span>${chBadge}</div>${hint?`<button class="link-co" data-cm="${l.dm}" data-nm="${l.nm}" title="${esc(Tf("已录入 {n} 位联系人",{n:ppl.length}))}">☎ ${esc(hint)}${more}</button>`:''}</div></div>
+        <div class="need">${needNA?'<span class="needna">待验证</span>':esc(l.need)}<small title="${esc(l.why||'')}">${esc(l.why||'')}</small>${needNA?'':'<span class="kwb"><span>命中：</span><span class="noi18n">'+esc(kwTxt)+'</span></span>'}</div>
         <div class="mbar">${l.match==null?'<span class="vna">待核查</span>':`<div class="bar"><i style="width:${l.match}%"></i></div><b>${l.match}</b>`}</div>
         <div><span class="badge ${riskCls}">${riskTxt}</span></div>
         <div><span class="badge ${covCls}">${covTxt}</span></div>
@@ -1866,6 +1940,9 @@ function render(){
   if(gs) gs.onclick=runSearch;
   const dr=document.getElementById("diagReset");
   if(dr) dr.onclick=clearFilters;
+  /* 2026-10-20 v58：空态里的「导入我自己的真实名单」直通导入弹窗 */
+  const dimp=document.getElementById("diagImport");
+  if(dimp) dimp.onclick=openImp;
   const dp=document.getElementById("diagProfile");
   if(dp) dp.onclick=()=>{state.scope="profile";state.industry="";runSearch();};
   paintSearchState(view.length);
@@ -1990,13 +2067,17 @@ function renderRegionDist(view){
   el.innerHTML=REGIONS.map(r=>{const n=view.filter(l=>l.region===r).length;return `<div class="rbar"><span>${r}</span><div class="bar"><i style="width:${Math.round(n/max*100)}%"></i></div><b>${n}</b></div>`;}).join("");
 }
 
-document.getElementById("exportBtn").onclick=()=>{
-  if(!state.added.size){alert("尚未加入任何管线线索。");return;}
-  const rows=allLeads().filter(l=>state.added.has(l.dm));
-  const q=x=>'"'+String(x==null?"":x).replace(/"/g,'""')+'"';
-  /* v2：一家公司 N 位联系人 → 展开成 N 行（公司字段重复，一人一行）。
-     Excel 里筛选「职务」列就能直接分出该找谁 —— 这正是多联系人存储的价值兑现处。
-     还没录 L3 的公司仍然占 1 行（人名列留空），保证不漏公司。 */
+/* ================= CSV 输出（2026-10-20 v58 重做）=================
+   ⚠️ 旧版问题（用户 2026-10-20 质疑「输出都做不了」，成立）：
+     按钮叫「导出管线 CSV」，但一条管线都没加时直接 alert 一句「尚未加入任何管线线索」就结束 ——
+     使用者刚搜出 39 家公司，想导出来看，结果什么都没拿到。**搜到了却拿不走，等于没搜到。**
+   ✅ 新版两档输出：
+     ① 有管线线索 → 导出管线（一人一行，含 L2/L3 全部字段，供 Excel 直接筛选）；
+     ② 没管线但**当前有检索结果** → 导出当前筛选结果（同一套字段，L2/L3 列留空），
+        文件名带时间戳，避免多次导出互相覆盖。 */
+function csvCell(x){ return '"'+String(x==null?"":x).replace(/"/g,'""')+'"'; }
+function exportRows(rows, fname){
+  const q=csvCell;
   const head=["公司","域名","区域","行业","规模","采购方类型","线索渠道","采购需求品类","命中关键词","命中依据","匹配度","风险","联系可用性","职能窗口岗位","企业电话","部门邮箱","人名","职务 / 决策角色","决策角色（按职务推断）","手机 / 电话","私人邮箱","WhatsApp","WeChat","Telegram","备注","资料来源","公司主页","数据来源","L2 核验来源","L2 核验日期"];
   const body=[];
   rows.forEach(function(l){
@@ -2007,7 +2088,8 @@ document.getElementById("exportBtn").onclick=()=>{
       l.match,l.risk,cov,c.role||"",c.cp||"",c.ce||""];
     /* 2026-10-19 v51：补「L2 核验来源 / 核验日期」两列 —— 核验过的数据必须能追溯到出处 */
     const l2=loadL2()[l.dm]||{};
-    const tail=[o.site||"",c.src||l.src,l2.src||"",l2.at||""];
+    /* v58：补「公司主页」= 实测可用的那条 URL（不是一律 https://） */
+    const tail=[o.site||l.url||"",c.src||l.src,l2.src||"",l2.at||""];
     /* ⚠️ 顺手修既有缺陷：未录 L3 的行原先只补 8 个空位，比表头少 2 列（备注 / 资料来源）→
        该行后面所有列整体前移、CSV 错位。补齐为 10 个空位。 */
     if(!ppl.length){ body.push(base.concat(["","","","","","","","","",""],tail).map(q).join(",")); return; }
@@ -2018,7 +2100,27 @@ document.getElementById("exportBtn").onclick=()=>{
     });
   });
   const csv="\ufeff"+[head.map(q).join(",")].concat(body).join("\n");
-  const blob=new Blob([csv],{type:"text/csv"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="FALCORA_管线线索_演示.csv";a.click();
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=fname;a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 3000);
+}
+function stamp(){
+  const d=new Date(), p=n=>String(n).padStart(2,"0");
+  return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"_"+p(d.getHours())+p(d.getMinutes());
+}
+document.getElementById("exportBtn").onclick=()=>{
+  if(state.added.size){
+    exportRows(allLeads().filter(l=>state.added.has(l.dm)), "FALCORA_管线线索_"+stamp()+".csv");
+    return;
+  }
+  /* 没有管线 → 退一步导出「当前检索结果」，而不是一句 alert 把人挡回去 */
+  const view = state.searched ? allLeads().filter(pass) : [];
+  if(!view.length){
+    alert(T("当前既没有管线线索，也没有检索结果 —— 请先「开始搜索」，或把结果「加入管线」。"));
+    return;
+  }
+  if(!confirm(Tv("还没有加入管线的线索。要导出当前检索到的 {n} 家吗？（联系方式列会留空，因为你还没核验/录入）", {n:String(view.length)}))) return;
+  exportRows(view, "FALCORA_检索结果_"+stamp()+".csv");
 };
 
 /* ---------- 联系方式弹窗（L1/L2 公开 · L3 仅自备） ---------- */
