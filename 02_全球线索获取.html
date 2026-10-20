@@ -5,6 +5,8 @@
 <script src="app-stats.js"></script>
 <!-- 2026-10-20 v58：真实企业名录（DNS + HTTPS 实测），必须在页内脚本前加载 -->
 <script src="data-real-companies.js"></script>
+<!-- 2026-10-20 v59：L2 企业职能联系方式（官网公开页原样提取，每条带来源链接） -->
+<script src="data-l2-contacts.js"></script>
 <script src="app-vals.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#0B2632" />
@@ -447,6 +449,25 @@
   .covbar .cv.on{border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.09)}
   .covbar .cv.on b,.covbar .cv.on span{color:#7de3b6}
   /* L3 区绿色主题 */
+  /* ---- L2 平台检索结果（2026-10-20 v59）----
+     每条值旁边都有「来源」按钮，点开就是抓到它的那个官网页面 —— 使用者可当场复核。
+     这是 L2 能站得住的唯一凭据：没有来源的联系方式一律不显示。 */
+  .l2f{border:1px solid rgba(56,189,248,.22);background:rgba(56,189,248,.05);border-radius:11px;padding:10px 12px;margin-bottom:10px}
+  .l2f-hd{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .l2f-hd b{font-size:11.5px;color:#7DD3FC;letter-spacing:.4px;font-weight:600}
+  .l2f-hd .at{margin-left:auto;font-size:10.5px;color:var(--muted-2);white-space:nowrap}
+  .l2f-row{display:grid;grid-template-columns:76px 1fr;gap:8px;padding:5px 0;border-top:1px solid rgba(255,255,255,.06);align-items:start}
+  .l2f-row:first-of-type{border-top:0}
+  .l2f-row .k{font-size:11.5px;color:var(--muted-2)}
+  .l2f-row .vs{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .l2f-row .vv{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0}
+  /* ⚠️ 这里不能用 word-break:break-all —— 它会把邮编 23236 从中间劈成「2323 / 6」。
+     地址要按词换行；只有超长的邮箱/域名才需要强制断，交给 overflow-wrap:break-word。 */
+  .l2f-row .vv b{font-weight:600;font-size:12.5px;color:var(--ink);word-break:normal;overflow-wrap:break-word}
+  .l2f-row .vv a.vsrc{font-size:10px;color:#7DD3FC;text-decoration:none;border:1px solid rgba(56,189,248,.3);border-radius:5px;padding:1px 5px;white-space:nowrap}
+  .l2f-row .vv a.vsrc:hover{background:rgba(56,189,248,.12)}
+  .l2f-row .na{font-size:11.5px;color:var(--muted-2)}
+  .l2f-foot{margin-top:7px;font-size:10.5px;color:var(--muted-2);line-height:1.55}
   .csec.l3sec{border-color:rgba(52,211,153,.26);background:rgba(52,211,153,.05)}
   .csec.l3sec > h4{color:#7de3b6}
   .l3lede{font-size:11.5px;color:var(--muted-2);line-height:1.6;margin-bottom:9px;
@@ -816,10 +837,12 @@ const BTYPES = ["制造商 (OEM/ODM)","品牌商","分销商 / 代理","工程�
 /* ================= 品类族（② 线索池按 ① 战略档案收敛范围） =================
    修复：02 页原先写死 16 条演示线索、行业互不相关 —— 使用者填「光学瞄准镜」也会看到
    医疗器械 / 化工 / 建材。现改为：**先读 ① 战略档案的主营关键词 / 品类 / 行业，
-   匹配到品类族，只生成该族的采购方线索**；匹配不到就明说「未覆盖」，不塞无关行业。
+   匹配到品类族，只出该族的真实名录企业**；匹配不到就明说「未覆盖」，不塞无关行业。
 
-   ⚠️ 生成出来的仍是**演示线索**（公司名 / 联系方式 / 评分均为示例，不对应真实主体），
-      页首范围条与页脚均明标。真实环境由数据源按档案检索后返回。 */
+   ⚠️ 2026-10-20 v58：线索池数据源已从「按族确定性拼公司名」换成
+      `data-real-companies.js` 真实名录（域名实测可达），本节的 FAM 只用于
+      **收敛范围 + 分组 + 关键词匹配**，不再生成任何公司名。
+   ⚠️ v59：15 个族全部有真实名录数据（不再只有 optics / tactical）。 */
 const FAM = [
   { id:"optics", lab:"光学 / 光电", ind:"光学光电", cat:["机械设备","五金/工具","其他"],
     suf:["Optics","Precision Optics","Optical Instruments","Vision Systems"],
@@ -1223,6 +1246,17 @@ function contactsOf(l){
      这样核验一次之后，弹窗 / 列表 / CSV 三处同时拿到真实值，且不再挂「示例」角标。 */
   const v2 = loadL2()[dm];
   if(v2) return v2;
+  /* 2026-10-20 v59：平台自官网公开页检索到的 L2（真实、逐条带来源，见 data-l2-contacts.js）。
+     优先级：使用者核验 > 平台检索 > 内置 CONTACTS > 示例样本。
+     只填「企业电话 / 部门邮箱」—— 岗位情报不推断，仍留待核验；官网见下方 cRow。 */
+  const f2 = (window.FAL_L2 || {})[dm];
+  if (f2 && ((f2.phones || []).length || (f2.emails || []).length)) {
+    return {
+      cp: (f2.phones[0] && f2.phones[0].v) || "",
+      ce: (f2.emails[0] && f2.emails[0].v) || "",
+      web: "", fetched: true, at: f2.at || ""
+    };
+  }
   if(CONTACTS[dm]) return CONTACTS[dm];
   if(l && typeof l === "object" && l.sample) return sampleL2(l) || {};
   return {};
@@ -1316,7 +1350,9 @@ function allLeads(){
 const CONTACTS = {};  /* 2026-10-15 用户「消除所有演示数据」：演示联系方式一并清除；不再编造。 */;
 
 const REGIONS = ["北美","欧盟","中东","东南亚","拉美","非洲","东亚","大洋洲"];
-const INDUSTRIES = ["工业设备","电子制造","医疗器械","新能源","建材","化工","汽车零部件","包装"];
+/* ⚠️ 行业筛选下拉**不写死**：从当前线索池里实际出现的 ind 动态生成（见 fillIndustry）。
+   2026-10-20 移除旧的硬编码 INDUSTRIES（只有 8 个行业，与 15 个品类族对不上，
+   且随 v59 行业扩容必然过期）—— 写死的下拉在按档案收敛之后一定点不出东西。 */
 
 /* ================= 线索渠道（2026-10-19 新增） =================
    为什么加这一层：原来的 ② 页只有「区域 / 关键词 / 品类 / 行业」，
@@ -1421,10 +1457,11 @@ function renderChannels(){
     };
   });
   const note=document.getElementById("chanNote");
-  /* 两句各自独立成键（不拼成一整句）：长句字典里已有，短句是本轮新增，
-     拆开才能各自命中字典 —— 拼串会因整体不在字典里而整段回落中文。 */
-  if(note) note.innerHTML = T("渠道能力为「接入后的设计口径」；当前线索池为示例样本，不对应真实主体。「部分待接入 / 待接入」表示该渠道尚未接通，不是没有线索。")
-    + ' ' + T("待接入渠道卡内仍可能展示示例样本，仅用于演示筛选效果，不代表已能查到真实数据。");
+  /* v59 起线索池已是真实名录（域名实测可达）→ 旧版「当前线索池为示例样本，不对应真实主体」
+     这句必须撤掉，否则等于告诉使用者「这些公司名是编的」，与事实相反。
+     两句各自独立成键（不拼成一整句）：各自命中字典，拼串会整段回落中文。 */
+  if(note) note.innerHTML = T("渠道能力为「接入后的设计口径」，不是当前已接通；当前线索池为平台真实企业名录（域名已实测可达）。「部分待接入 / 待接入」表示该渠道的数据尚未接通，不是没有线索。")
+    + ' ' + T("名录内企业均来自公开渠道，联系方式一律未收录；待接入渠道接通后才会补充对应字段。");
   /* 刷新后若展会仍在选中态，面板保持展开（否则条件生效却看不到依据） */
   if(state.chan.has("expo")) toggleExpo(true);
 }
@@ -1663,10 +1700,10 @@ function paintMatchNote(){
   el.hidden=false;
   if(state.match>0){
     el.className="fhint fnote warn";
-    el.textContent=T("池内线索的匹配度尚未标注（示例样本 / 未接入数据源），阈值大于 0 会把它们全部排除。请把滑块拉回 0。");
+    el.textContent=T("池内线索的匹配度尚未标注（真实名录不做伪评分），阈值大于 0 会把它们全部排除。请把滑块拉回 0。");
   }else{
     el.className="fhint fnote";
-    el.textContent=T("池内线索的匹配度尚未标注（示例样本 / 未接入数据源），此筛选暂不生效。");
+    el.textContent=T("池内线索的匹配度尚未标注（真实名录不做伪评分），此筛选暂不生效。");
   }
 }
 
@@ -1776,11 +1813,12 @@ function emptyDiagnosis(){
 
   /* ① 池子本身为空 —— 与筛选无关 */
   if(!base.length){
-    /* 2026-10-20 v58：真实名录只覆盖「光学瞄准镜 / 战术装备」两类，
-       其他行业一定为空。必须说清覆盖范围，并给出唯一能立刻补数据的动作（导入自备名单）。 */
+    /* 2026-10-20 v59：用户纠正定位「FALCORA 不只是光学瞄准镜，而是各种中小出口企业」，
+       真实名录已从 2 族扩到 15 族。仍可能为空（未覆盖的行业）→ 必须说清覆盖范围，
+       并给出唯一能立刻补数据的动作（导入自备名单）。 */
     const covN = (window.FAL_REAL_META || {}).total || 0;
     const covTxt = covN
-      ? Tv("当前真实名录共 {n} 家，覆盖「光学瞄准镜 / 战术装备」两类（2026-10-20 实测可达）。你的主营行业若不在其中，这里就是空的 —— 平台不会编造公司来填满它。",
+      ? Tv("当前真实名录共 {n} 家，覆盖 15 个行业族（光学 / 光电、战术 / 户外装备、电子 / 电气、机械设备、五金 / 工具、化工 / 材料、医疗器械、新能源、汽车零部件、纺织 / 服装、包装、建材、消费品 / 快消、软件 / SaaS、专业服务），均为 2026-10-20 实测可达。你的主营行业若不在其中，这里就是空的 —— 平台不会编造公司来填满它。",
            {n:"<b>"+covN+"</b>"})
       : "";
     const impBtn2 = '<button class="sb-btn pri" id="diagImport">'+T("导入我自己的真实名单")+'</button>';
@@ -1855,10 +1893,10 @@ function render(){
       +'<a class="sb-btn pri" href="01_战略_企业战略档案.html" style="text-decoration:none">'+T("前往填写战略档案")+'</a>'
       +'<button class="sb-btn" id="guideAll">'+T("查看全部线索")+'</button></div></div>';
   } else if(state.scope==="profile" && pool.mode==="nocover"){
-    /* 2026-10-20 v58：真实名录只覆盖光学 / 战术装备，其他行业必然「未覆盖」——
+    /* 2026-10-20 v59：名录已覆盖 15 个行业族，但使用者的主营品类仍可能落在覆盖外 ——
        不编数据填充，直接说清覆盖范围 + 给导入入口。 */
     list.innerHTML='<div class="guidebox"><b>'+T("你的主营品类不在当前真实名录覆盖内")+'</b>'
-      +'<span>'+Tv("当前真实名录共 {n} 家，覆盖「光学瞄准镜 / 战术装备」两类（2026-10-20 实测可达）。平台不会为了填满列表而编造公司 —— 你的行业需要你自己的名单。",{n:"<b>"+((window.FAL_REAL_META||{}).total||0)+"</b>"})+'</span>'
+      +'<span>'+Tv("当前真实名录共 {n} 家，覆盖 15 个行业族（2026-10-20 实测可达）。平台不会为了填满列表而编造公司 —— 你的行业需要你自己的名单。",{n:"<b>"+((window.FAL_REAL_META||{}).total||0)+"</b>"})+'</span>'
       +'<div style="margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
       +'<button class="sb-btn pri" id="diagImport">'+T("导入我自己的真实名单")+'</button>'
       +'<a class="sb-btn" href="01_战略_企业战略档案.html" style="text-decoration:none">'+T("回档案补充关键词")+'</a>'
@@ -1962,7 +2000,7 @@ function renderScopeBar(){
   if(state.scope==="all"){
     el.className="scopebar warn";
     h='<div class="sb-ic">◎</div><div class="sb-t"><span>'+T("当前范围")+'</span></div>'
-      +'<div class="sb-d">'+T("本原型未接入真实企业数据源；当前展示的是全部线索池（含你建档的展会名片）。真实环境由数据源按 ① 战略档案检索后返回采购方线索，所列企业不对应真实主体。")+'</div>'
+      +'<div class="sb-d">'+Tv("全部线索池 = 平台真实企业名录共 {n} 家，域名已于 2026-10-20 实测可达（反爬 / 本机不通的单独标注）。名录只含 L1 公开信息（公司 / 官网 / 国家）：L2 企业职能联系方式待数据源接入，L3 个人联系方式由你自备。点「按我的档案筛选」可按 ① 战略档案的主营关键词与目标区域收敛范围。",{n:"<b>"+((window.FAL_REAL_META||{}).total||0)+"</b>"})+'</div>'
       +'<div class="sb-acts"><button class="sb-btn pri" id="sbProfile">'+T("按我的档案筛选")+'</button></div>';
   } else if(pool.mode==="empty"){
     el.className="scopebar warn";
@@ -1978,9 +2016,10 @@ function renderScopeBar(){
       +'<button class="sb-btn" id="sbAll">'+T("查看全部线索")+'</button></div>';
   } else {
     const fams=esc(pool.m.fams.slice(0,3).map(f=>T(f.lab)).join(" / "));
-    /* 收敛成功时，池内是「示例 · 非真实主体」样本 —— 范围条转金色并在下方补一句声明，
-       不让使用者误以为这些公司名是真实查到的企业 */
-    el.className="scopebar sample";
+    /* 收敛成功：池内是**真实名录**的真实企业（域名已实测可达），
+       不是示例生成的公司名 —— 2026-10-20 v58 起 genLeads() 已不再拼假公司。
+       因此用默认（青色）范围条，不再用金色「示例」警示色。 */
+    el.className="scopebar";
     const tpl = pool.m.regions.length
       ? "按 ① 战略档案收敛 —— 关键词「{kw}」 · 命中品类族 {fams} · 目标区域 {rg}。池内仅含这些品类的采购方，不含无关行业。"
       : "按 ① 战略档案收敛 —— 关键词「{kw}」 · 命中品类族 {fams}。池内仅含这些品类的采购方，不含无关行业。";
@@ -1990,8 +2029,6 @@ function renderScopeBar(){
       +'<div class="sb-d">'+Tv(tpl,vars)+'</div>'
       +'<div class="sb-acts"><button class="sb-btn" id="sbAll">'+T("查看全部线索")+'</button></div>';
   }
-  /* 示例样本声明：只要池内出现过 sample 行，就在范围条下方补这句。
-     与每行的「示例」角标、页脚声明形成三重提示 —— 任何一处都不省略。 */
   /* 有关键词一个品类族都没命中 → 明说，不默默略过。
      否则使用者填了 3 个词却只看到 2 组客户，只会以为是程序出错。 */
   const m2 = pool.m || {};
@@ -2003,9 +2040,17 @@ function renderScopeBar(){
       + Tv("关键词 {m} 在当前品类库中没有命中任何品类族，所以池内没有它们的分组。可回 ① 档案换成更通用的说法（例如「红点瞄具」→「瞄具」）。",{m:'<b class="noi18n">'+esc(missed.join(" / "))+"</b>"})
       + '</div>';
   }
+  /* 名录口径声明：2026-10-20 v58 起池内已全部是真实企业，不再有 sample 行 ——
+     旧版那段「示例 · 非真实主体」长声明随之失效，换成一句真实口径。
+     ⚠️ 保留 `some(l=>l.sample)` 判断是防御：万一将来又出现示例行，
+        这句仍会立刻出现，不会让假数据裸奔。 */
   if(allLeads().some(function(l){ return l.sample; })){
     h += '<div class="sb-note">'
       + T("池内为「示例 · 非真实主体」样本：公司名与域名由系统按品类确定性生成，用于演示按关键词分组与按类别筛选；联系方式 / 匹配度 / 风险一律留空待核查。这些样本不进驾驶舱 KPI，只有你点「加入管线」才会成为真实商机并出现在地图上。")
+      + '</div>';
+  } else {
+    h += '<div class="sb-note">'
+      + T("名录内为真实注册主体，域名已实测可达；联系方式一律未收录 —— 点「联系方式」可按公开渠道核验 L2，或自备录入 L3。")
       + '</div>';
   }
   el.innerHTML=h;
@@ -2022,22 +2067,22 @@ function renderInsight(){
   const pool=currentPool();
   let h="";
   if(state.scope==="all"){
-    h='<span>'+T("本原型未接入真实企业数据源，当前没有可展示的采购方线索。点上方「按我的档案筛选」可按 ① 战略档案的主营关键词与目标区域收敛范围（真实环境由数据源返回结果）。")+'</span>'
-     +'<span>'+T("所列企业（如有）均为你自备或占位，不对应真实主体。")+'</span>';
+    h='<span>'+Tv("全部线索池 = 平台真实企业名录共 {n} 家，均为真实注册主体、域名已实测可达。",{n:"<b>"+((window.FAL_REAL_META||{}).total||0)+"</b>"})+'</span>'
+     +'<span>'+T("名录只含 L1 公开信息（公司 / 官网 / 国家）；联系方式未收录。点上方「按我的档案筛选」可按 ① 战略档案的主营关键词与目标区域收敛范围。")+'</span>';
   } else if(pool.mode==="empty"){
     h='<span>'+T("尚未填写 ① 战略档案，线索池无法判断你的主营品类，因此暂不生成任何采购方 —— 避免混入与你无关的行业。")+'</span>'
      +'<span>'+T("填好档案后，这里会按关键词与目标区域收敛，只出对你有实际采购需求的企业。")+'</span>';
   } else if(pool.mode==="nocover"){
-    h='<span>'+T("档案关键词在当前演示库中没有对应的品类族，因此这里保持为空，而不是塞给你无关行业的线索。")+'</span>'
-     +'<span>'+T("真实环境会由数据源按关键词检索后返回结果。")+'</span>';
+    h='<span>'+T("档案关键词在当前真实名录中没有对应的品类族，因此这里保持为空，而不是塞给你无关行业的线索。")+'</span>'
+     +'<span>'+T("你可以把手上已有的客户 / 目标客户域名导入进来，平台会逐条真实探测可达性，连得上的才入池。")+'</span>';
   } else {
     const fams=esc(pool.m.fams.slice(0,3).map(f=>T(f.lab)).join(" / "));
     if(pool.leads.length===0){
-      h='<span>'+T("本原型未接入真实企业数据源，依据 ① 战略档案收敛后当前无可操作的真实采购方。真实环境由数据源按关键词检索后返回采购方线索。")+'</span>';
+      h='<span>'+T("依据 ① 战略档案收敛后，当前目标区域内没有名录企业。可放宽目标区域，或用「导入我自己的真实名单」把自备名单放进来。")+'</span>';
     } else {
-      h='<span>'+Tv("依据 ① 战略档案的主营关键词，已收敛到 {fams} 品类族，生成 {n} 家采购方 —— 即对这些品类存在实际采购需求的企业。",{fams:"<b>"+fams+"</b>",n:"<b>"+pool.leads.length+"</b>"})+'</span>'
+      h='<span>'+Tv("依据 ① 战略档案的主营关键词，已收敛到 {fams} 品类族、{n} 家采购方 —— 名录内均为真实注册主体，域名已实测可达（反爬 / 本机不通的会单独标注）。",{fams:"<b>"+fams+"</b>",n:"<b>"+pool.leads.length+"</b>"})+'</span>'
        +'<span>'+T("已剔除纯同业竞争者、上游供应商与无采购行为的企业。")+'</span>'
-       +'<span>'+T("本原型未接入真实数据源，所列企业与联系方式为占位、不对应真实主体；下方「未覆盖」标记代表该数据源尚未接入，并非无风险。")+'</span>';
+       +'<span>'+T("联系方式一律未收录：点「联系方式」可按公开渠道核验 L2，或自备录入 L3。「未覆盖」标记代表该层数据尚未接入，并非无风险。")+'</span>';
     }
   }
   el.innerHTML=h;
@@ -2086,10 +2131,13 @@ function exportRows(rows, fname){
     const chn=(chanById(l.chan||"registry")||{}).nm||"";
     const base=[l.nm,l.dm,l.region,l.ind,l.size,l.btype||"",chn,l.need||"",l.kw||"",l.why||"",
       l.match,l.risk,cov,c.role||"",c.cp||"",c.ce||""];
-    /* 2026-10-19 v51：补「L2 核验来源 / 核验日期」两列 —— 核验过的数据必须能追溯到出处 */
+    /* 2026-10-19 v51：补「L2 核验来源 / 核验日期」两列 —— 核验过的数据必须能追溯到出处。
+       2026-10-20 v59：没有使用者核验记录时，填**平台检索的来源页面与检索日期** ——
+       导出的每个电话 / 邮箱都得能点回官网核对，否则 CSV 就是一份无法验证的号码表。 */
     const l2=loadL2()[l.dm]||{};
-    /* v58：补「公司主页」= 实测可用的那条 URL（不是一律 https://） */
-    const tail=[o.site||l.url||"",c.src||l.src,l2.src||"",l2.at||""];
+    const pf=(window.FAL_L2||{})[l.dm]||{};
+    const tail=[o.site||l.url||"",c.src||l.src,
+      l2.src||l2SrcOf(l.dm)||"", l2.at||pf.at||""];
     /* ⚠️ 顺手修既有缺陷：未录 L3 的行原先只补 8 个空位，比表头少 2 列（备注 / 资料来源）→
        该行后面所有列整体前移、CSV 错位。补齐为 10 个空位。 */
     if(!ppl.length){ body.push(base.concat(["","","","","","","","","",""],tail).map(q).join(",")); return; }
@@ -2183,6 +2231,47 @@ function cRow(k,v,layer,naTxt,isSample,isOwn){const has=v&&String(v).trim();
     +(isSample&&has?'<span class="sflag">'+T("示例")+'</span>':'')
     +(isOwn&&has?'<span class="rflag">'+T("已录入")+'</span>':'')+'</span>'
     +lb(layer)+'</div>';}
+/* ================= L2 平台检索结果块（2026-10-20 v59）=================
+   L3 有合规边界（平台不抓取、不推断个人联系方式），所以 L2 必须做得扎实：
+     · 每条值后面都有「来源 ↗」—— 点开就是抓到它的那个官网页面，使用者可当场复核；
+     · 抓不到就明写「未检索到公开准确信息」，并按原因区分（反爬 / 官网未公开）；
+     · 没有来源的联系方式一律不进这块 —— 宁少不假。 */
+/* 平台检索结果的来源页（取第一条值的出处）—— 导出 / 追溯用 */
+function l2SrcOf(dm){
+  const f=(window.FAL_L2||{})[dm];
+  if(!f) return "";
+  const a=[].concat(f.phones||[],f.emails||[],f.addr||[]);
+  return (a[0]&&a[0].src)||"";
+}
+function l2NoteTxt(note, nPages){
+  if(!note) return "";
+  if(/反爬|拦截/.test(note)) return T("官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验");
+  if(/已读取官网/.test(note)) return Tv("已读取官网 {n} 个页面，未检索到公开职能联系方式",{n:String(nPages||0)});
+  return T("未检索到公开准确信息");
+}
+function l2FetchedBlock(f){
+  if(!f) return "";
+  function row(label, arr){
+    if(arr && arr.length){
+      return '<div class="l2f-row"><span class="k">'+T(label)+'</span><div class="vs">'
+        + arr.map(function(x){
+            return '<div class="vv"><b class="noi18n">'+esc(x.v)+'</b>'
+              + (x.src ? '<a class="vsrc" href="'+esc(x.src)+'" target="_blank" rel="noopener noreferrer">'+T("来源")+' ↗</a>' : '')
+              + '</div>';
+          }).join("")
+        + '</div></div>';
+    }
+    return '<div class="l2f-row"><span class="k">'+T(label)+'</span><span class="na">'+T("未检索到公开准确信息")+'</span></div>';
+  }
+  const rows = row("企业电话", f.phones) + row("职能邮箱", f.emails) + row("总部地址", f.addr);
+  const nt = l2NoteTxt(f.note, (f.pages||[]).length);
+  return '<div class="l2f"><div class="l2f-hd"><b>'+T("平台检索 · 官网公开信息")+'</b>'
+    + '<span class="at">'+Tv("检索于 {d}",{d:String(f.at||"—")})+'</span></div>'
+    + rows
+    + (nt ? '<div class="l2f-foot">'+nt+'</div>' : '')
+    + '<div class="l2f-foot">'+T("只收企业职能联系方式（总机 / 角色邮箱 / 公开地址）；姓名式邮箱与个人直线不收录 —— 那是 L3，平台不抓取、不推断。点「来源」即可在官网核对同一条值。")+'</div>'
+    + '</div>';
+}
 /* L3 行的两种形态 —— 空值不再是「灰掉的空白」，而是「待您录入」的行动召唤：
      ① 已录入 → 值 + 绿色「已录入 · 日期」角标（多次录入取最近一次日期）
      ② 未录入 → 「＋ 待您录入」按钮，点击跳到下方表单对应输入框并聚焦
@@ -2255,6 +2344,9 @@ function openCM(dm,nm,editIdxArg){
   const l=allLeads().find(x=>x.dm===dm)||{nm:nm||dm,dm:dm,region:"",ind:"",contact:"none"};
   const c=contactsOf(l); const own=loadOwn()[dm]||{}; const k=l.card||{};
   const l2own=loadL2()[dm]||null;   /* 使用者核验过的 L2：有值 → 不再挂「示例」角标 */
+  /* 2026-10-20 v59：平台自官网公开页检索到的 L2（真实值 + 逐条来源链接） */
+  const l2f=(window.FAL_L2||{})[dm]||null;
+  const l2fHas=!!(l2f && ((l2f.phones||[]).length || (l2f.emails||[]).length || (l2f.addr||[]).length));
   document.getElementById("cmName").textContent=l.nm;
   /* 2026-10-20 v57：示例线索不再把 `.example` 域名当副标题展示（会让人以为能点开/是真实公司），
      改显「示例样本 · 非真实主体」；真实线索照常显示域名。 */
@@ -2289,7 +2381,9 @@ function openCM(dm,nm,editIdxArg){
   /* ---- 档案完整度条：一眼看清「平台做什么 / 你做什么」 ---- */
   h+='<div class="covbar">'
     +'<div class="cv"><b>L1</b><span>'+T("公开信息 · 已覆盖")+'</span></div>'
-    +'<div class="cv"><b>L2</b><span>'+T("企业职能 · 待核验")+'</span></div>'
+    /* L2 状态随平台检索结果变化：检索到就点亮 —— 别再一律写「待核验」，
+       那会让使用者以为平台什么都没做（2026-10-20 v59） */
+    +'<div class="cv'+(l2fHas?' on':'')+'"><b>L2</b><span>'+T("企业职能")+' · '+(l2fHas?T("平台已检索"):T("待核验"))+'</span></div>'
     +'<div class="cv'+(nPeople?' on':'')+'"><b>L3</b><span>'+T("关系档案")+' · '+(nPeople?Tf("{n} 位联系人",{n:nPeople}):T("未录入"))+'</span></div>'
     +'</div>';
   if(cov==="none") h+='<div class="warnbox">'+T("该线索目前仅有域名（L1 公开信息）。企业职能联系方式（L2）请点下方「公开渠道核验」进入官方 / 权威公开查询入口查证后填入；个人联系方式（L3）平台不抓取、不推断，需您自备（名片 / 展会 / 客户留资）。「数据未覆盖」既不等于「不存在」，也不等于「无风险」。")+'</div>';
@@ -2309,6 +2403,8 @@ function openCM(dm,nm,editIdxArg){
     +'<div class="crow"><span class="k">线索渠道</span><span class="v">'+esc(chInfo?T(chInfo.nm):"—")+'</span>'+lb("L1")+'</div>'
     +'<div class="crow"><span class="k">命中依据</span><span class="v">'+esc(l.why||"—")+'</span>'+lb("L1")+'</div></div>';
   h+='<div class="csec"><h4><span>企业职能联系方式</span><span class="lay">'+lb("L2")+'</span></h4>'
+    /* 平台检索结果置顶：这是 L2 最有价值的部分（真实值 + 官网来源可点开复核） */
+    + (l2f ? l2FetchedBlock(l2f) : "")
     /* 职能窗口岗位 = 平台给出的「该找哪个岗位」（L2 职能情报），
        与下面 L3 区「对方职务」是两个不同的东西：前者是线索情报，后者是你实际对接的这个人的头衔。 */
     /* 使用者自己核验来的值**绝不挂「示例」角标** —— 那是他核到的真实数据，不是示例 */
