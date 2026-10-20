@@ -318,6 +318,22 @@
     text-decoration:none;color:#dff7f1;font-size:12.5px}
   .srcbtn:hover{border-color:rgba(94,234,212,.55);background:rgba(94,234,212,.10)}
   .srcn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* 2026-10-20 v56：L2「核到后填回」录入块 —— HTML 一直在用 .l2box / .l2ok / .fgrid，
+     但这三个类**从未定义过样式**，于是 label 与 input 退化成 inline 流：四个字段全挤在
+     同一行、输入框被压成一条缝、文字被裁切（2026-10-20 截图实证）。此处补齐，
+     视觉与下方 .cform（L3 录入）保持同一套语言。 */
+  .l2box{margin-top:10px;padding:11px 12px;border:1px solid var(--border);border-radius:11px;background:rgba(0,0,0,.16)}
+  .l2box.ok{border-color:rgba(52,211,153,.30);background:rgba(52,211,153,.06)}
+  .l2box .srct{margin-bottom:0}
+  .l2ok{font-size:11.5px;font-weight:700;color:var(--good);margin-bottom:8px}
+  .fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;margin-top:9px}
+  .fgrid label{display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--muted-2);min-width:0}
+  .fgrid input{width:100%;min-width:0;padding:9px 11px;border-radius:9px;border:1px solid var(--border);
+    background:rgba(0,0,0,.26);color:var(--ink);font-size:12.5px;font-family:inherit;outline:none}
+  .fgrid input::placeholder{color:rgba(126,154,160,.62)}
+  .fgrid input:focus{border-color:var(--border-2);box-shadow:0 0 0 3px rgba(94,234,212,.1)}
+  .fgrid .full{grid-column:1/-1}
+  .l2box .cfoot{margin-top:10px}
   .cbar{display:flex;gap:9px;flex-wrap:wrap;margin-top:2px}
   /* ---------- L3 多联系人（2026-10-19）----------
      一个客户可能有 1~4 位对接人（决策者/影响者/使用者/守门人）。
@@ -341,7 +357,7 @@
   /* 示例域名可能撞真实注册域名的提示（2026-10-16 加）：与上文同一盒子，但加一条分隔线，
      让「请勿据此发信」这句不会被读成上一句的附注。 */
   .samplebox .dmnwarn{margin-top:7px;padding-top:7px;border-top:1px solid rgba(94,234,212,.22);font-weight:600}
-  @media(max-width:520px){.cform{grid-template-columns:1fr}}
+  @media(max-width:520px){.cform{grid-template-columns:1fr}.fgrid{grid-template-columns:1fr}}
 
   @media(max-width:1180px){.layout{grid-template-columns:1fr}.lhead{display:none}.lrow{grid-template-columns:1fr 1fr;gap:8px}.lrow .co{grid-column:1/-1}}
   @media(max-width:780px){.sidebar{display:none}.topbar{flex-wrap:wrap}}
@@ -2140,7 +2156,11 @@ function openCM(dm,nm,editIdxArg){
         +'<div class="fgrid">'
         +'<label>'+T("企业电话")+'<input id="l2cp" value="'+esc((l2own&&l2own.cp)||"")+'" placeholder="+49 30 1234567" /></label>'
         +'<label>'+T("部门邮箱")+'<input id="l2ce" value="'+esc((l2own&&l2own.ce)||"")+'" placeholder="info@company.com" /></label>'
-        +'<label>'+T("职能窗口岗位")+'<input id="l2role" value="'+esc((l2own&&l2own.role)||(l.sample?role:""))+'" placeholder="'+esc(T("例：采购经理"))+'" /></label>'
+        /* 2026-10-20 v56：原来 `||(l.sample?role:"")` 会把平台的示例岗位（如「采购主管」）
+           直接预填进这个「核验录入」框 —— 既违反「不把预设内容放进使用者输入控件」，
+           也和上方「平台只存您核到的，不代填」自相矛盾：用户一按保存，示例值就变成
+           「他核验的 L2」。示例岗位已在上面「职能窗口岗位」展示行里给出，这里只接受自备。 */
+        +'<label>'+T("职能窗口岗位")+'<input id="l2role" value="'+esc((l2own&&l2own.role)||"")+'" placeholder="'+esc(T("例：采购经理"))+'" /></label>'
         +'<label class="full">'+T("核验来源 URL")+'<input id="l2src" value="'+esc((l2own&&l2own.src)||"")+'" placeholder="https://www.handelsregister.de/" /></label>'
         +'</div><div class="cfoot"><button class="mini" id="l2Save">'+T("保存核验结果")+'</button>'
         +(l2own?'<button class="mini ghost" id="l2Cancel">'+T("取消编辑")+'</button>':'')
