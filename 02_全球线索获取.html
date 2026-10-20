@@ -217,7 +217,9 @@
   .need{font-size:12.5px;color:var(--ink);font-weight:600;line-height:1.4}
   .need small{display:block;font-weight:500;font-size:10.5px;color:var(--muted-2);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;margin-top:2px}
-  .co .btline{margin-top:4px}
+  /* 2026-10-20 v57：两个 badge（采购方类型 + 线索渠道）原来直接 inline 相邻，
+     渲染成「制造商 (OEM/ODM)自备」粘成一串 —— 补 gap，允许换行。 */
+  .co .btline{margin-top:4px;display:flex;flex-wrap:wrap;gap:5px;align-items:center}
   .kwb{display:inline-block;font-size:10.5px;padding:2px 7px;border-radius:999px;margin-top:4px;
     background:rgba(245,184,65,.14);color:var(--gold);border:1px solid rgba(245,184,65,.28);font-weight:600}
   .needna{color:var(--muted-2);font-weight:500;font-style:italic}
@@ -334,6 +336,19 @@
   .fgrid input:focus{border-color:var(--border-2);box-shadow:0 0 0 3px rgba(94,234,212,.1)}
   .fgrid .full{grid-column:1/-1}
   .l2box .cfoot{margin-top:10px}
+  /* 2026-10-20 v57：导入真实线索 —— 逐条真实探测 HTTPS 可达性，只让「连得上」的入池 */
+  .imp-res{display:flex;flex-direction:column;gap:6px;margin-top:10px;max-height:190px;overflow:auto}
+  .imp-row{display:grid;grid-template-columns:74px minmax(0,1.05fr) minmax(0,1.25fr) auto;gap:9px;align-items:center;
+    font-size:12.5px;padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:rgba(0,0,0,.18)}
+  .imp-row.ok{border-color:rgba(52,211,153,.34);background:rgba(52,211,153,.07)}
+  .imp-row.bad{border-color:rgba(248,113,113,.30);background:rgba(248,113,113,.06)}
+  .imp-row .st{font-weight:700;white-space:nowrap}
+  .imp-row.ok .st{color:var(--good)}
+  .imp-row.bad .st{color:#f87171}
+  .imp-row .im-nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .imp-row .im-dm{color:var(--muted-2);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .imp-row .im-why{color:var(--muted-2);font-size:11px;white-space:nowrap;text-align:right}
+  .imp-prog{font-size:12px;color:var(--cyan);margin-top:9px}
   .cbar{display:flex;gap:9px;flex-wrap:wrap;margin-top:2px}
   /* ---------- L3 多联系人（2026-10-19）----------
      一个客户可能有 1~4 位对接人（决策者/影响者/使用者/守门人）。
@@ -488,6 +503,7 @@
         <span class="sub" id="count">共 0 家</span>
         <div class="spacer"></div>
         <span class="saved" id="savedTip" style="display:none">✓ 已加入管线</span>
+        <button class="btn ghost" id="impBtn">＋ 导入真实线索</button>
         <button class="btn ghost" id="cardBtn">＋ 名片建档</button>
         <button class="btn ghost" id="resetBtn">重置筛选</button>
         <button class="btn" id="exportBtn">导出管线 CSV</button>
@@ -683,6 +699,36 @@
       <div style="display:flex;gap:10px;justify-content:flex-end">
         <button class="btn ghost" data-card-close>取消</button>
         <button class="btn" id="kSave">建档并加入线索池</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 导入真实线索 · 逐条真实探测可达性（2026-10-20 v57） -->
+<div class="modal" id="impModal" hidden>
+  <div class="modal-mask" data-imp-close></div>
+  <div class="modal-box" role="dialog" aria-modal="true">
+    <div class="modal-h">
+      <div><b>导入真实线索</b><span class="mh-s">逐条真实探测 HTTPS 可达性 · 连不上的一律不入池</span></div>
+      <button class="modal-x" data-imp-close aria-label="关闭">✕</button>
+    </div>
+    <div class="modal-b">
+      <!-- 说明文字由 JS 用 T() 填充：整句带 <b> 会被切成多个文本节点，反查字典必失败 -->
+      <div class="cnote2" id="impLede"></div>
+      <div class="cnote2" id="impLede2" style="margin-top:6px"></div>
+      <div class="f2">
+        <div class="field"><label id="impBtypeLb">本批采购方类型</label><select class="inp" id="impBtype"></select></div>
+        <div class="field"><label id="impNeedLb">本批需求品类</label><input class="inp" id="impNeed" /></div>
+      </div>
+      <div class="field"><label id="impListLb">公司清单（每行一条）</label>
+        <textarea class="inp" id="impList" rows="6"></textarea>
+      </div>
+      <div class="hitnote" id="impNote" hidden></div>
+      <div class="imp-prog" id="impProg" hidden></div>
+      <div class="imp-res" id="impResult"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px">
+        <button class="btn ghost" data-imp-close>取消</button>
+        <button class="btn" id="impRun">开始验证并导入</button>
       </div>
     </div>
   </div>
@@ -1032,7 +1078,12 @@ function genLeads(fams, regions, hitsByFam, tokens){
         const pre = PRE[idx % PRE.length];
         const suf = f.suf[bi % f.suf.length];
         const nm  = pre + " " + suf;
-        const dm  = (pre + suf).toLowerCase().replace(/[^a-z0-9]/g,"") + "." + (geo[2] || "com");
+        /* 2026-10-20 v57：示例域名改用 RFC 2606 保留 TLD `.example`。
+           ⚠️ 旧写法 `<slug>.<国家 TLD>` 会拼出**看起来像真的、实际 100% 不存在**的域名
+           （2026-10-20 实测 10/10 NXDOMAIN），而弹窗与「公开渠道核验」还把它渲染成
+           可点外链 → 用户点开必然打不开，等于用假网址骗人。
+           `.example` 是 IANA 保留域，永远不解析，一眼可辨是示例，也不会误伤任何真实企业。 */
+        const dm  = (pre + suf).toLowerCase().replace(/[^a-z0-9]/g,"") + ".example";
         const cats = [f.lab];
         const a1 = adjFam(f.id, 0);
         if(a1 && cats.indexOf(a1.lab) === -1) cats.push(a1.lab);
@@ -1109,7 +1160,9 @@ const L2_ROLES = ["采购经理","采购总监","供应链经理","品类采购�
 function officialSources(l){
   const dm=(l&&l.dm)||"", nm=(l&&(l.nm||l.name))||dm;
   const out=[];
-  if(dm) out.push({nm:T("公司官网"), url:"https://"+dm, tag:"L1"});
+  /* 2026-10-20 v57：示例线索不再给「公司官网」链接。
+     它的域名是 `.example` 保留域，点开必然打不开 —— 给一个死链比不给更糟。 */
+  if(dm && !(l && l.sample)) out.push({nm:T("公司官网"), url:"https://"+dm, tag:"L1"});
   const list=REGISTRY[(l&&l.region)]||REGISTRY["*"];
   (list||[]).forEach(function(r){
     out.push({nm:r[0], url:r[1]+(r[2]?encodeURIComponent(nm):""), tag:"L2"});
@@ -1121,7 +1174,7 @@ function sampleL2(l){
   const h = hashStr(l.dm);
   /* 只保留「建议职能窗口」这一条职能情报（不冒充具体某个人的信息）；
      **假电话 / 假邮箱一律不再生成** —— 改由官方渠道直链引导使用者自行核验。 */
-  return { role: L2_ROLES[h % L2_ROLES.length], cp:"", ce:"", web:"https://"+l.dm, li:"", src:"" };
+  return { role: L2_ROLES[h % L2_ROLES.length], cp:"", ce:"", web:"", li:"", src:"" };
 }
 function contactsOf(l){
   const dm = (typeof l === "string") ? l : (l && l.dm);
@@ -1178,7 +1231,7 @@ function loadCards(){ try { return JSON.parse(localStorage.getItem(CARDKEY) || "
 function saveCards(a){ try { localStorage.setItem(CARDKEY, JSON.stringify(a)); } catch (e) {} }
 
 function importedLeads(){
-  return loadCards().map(c => ({
+  const cards = loadCards().map(c => ({
     nm:c.nm, dm:c.dm, flag:"🏳", region:c.region || "待确认", ind:c.ind || "待确认", size:"",
     match:null, risk:"na", contact:"L3", src:"展会名片（用户自备）",
     /* 名片建档一律归「自备」渠道：它不是平台检索来的，是使用者线下拿到的。
@@ -1189,11 +1242,26 @@ function importedLeads(){
     cats: (c.ind && c.ind !== "待确认") ? [c.ind] : [],
     card:c
   }));
+  /* 2026-10-20 v57：导入的真实线索（域名已实测 HTTPS 可达）——
+     与名片一样无条件并入，不随「按档案 / 全部池」范围变化，
+     因为它们是使用者自己明确要跟的名单，不是平台筛出来的。 */
+  const imps = loadImp().map(r => ({
+    nm:r.nm, dm:r.dm, flag:"🏳", region:r.region || "待确认", ind:r.ind || "待确认", size:"",
+    match:null, risk:"na",
+    /* 只有域名可达，没有拿到任何联系方式 → 只能算 L1 公开信息，不冒充 L2 */
+    contact:"L1", src:T("自备导入 · HTTPS 已验证可达"), imp:true,
+    chan:"own",
+    btype:r.btype || "待确认", need:r.need || "待确认", kw:"—",
+    why:Tv("自备名单 · 导入时实测 HTTPS 可达（{date}）",{date:r.at || ""}),
+    cats:[]
+  }));
+  return cards.concat(imps);
 }
-/* 当前范围内的线索 + 展会名片（名片永远并入，与范围无关） */
+/* 当前范围内的线索 + 自备名单（名片 / 导入的真实线索）——
+   自备名单永远并入、且排在最前：那是使用者自己明确要跟的，不该被平台侧筛选或范围藏起来。 */
 function allLeads(){
   const base = (state.scope === "all") ? LEADS : currentPool().leads;
-  return base.concat(importedLeads());
+  return importedLeads().concat(base);
 }
 
 /* 联系方式（合规分层 · 演示数据，不对应真实主体）
@@ -1570,6 +1638,14 @@ function kwHit(l, sel){
 }
 
 function pass(l){
+  const qOk = !state.q || (l.nm.toLowerCase().includes(state.q)||l.dm.toLowerCase().includes(state.q)||l.region.includes(state.q)||l.ind.toLowerCase().includes(state.q)
+    ||String(l.btype||"").toLowerCase().includes(state.q)||String(l.need||"").toLowerCase().includes(state.q)||String(l.kw||"").toLowerCase().includes(state.q));
+  /* 2026-10-20 v57：自备线索（展会名片 / 导入的真实线索）**不受平台侧筛选条件限制**。
+     它们是使用者自己明确要跟的名单，不是平台按档案筛出来的；若被关键词 / 行业 / 匹配度
+     过滤掉，就会出现「刚导入就看不见」的假失败 —— 用户会以为导入没成功。
+     只保留搜索框（q）这一个主动动作。 */
+  const selfOwned = !!l.card || !!l.imp;
+  if(selfOwned) return qOk;
   if(state.region.size && !state.region.has(l.region)) return false;
   /* 渠道多选 = 并集（选「展会」+「线上」= 这两个渠道的线索都要），
      与「区域 / 关键词 / 类别」的多选语义保持一致。 */
@@ -1582,8 +1658,7 @@ function pass(l){
   if(state.contact && l.contact!==state.contact) return false;
   if(state.match>0 && !(l.match!=null && l.match>=state.match)) return false;
   if(!state.risk.has(l.risk)) return false;
-  if(state.q && !(l.nm.toLowerCase().includes(state.q)||l.dm.toLowerCase().includes(state.q)||l.region.includes(state.q)||l.ind.toLowerCase().includes(state.q)
-    ||String(l.btype||"").toLowerCase().includes(state.q)||String(l.need||"").toLowerCase().includes(state.q)||String(l.kw||"").toLowerCase().includes(state.q))) return false;
+  if(!qOk) return false;
   return true;
 }
 
@@ -1710,7 +1785,9 @@ function render(){
   document.getElementById("count").innerHTML = state.searched
     ? "<span>"+T("共")+"</span> <b>"+view.length+"</b> <span>"+T("家")+"</span>"
     : "<span>"+T("尚未检索")+"</span>";
-  if(state.scope==="profile" && pool.mode==="empty"){
+  /* 有自备名单（名片 / 导入的真实线索）时不显示「尚未填写战略档案」引导框 ——
+     否则用户刚导入完就看不到自己的线索，会以为导入失败。 */
+  if(state.scope==="profile" && pool.mode==="empty" && !importedLeads().length){
     list.innerHTML='<div class="guidebox"><b>'+T("尚未填写 ① 战略档案")+'</b>'
       +'<span>'+T("线索池要按你的主营品类与目标区域收敛，必须先有档案。填好后这里会自动只出与你主营相关的采购方，不会混入无关行业。")+'</span>'
       +'<div style="margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
@@ -2077,7 +2154,12 @@ function openCM(dm,nm,editIdxArg){
   const c=contactsOf(l); const own=loadOwn()[dm]||{}; const k=l.card||{};
   const l2own=loadL2()[dm]||null;   /* 使用者核验过的 L2：有值 → 不再挂「示例」角标 */
   document.getElementById("cmName").textContent=l.nm;
-  document.getElementById("cmDom").innerHTML=[l.dm,l.region,l.ind,l.btype].filter(Boolean).map(function(x){return "<span>"+esc(x)+"</span>";}).join(" · ");
+  /* 2026-10-20 v57：示例线索不再把 `.example` 域名当副标题展示（会让人以为能点开/是真实公司），
+     改显「示例样本 · 非真实主体」；真实线索照常显示域名。 */
+  document.getElementById("cmDom").innerHTML=(l.sample
+      ? [T("示例样本 · 非真实主体"),l.region,l.ind,l.btype]
+      : [l.dm,l.region,l.ind,l.btype]
+    ).filter(Boolean).map(function(x){return "<span>"+esc(x)+"</span>";}).join(" · ");
   const role=c.role||"";                                   /* 职能窗口岗位 = L2（平台给出「该找哪个岗位」） */
   /* ⚠️ L2 与 L3 的值**绝不能互相顶替**（2026-10-15 v46 修）：
      · L2（企业电话 / 部门邮箱）= **平台字段** —— 目前只有示例线索由 sampleL2() 生成；
@@ -2131,9 +2213,12 @@ function openCM(dm,nm,editIdxArg){
     +cRow("职能窗口岗位",role,"L2",naL2,isSample&&!l2own)
     +cRow("企业电话",cp,"L2",naL2,isSample&&!l2own)
     +cRow("部门邮箱",ce,"L2",naL2,isSample&&!l2own)
-    /* 官网 = L1 公开信息。线索本身就有域名（弹窗副标题已显示该域名），
-       这一栏空着反而自相矛盾 → 直接用线索域名回填（示例域名，页脚已声明）。 */
-    +cRow("官网",c.web||l.dm,"L1","—")
+    /* 官网 = L1 公开信息。**真实线索**直接用其域名（可点开）。
+       示例线索例外：域名是 `.example` 保留域，展示出来只会让人以为能点开，
+       故改为说清「示例样本无真实官网」，域名只在内部做唯一键。 */
+    +(l.sample
+      ? cRow("官网","","L1",T("示例样本 · 无真实官网（域名 .example 仅为内部标识）"))
+      : cRow("官网",c.web||l.dm,"L1","—"))
     /* 公司主页（LinkedIn 等）= 唯一性地址，**无法确定性生成** —— 编一个极可能指向
        真实存在的其它公司页，比留空更糟。故：空态说清「平台待接入」，并允许使用者自行补录。 */
     +cRow("公司主页",osite,"L1",T("待数据源接入 · 可自行补录"),false,!!osite)
@@ -2400,6 +2485,159 @@ function closeCard(){cardModal.hidden=true;document.body.style.overflow="";}
 document.getElementById("cardBtn").onclick=openCard;
 document.querySelectorAll("[data-card-close]").forEach(b=>b.onclick=closeCard);
 cardModal.addEventListener("click",e=>{if(e.target===cardModal)closeCard();});
+
+/* ================= 导入真实线索 · 逐条真实探测可达性（2026-10-20 v57）=================
+   为什么要这个模块（用户 2026-10-20 质疑「网址根本连不上，要你何用」—— 成立）：
+   · 示例线索的公司名 / 域名是 `PRE + suf` 确定性拼出来的，2026-10-20 实测 10/10 NXDOMAIN，
+     「公司官网」点开必然打不开 —— 这是生成式假数据的原罪，不是文案能遮过去的。
+   · 平台没有企业名录数据源，凭空「生成真实公司」只能靠编。真实线索的唯一合法来源
+     是使用者自备（展会名录 / 平台询盘 / 海关数据 / 领英 / 老客户转介绍）。
+   · 所以这里只做两件**真实**的事：
+       ① 对使用者给的域名逐条发起真实 HTTPS 请求；
+       ② 只有真的连得上的才入池，连不上的逐条给原因、拒绝入池。
+   ⚠️ 边界：探测只能判断「连得上」，拿不到页面内容（浏览器 CORS 限制）——
+     绝不因此声称「已抓取 / 已核对业务」；L2 / L3 仍需使用者按公开渠道人工核验。 */
+const IMPKEY = "falcora_import_v1";
+function loadImp(){ try { return JSON.parse(localStorage.getItem(IMPKEY) || "[]") || []; } catch (e) { return []; } }
+function saveImp(a){ try { localStorage.setItem(IMPKEY, JSON.stringify(a)); } catch (e) {} }
+
+/* no-cors 拿不到响应体，但足以区分「有响应」与「连不上」（DNS 失败 / 证书错误 / 拒绝连接 / 超时） */
+function probeHttps(dm){
+  return new Promise(function(resolve){
+    var done=false, ctrl=(typeof AbortController!=="undefined")?new AbortController():null;
+    var timer=setTimeout(function(){
+      if(done) return; done=true;
+      if(ctrl){ try{ ctrl.abort(); }catch(e){} }
+      resolve({ok:false, why:T("超时（8 秒无响应）")});
+    }, 8000);
+    var opt={mode:"no-cors", cache:"no-store", redirect:"follow", referrerPolicy:"no-referrer"};
+    if(ctrl) opt.signal=ctrl.signal;
+    fetch("https://"+dm+"/", opt).then(function(){
+      if(done) return; done=true; clearTimeout(timer); resolve({ok:true});
+    }).catch(function(e){
+      if(done) return; done=true; clearTimeout(timer);
+      resolve({ok:false, why:(e&&e.name==="AbortError")?T("超时（8 秒无响应）"):T("连不上（域名不存在 / 证书错误 / 拒绝连接）")});
+    });
+  });
+}
+
+/* 每行：公司名, 域名 —— 也接受只有域名、或用制表符分隔 */
+function parseImpLines(txt){
+  var out=[], bad=[];
+  String(txt||"").split(/\r?\n/).forEach(function(raw){
+    var line=raw.trim(); if(!line) return;
+    var parts=line.split(/[,\t]/).map(function(s){return s.trim();}).filter(Boolean);
+    var nm="", dm="";
+    if(parts.length>=2){ nm=parts[0]; dm=parts[parts.length-1]; }
+    else { dm=parts[0]; }
+    dm=normDm(dm).replace(/[^a-z0-9.-]/g,"").replace(/^\.+|\.+$/g,"");
+    if(!/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(dm)){ bad.push(line); return; }
+    out.push({nm:nm||dm, dm:dm});
+  });
+  return {ok:out, bad:bad};
+}
+
+function impRowHTML(r){
+  return '<div class="imp-row '+(r.ok?"ok":"bad")+'">'
+    +'<span class="st">'+(r.ok?("✓ "+T("可达")):("✗ "+T("连不上")))+'</span>'
+    +'<span class="im-nm">'+esc(r.nm)+'</span>'
+    +'<span class="im-dm noi18n">'+esc(r.dm)+'</span>'
+    +'<span class="im-why">'+esc(r.ok?T("已入池"):(r.why||""))+'</span></div>';
+}
+
+let impBusy=false;
+async function runImport(){
+  if(impBusy) return;
+  const modal=document.getElementById("impModal");
+  const note=document.getElementById("impNote");
+  const prog=document.getElementById("impProg");
+  const box=document.getElementById("impResult");
+  const btn=document.getElementById("impRun");
+  const btype=document.getElementById("impBtype").value;
+  const need=document.getElementById("impNeed").value.trim();
+  const parsed=parseImpLines(document.getElementById("impList").value);
+  note.hidden=true; box.innerHTML="";
+
+  if(!parsed.ok.length){
+    note.hidden=false;
+    note.textContent = parsed.bad.length
+      ? "✗ "+T("没有可识别的域名。每行请写「公司名, 域名」或直接写域名，例：acme-machinery.com")
+      : "✗ "+T("清单是空的。请先粘贴至少一个域名。");
+    return;
+  }
+  /* 去重：本批内部 + 池内已有（名片 / 已导入 / 示例池都不重复入） */
+  const seen={}, uniq=[], dup=[];
+  parsed.ok.forEach(function(r){ if(seen[r.dm]) { dup.push(r); return; } seen[r.dm]=1; uniq.push(r); });
+  const exist={};
+  allLeads().forEach(function(l){ exist[normDm(l.dm)]=l; });
+
+  impBusy=true; btn.disabled=true; prog.hidden=false;
+  const rows=[], passed=[];
+  let i=0;
+  const total=uniq.length;
+  /* 并发完成顺序是乱的 —— 每次重排按输入顺序渲染，否则结果看起来像随机排列 */
+  const paint=function(){
+    box.innerHTML=rows.slice().sort(function(a,b){return a.idx-b.idx;}).map(impRowHTML).join("");
+  };
+  async function worker(){
+    while(i<total){
+      const k=i++; const r=uniq[k];
+      if(exist[r.dm]){ rows.push({idx:k, nm:r.nm, dm:r.dm, ok:false, why:T("已在池中，跳过")}); paint(); continue; }
+      prog.textContent=Tv("正在探测 {n} / {total} …",{n:k+1,total:total});
+      const res=await probeHttps(r.dm);
+      rows.push({idx:k, nm:r.nm, dm:r.dm, ok:res.ok, why:res.why});
+      paint();
+      if(res.ok) passed.push({nm:r.nm, dm:r.dm, at:new Date().toISOString().slice(0,10)});
+    }
+  }
+  await Promise.all([worker(),worker(),worker(),worker()]);
+
+  if(passed.length){
+    const imp=loadImp();
+    passed.forEach(function(p){
+      if(imp.some(function(x){ return x.dm===p.dm; })) return;
+      imp.push({nm:p.nm, dm:p.dm, at:p.at, btype:btype||"待确认", need:need||"待确认", region:"待确认", ind:"待确认"});
+    });
+    saveImp(imp);
+    /* 未检索时列表是引导态 —— 导入完必须让它可见，否则用户以为没成功 */
+    if(!state.searched) state.searched=true;
+    if(typeof render==="function") render();
+    if(typeof reportStats==="function") reportStats();
+  }
+  prog.textContent=Tv("验证完成：{a} 条可达已入池 / {b} 条未通过",{a:passed.length,b:total-passed.length})
+    +(dup.length?Tv("（另有 {n} 条重复已跳过）",{n:dup.length}):"");
+  if(parsed.bad.length){
+    note.hidden=false;
+    note.textContent=Tv("⚠ 有 {n} 行格式无法识别已跳过：",{n:parsed.bad.length})+parsed.bad.slice(0,3).join(" / ");
+  }
+  impBusy=false; btn.disabled=false;
+}
+
+function openImp(){
+  const m=document.getElementById("impModal");
+  /* 文案统一在这里用 T() 填 —— 含 <b> 的整句不能写在 HTML 里（会被拆成多个文本节点，反查字典失败） */
+  document.getElementById("impLede").textContent=T("每行一条：公司名, 域名（公司名可省略，直接用域名）。平台会真的去连一次，连不上的直接拒绝并说明原因 —— 不会给你一条打不开的网址。");
+  document.getElementById("impLede2").textContent=T("能连上的只证明「网站可达」，页面内容与联系方式仍需您按 L2 公开渠道自行核验。");
+  document.getElementById("impBtypeLb").textContent=T("本批采购方类型");
+  document.getElementById("impNeedLb").textContent=T("本批需求品类");
+  document.getElementById("impListLb").textContent=T("公司清单（每行一条）");
+  document.getElementById("impNeed").placeholder=T("例：精密结构件");
+  document.getElementById("impList").placeholder=T("Acme Machinery, acme-machinery.com\nNordic Precision, nordic-precision.dk\n只是域名也可以：summit-tools.com");
+  document.getElementById("impNote").hidden=true;
+  document.getElementById("impProg").hidden=true;
+  document.getElementById("impResult").innerHTML="";
+  m.hidden=false; document.body.style.overflow="hidden";
+  document.getElementById("impList").focus();
+}
+function closeImp(){
+  document.getElementById("impModal").hidden=true;
+  document.body.style.overflow="";
+}
+document.getElementById("impBtn").onclick=openImp;
+document.querySelectorAll("[data-imp-close]").forEach(b=>b.onclick=closeImp);
+document.getElementById("impModal").addEventListener("click",e=>{if(e.target===document.getElementById("impModal"))closeImp();});
+document.getElementById("impRun").onclick=runImport;
+BTYPES.forEach(function(t){ const o=document.createElement("option"); o.value=t; o.textContent=t; document.getElementById("impBtype").appendChild(o); });
 
 document.getElementById("cardDrop").onclick=()=>document.getElementById("cardFile").click();
 document.getElementById("cardFile").onchange=e=>{
