@@ -82,6 +82,9 @@
   .hero{display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center;padding:20px 24px;border-radius:var(--radius);
     border:1px solid var(--border);background:var(--panel);box-shadow:var(--shadow)}
   .hero .lg{width:64px;height:64px;border-radius:16px;background:rgba(94,234,212,.1);display:grid;place-items:center;font-size:30px;flex:0 0 auto}
+  /* 2026-10-21 v61：旗帜下方补国名（与 ② 列表同一口径，国名由 __falCountry 生成） */
+  .hero .lgwrap{display:flex;flex-direction:column;align-items:center;gap:5px;flex:0 0 auto}
+  .hero .lgwrap .cn{font-size:10.5px;line-height:1.2;color:var(--muted-2);text-align:center;max-width:78px;word-break:break-word}
   .hero h2{font-size:19px;font-weight:750;margin-bottom:4px}
   .hero .meta{font-size:13px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
   .hero .meta b{color:var(--ink)}
@@ -581,7 +584,10 @@ function realList(){
   Object.keys(l2).forEach(function(dm){ seen[dm]=1; });
   Object.keys(seen).forEach(function(dm){
     const rec=p[dm]||{}, own=o[dm]||{};
+    /* cc：管线记录可能只存了 flag（② 手动新增的记录就没有 cc）→ 用旗帜反推，
+       反推不到就是 ""，国名不显示 —— 不拿区域冒充国名。 */
     out.push({ dm:dm, nm:rec.nm||dm, flag:rec.flag||"",
+      cc:rec.cc || (window.__falCCof ? window.__falCCof(rec.flag) : ""),
       region:rec.region||"", ind:rec.ind||"", chan:rec.chan||"",
       btype:rec.btype||"", need:rec.need||"", kw:rec.kw||"",
       contact:rec.contact||"", src:rec.src||"", at:rec.at||0, own:own });
@@ -677,9 +683,11 @@ function renderReal(c){
     return {r:r, p:who};
   });
   const covered=slots.filter(function(x){ return x.p; }).length;
+  const cn=(window.__falCountry?window.__falCountry(c.cc||c.flag):"");
 
   document.getElementById("hero").innerHTML=
-    '<div class="lg">'+(c.flag||"🏳")+'</div>'+
+    '<div class="lgwrap"><div class="lg">'+(c.flag||"🏳")+'</div>'
+    +(cn?'<div class="cn noi18n" title="'+esc(cn)+'">'+esc(cn)+'</div>':'')+'</div>'+
     '<div><h2><span class="noi18n">'+esc(c.nm)+'</span></h2><div class="meta">'+
       '<span>'+esc(c.dm)+'</span>'+
       (c.region?'<span>· '+esc(V(c.region))+'</span>':'')+
@@ -809,7 +817,7 @@ function renderSample(dm){
   const ft=document.getElementById("footNote");
   if(ft) ft.textContent=T("演示数据 · 画像、决策链与痛点均为示例推断，需以真实访谈验证；不采集私人沟通内容。");
   document.getElementById("hero").innerHTML=`
-    <div class="lg">${c.flag}</div>
+    <div class="lgwrap"><div class="lg">${c.flag}</div>${(window.__falCountry&&window.__falCountry(c.flag))?`<div class="cn noi18n">${window.__falCountry(c.flag)}</div>`:''}</div>
     <div><h2>${c.nm}</h2><div class="meta"><span>${c.dm}</span><span>· <span>${c.region}</span> · <span>${c.ind}</span></span><span>· 联系人层级 <b>L2 职能</b></span></div></div>
     <div class="score"><b>${c.score}</b><small>深挖匹配度 / 100</small></div>`;
 

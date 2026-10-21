@@ -95,3 +95,73 @@
     return null;
   };
 })();
+
+/* ==========================================================================
+   国旗 / 国家名（② ⑤ 共用，2026-10-21 v61）
+   —— 起因（用户 2026-10-21）：「每一个客户的国旗下面最好标上国家名」。
+      只有一面旗，非该国的使用者认不出是哪国；旗下面补一行国名才真的可读。
+   —— 为什么用 Intl 而不是字典：
+      国名是**数据值**不是界面文案，39 个国家 × 10 语言 = 390 条字典，维护必漏；
+      `Intl.DisplayNames` 原生给出全部语言的规范国名（含繁體「美國」、阿语「الولايات المتحدة」），
+      且随浏览器语言数据自动更新。字典里没有的国名一旦漏翻，英文界面就会残留中文。
+   —— 为什么旗帜也在这里算：
+      旧版 `CC_FLAG` 只硬写了 16 个国家，而真实名录覆盖 39 国 → 一半企业显示白旗 🏳。
+      旗帜 emoji 本身就是「ISO 3166-1 alpha-2 → 两个区域指示符」的确定性映射，
+      任何合法两字母码都能算出来，不需要逐国维护。
+   ========================================================================== */
+(function () {
+  /* 非标准但常见的写法 → ISO 码（英国在数据里同时出现 UK / GB） */
+  var ALIAS = { UK: "GB", EL: "GR", AN: "NL", XK: "XK" };
+  function ccNorm(cc) {
+    cc = String(cc || "").trim().toUpperCase();
+    if (ALIAS[cc]) cc = ALIAS[cc];
+    return /^[A-Z]{2}$/.test(cc) ? cc : "";
+  }
+  /* ISO 码 → 旗帜 emoji（🏳 表示国家未知，绝不乱猜） */
+  window.__falFlagOf = function (cc) {
+    var c = ccNorm(cc);
+    if (!c) return "🏳";
+    return String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65, 0x1F1E6 + c.charCodeAt(1) - 65);
+  };
+  /* 旗帜 emoji → ISO 码（管线记录只存了 flag，没有 cc；反推回来才能取国名） */
+  window.__falCCof = function (flag) {
+    var cp = Array.from(String(flag || ""));
+    if (cp.length < 2) return "";
+    var a = cp[0].codePointAt(0), b = cp[1].codePointAt(0);
+    if (a < 0x1F1E6 || a > 0x1F1FF || b < 0x1F1E6 || b > 0x1F1FF) return "";
+    return String.fromCharCode(65 + a - 0x1F1E6, 65 + b - 0x1F1E6);
+  };
+  var L2L = { zh: "zh-CN", "zh-Hant": "zh-TW", en: "en-US", es: "es-ES", ja: "ja-JP",
+    fr: "fr-FR", de: "de-DE", ar: "ar-EG", vi: "vi-VN", hi: "hi-IN" };
+  /* 兜底国名（仅用于 Intl.DisplayNames 不可用的极老浏览器）；以简体为准，
+     其它语言走 Intl，不在这里堆 10 份。 */
+  var FALLBACK = { US: "美国", CA: "加拿大", MX: "墨西哥", BR: "巴西", CL: "智利", AR: "阿根廷",
+    GB: "英国", IE: "爱尔兰", DE: "德国", AT: "奥地利", CH: "瑞士", FR: "法国", IT: "意大利",
+    ES: "西班牙", PT: "葡萄牙", NL: "荷兰", BE: "比利时", LU: "卢森堡", DK: "丹麦", SE: "瑞典",
+    NO: "挪威", FI: "芬兰", PL: "波兰", CZ: "捷克", SK: "斯洛伐克", HU: "匈牙利", RO: "罗马尼亚",
+    SI: "斯洛文尼亚", GR: "希腊", TR: "土耳其", IL: "以色列", AE: "阿联酋", SA: "沙特阿拉伯",
+    ZA: "南非", JP: "日本", KR: "韩国", CN: "中国", HK: "中国香港", TW: "中国台湾", SG: "新加坡",
+    TH: "泰国", VN: "越南", MY: "马来西亚", ID: "印度尼西亚", PH: "菲律宾", IN: "印度",
+    AU: "澳大利亚", NZ: "新西兰", LI: "列支敦士登", RU: "俄罗斯", UA: "乌克兰" };
+  var DN = {};
+  function dnOf(loc) {
+    if (DN[loc] !== undefined) return DN[loc];
+    try { DN[loc] = new Intl.DisplayNames([loc], { type: "region" }); }
+    catch (e) { DN[loc] = null; }
+    return DN[loc];
+  }
+  /* 入参可以是 ISO 码、旗帜 emoji 或空；返回当前界面语言下的国名，未知则 "" */
+  window.__falCountry = function (ccOrFlag, lang) {
+    var cc = ccNorm(ccOrFlag) || window.__falCCof(ccOrFlag);
+    if (!cc) return "";
+    lang = lang || (window.__falGetLang ? window.__falGetLang() : "zh");
+    var dn = dnOf(L2L[lang] || lang);
+    if (dn) {
+      try {
+        var n = dn.of(cc);
+        if (n && n !== cc) return n;
+      } catch (e) { /* 非法码落到兜底表 */ }
+    }
+    return FALLBACK[cc] || cc;
+  };
+})();

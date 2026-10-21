@@ -180,7 +180,16 @@
   .lrow:hover{background:rgba(94,234,212,.04)}
   .lrow.dim{opacity:.34}
   .co{display:flex;align-items:center;gap:10px;min-width:0}
-  .co .flag{font-size:18px;flex:0 0 auto}
+  /* 2026-10-21 v61：旗帜下方补一行国名（用户：「每一个客户的国旗下面最好标上国家名」）。
+     —— 单独一面旗，非该国的使用者认不出是哪国；国名才是可读信息。
+     —— 列宽固定 56px：既容得下「阿拉伯联合酋长国」这类长名换两行，
+        又不会因为国名长短不同让整列公司名左右跳动。
+     —— 国名由 Intl.DisplayNames 按界面语言生成（见 app-vals.js __falCountry），
+        包 .noi18n 防止反查字典把国名当界面文案再翻一次。 */
+  .co .flagbox{display:flex;flex-direction:column;align-items:center;gap:3px;flex:0 0 auto;width:58px;text-align:center}
+  .co .flag{font-size:19px;line-height:1.05}
+  .co .ccnm{font-size:10.5px;line-height:1.2;color:var(--muted);letter-spacing:0;max-width:58px;font-weight:500;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
   .co .nm{font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .co .dm{font-size:11px;color:var(--muted-2)}
   /* 2026-10-20 v58：域名做成可点链接，指向**实测能打开的那条 URL**（不是拼 https://）。
@@ -267,6 +276,9 @@
   .vrow{display:flex;align-items:center;gap:9px;font-size:12.5px}
   .vrow .lab{flex:1;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .vrow b{font-variant-numeric:tabular-nums}
+  /* 覆盖率百分比（2026-10-21 v61）：L2 覆盖那行末尾的小字 */
+  .vrow .vpct{font-size:11px;color:var(--cyan);background:rgba(56,189,248,.12);
+    border:1px solid rgba(56,189,248,.28);border-radius:5px;padding:0 5px;white-space:nowrap}
   .vok{color:var(--good);font-weight:700}
   .vwarn{color:var(--warn);font-weight:700}
   .vna{color:var(--muted-2);font-weight:700}
@@ -470,6 +482,9 @@
   .l2f-row .vv b{font-weight:600;font-size:12.5px;color:var(--ink);word-break:normal;overflow-wrap:break-word}
   .l2f-row .vv a.vsrc{font-size:10px;color:#7DD3FC;text-decoration:none;border:1px solid rgba(56,189,248,.3);border-radius:5px;padding:1px 5px;white-space:nowrap}
   .l2f-row .vv a.vsrc:hover{background:rgba(56,189,248,.12)}
+  /* 区域站标记：金色小徽章（与「示例」同一视觉语言，但语义不同 —— 这是「值来自哪一站」） */
+  .l2f-row .vv .locb{font-size:10px;line-height:1.5;color:var(--warn);background:rgba(245,184,65,.13);
+    border:1px solid rgba(245,184,65,.3);border-radius:5px;padding:0 5px;white-space:nowrap}
   .l2f-row .na{font-size:11.5px;color:var(--muted-2)}
   .l2f-foot{margin-top:7px;font-size:10.5px;color:var(--muted-2);line-height:1.55}
   .csec.l3sec{border-color:rgba(52,211,153,.26);background:rgba(52,211,153,.05)}
@@ -1209,7 +1224,10 @@ function realToLead(r, f, kw){
   const a1 = adjFam(f.id, 0);
   if(a1 && cats.indexOf(a1.lab) === -1) cats.push(a1.lab);
   return {
-    nm:r.nm, dm:r.dm, url:r.url||("https://"+r.dm), flag:CC_FLAG[r.cc]||"🏳",
+    nm:r.nm, dm:r.dm, url:r.url||("https://"+r.dm),
+    /* 旗帜由 ISO 码推导（app-vals.js __falFlagOf）——旧版 CC_FLAG 只硬写 16 国，
+       真实名录 39 国 → 一半企业白旗。推导是确定性的，任何合法码都有旗。 */
+    flag:(window.__falFlagOf ? window.__falFlagOf(r.cc) : (CC_FLAG[r.cc]||"🏳")),
     region:r.region, ind:r.ind||f.ind, size:"",
     match:null, risk:"na",
     /* 只有 L1 公开信息（公司 / 官网 / 国家）—— 没有任何联系方式，绝不冒充 L2 */
@@ -1555,6 +1573,9 @@ function addToPipe(l){
      手动新增的记录没有 flag，地图回退到区域锚点。 */
   m[l.dm] = { dm:l.dm, nm:l.nm||l.dm, region:l.region||"", ind:l.ind||"",
               flag:l.flag||"",
+              /* cc（ISO 国家码，L1 公开信息）：⑤ 深挖页要在旗子下面显示国名，
+                 存下来比每次从 emoji 反推更稳（手动新增的记录本来就没有 flag）。 */
+              cc:l.cc || (window.__falCCof ? window.__falCCof(l.flag) : ""),
               btype:l.btype||"", need:l.need||"", kw:l.kw||"",
               chan:l.chan||"",   /* 线索渠道：用于复盘「哪个渠道来的客户成交率高」 */
               contact:l.contact||"", src:"② 线索池", at:Date.now() };
@@ -2063,8 +2084,11 @@ function render(){
       const kwTxt = (l.card || l.imp)
         ? l.kw
         : String(l.kw||"").split(/[,，、]/).map(function(t){ return T(t.trim()); }).filter(Boolean).join(T("、"));
+      /* 国名：有 cc 用 cc（最准），没有就用旗帜反推（管线 / 名片记录只存了 flag）。
+         两者都推不出（🏳）→ 不显示，绝不拿「区域」冒充国名。 */
+      const cnm = window.__falCountry ? window.__falCountry(l.cc || l.flag) : "";
       return `<div class="lrow">
-        <div class="co"><span class="flag">${l.flag}</span><div style="min-width:0"><div class="nm" data-cm="${l.dm}" data-nm="${l.nm}" title="点击查看联系方式与命中依据">${l.nm}</div>${l.sample?'<span class="sflag" title="示例样本 · 公司名由系统按品类确定性生成，不对应任何真实企业">示例</span>':''}${dmHTML}<div class="dm2"><span>${l.region}</span><span> · </span><span>${l.ind}</span>${szTxt?`<span> · </span><span>${szTxt}</span>`:''}</div><div class="btline"><span class="badge b-bt">${l.btype||'—'}</span>${chBadge}</div>${hint?`<button class="link-co" data-cm="${l.dm}" data-nm="${l.nm}" title="${esc(Tf("已录入 {n} 位联系人",{n:ppl.length}))}">☎ ${esc(hint)}${more}</button>`:''}</div></div>
+        <div class="co"><span class="flagbox"><span class="flag">${l.flag||"🏳"}</span>${cnm?`<span class="ccnm noi18n" title="${esc(cnm)}">${esc(cnm)}</span>`:''}</span><div style="min-width:0"><div class="nm" data-cm="${l.dm}" data-nm="${l.nm}" title="点击查看联系方式与命中依据">${l.nm}</div>${l.sample?'<span class="sflag" title="示例样本 · 公司名由系统按品类确定性生成，不对应任何真实企业">示例</span>':''}${dmHTML}<div class="dm2"><span>${l.region}</span><span> · </span><span>${l.ind}</span>${szTxt?`<span> · </span><span>${szTxt}</span>`:''}</div><div class="btline"><span class="badge b-bt">${l.btype||'—'}</span>${chBadge}</div>${hint?`<button class="link-co" data-cm="${l.dm}" data-nm="${l.nm}" title="${esc(Tf("已录入 {n} 位联系人",{n:ppl.length}))}">☎ ${esc(hint)}${more}</button>`:''}</div></div>
         <div class="need">${needNA?'<span class="needna">待验证</span>':esc(l.need)}<small title="${esc(l.why||'')}">${esc(l.why||'')}</small>${needNA?'':'<span class="kwb"><span>命中：</span><span class="noi18n">'+esc(kwTxt)+'</span></span>'}</div>
         <div class="mbar">${l.match==null?'<span class="vna">待核查</span>':`<div class="bar"><i style="width:${l.match}%"></i></div><b>${l.match}</b>`}</div>
         <div><span class="badge ${riskCls}">${riskTxt}</span></div>
@@ -2097,6 +2121,10 @@ function render(){
   paintSearchState(view.length);
   renderRegionDist(view);
   updateFunnel();
+  /* 2026-10-21 v61：验证面板必须跟着当前池子重算。
+     旧版只在首屏与切语言时调 runVerify() → 检索出 398 家之后面板还挂着全 0，
+     等于「面板说没覆盖、弹窗里明明有电话」，自相矛盾。 */
+  try { runVerify(); } catch (e) {}
   reportStats();   /* 池子规模/范围变化 → 同步给驾驶舱 KPI（签名不变则不写盘） */
 }
 
@@ -2362,11 +2390,23 @@ function l2NoteTxt(note, nPages){
 }
 function l2FetchedBlock(f){
   if(!f) return "";
+  /* 区域站标记（2026-10-21 v61）：抓取机会被全球站按 IP 地理跳转到区域站
+     （puma.com → ph.puma.com、samsung.com → /ph/），拿到的是**该企业区域站的**
+     真实公开电话，不是总部。标出来让使用者自己判断该不该打 —— 不删值，也不冒充总部。 */
+  function locChip(loc){
+    if(!loc) return "";
+    const cn = window.__falCountry ? window.__falCountry(loc) : "";
+    const fl = window.__falFlagOf ? window.__falFlagOf(loc) : "";
+    return '<span class="locb noi18n" title="'+esc(cn||loc)+'">'+esc((fl?fl+" ":"")+loc)+'</span>';
+  }
+  let hasLoc = false;
   function row(label, arr){
     if(arr && arr.length){
       return '<div class="l2f-row"><span class="k">'+T(label)+'</span><div class="vs">'
         + arr.map(function(x){
+            if(x.loc) hasLoc = true;
             return '<div class="vv"><b class="noi18n">'+esc(x.v)+'</b>'
+              + locChip(x.loc)
               + (x.src ? '<a class="vsrc" href="'+esc(x.src)+'" target="_blank" rel="noopener noreferrer">'+T("来源")+' ↗</a>' : '')
               + '</div>';
           }).join("")
@@ -2379,6 +2419,7 @@ function l2FetchedBlock(f){
   return '<div class="l2f"><div class="l2f-hd"><b>'+T("平台检索 · 官网公开信息")+'</b>'
     + '<span class="at">'+Tv("检索于 {d}",{d:String(f.at||"—")})+'</span></div>'
     + rows
+    + (hasLoc ? '<div class="l2f-foot">'+T("带国旗标记的值来自该企业的区域站点（不是总部），点「来源」可核对原页面。")+'</div>' : '')
     + (nt ? '<div class="l2f-foot">'+nt+'</div>' : '')
     + '<div class="l2f-foot">'+T("只收企业职能联系方式（总机 / 角色邮箱 / 公开地址）；姓名式邮箱与个人直线不收录 —— 那是 L3，平台不抓取、不推断。点「来源」即可在官网核对同一条值。")+'</div>'
     + '</div>';
@@ -2742,22 +2783,43 @@ function runVerify(){
   all.forEach(l=>{const c=contactsOf(l),o=own[l.dm]||{},k=l.card||{};
     const t=String(o.phone||k.tel||c.cp||"").trim(); if(!t) return; tN++; if(TEL_RE.test(t.replace(/[\s-]/g,""))) tOk++;});
 
-  /* 4) 联系可用性分层 */
-  const lyr={L1:0,L2:0,L3:0,none:0};
-  all.forEach(l=>{lyr[l.contact]=(lyr[l.contact]||0)+1;});
-  /* 5) L3 建档进度（使用者自备的关系资产 —— 只统计本机 falcora_contacts_v1 里真实录入的） */
-  const l3done=all.filter(l=>l3Count(own[l.dm])>0).length;
+  /* 4) 联系可用性分层（2026-10-21 v61 修正口径）
+     ⚠️ 旧写法数的是 `l.contact` —— 那是**线索自带的静态标注**，真实名录一律是 "L1"，
+     而平台后来从官网检索到的 L2（data-l2-contacts.js）根本不计入 →
+     面板永远显示「L2 0 / 未覆盖 0」，与弹窗里明明有电话邮箱自相矛盾。
+     现在按**实际能不能拿到联系方式**统计：L2 看 contactsOf 的结果（含平台检索），
+     L3 看本机 people，两者都没有才算未覆盖。 */
+  let nL2 = 0, nL2p = 0, nL2e = 0, nL3 = 0, nNone = 0;
+  all.forEach(function (l) {
+    const c = contactsOf(l);
+    const hasP = !!(String(c.cp || "").trim());
+    const hasE = !!(String(c.ce || "").trim());
+    const hasL2 = hasP || hasE;
+    const hasL3 = peopleOf(own[l.dm]).length > 0;
+    if (hasL2) nL2++;
+    if (hasP) nL2p++;
+    if (hasE) nL2e++;
+    if (hasL3) nL3++;
+    if (!hasL2 && !hasL3) nNone++;
+  });
+  const lyr = { L2: nL2, L3: nL3, none: nNone };
+  /* 5) L3 建档进度（使用者自备的关系资产 —— 只统计本机 falcora_contacts_v1 里真实录入的）
+     v61：原「已录入 L3 关系档案（线索 / 字段）」与「L3 自备联系人」是同一件事的两种数法，
+     并排显示两个 0 看着像 bug → 合并为一行「L3 自备联系人（企业 / 字段）」= nL3 / l3items。 */
   const l3items=all.reduce((s,l)=>s+l3Count(own[l.dm]),0);
 
   const uniq=Object.keys(byDm).length;
   const el=document.getElementById("vfyBody");
+  const pct = all.length ? Math.round(nL2 / all.length * 100) : 0;
   el.innerHTML=
     '<div class="vrow"><span class="lab">线索总数 / 唯一主体</span><b>'+all.length+' / '+uniq+'</b></div>'+
     '<div class="vrow"><span class="lab">疑似重复（域名或公司名）</span>'+(dups.length?'<span class="vwarn"><b>'+dups.length+'</b><span> 条</span></span>':'<span class="vok">0 条</span>')+'</div>'+
     '<div class="vrow"><span class="lab">邮箱格式通过 / 免费邮箱 / 疑似无效</span><b>'+mOk+' / '+mFree+' / '+mBad+'</b></div>'+
     '<div class="vrow"><span class="lab">电话 E.164 合规</span><b>'+tOk+' / '+tN+'</b></div>'+
-    '<div class="vrow"><span class="lab">L2 职能联系 / L3 自备 / 未覆盖</span><b>'+lyr.L2+' / '+lyr.L3+' / '+lyr.none+'</b></div>'+
-    '<div class="vrow"><span class="lab">已录入 L3 关系档案（线索 / 字段）</span><b>'+l3done+' / '+l3items+'</b></div>'+
+    '<div class="vrow"><span class="lab">L2 企业职能联系覆盖</span><b>'+nL2+' / '+all.length+'</b><span class="vpct">'+pct+'%</span></div>'+
+    '<div class="vrow"><span class="lab">其中 电话 / 部门邮箱</span><b>'+nL2p+' / '+nL2e+'</b></div>'+
+    '<div class="vrow"><span class="lab">L3 自备联系人（企业 / 字段）</span><b>'+nL3+' / '+l3items+'</b></div>'+
+    '<div class="vrow"><span class="lab">两者皆无（未覆盖）</span><b>'+nNone+'</b></div>'+
     '<div class="vbar"><i style="width:'+(all.length?Math.round((mOk+mFree+mBad)/all.length*100):0)+'%"></i></div>'+
     '<div class="cnote2">邮箱与电话<b>只做格式与域名一致性校验</b>；未接入 MX 查询与实投验证前，一律标「未验证」，<b>不标「有效」</b>。</div>'+
     (dups.length?'<div class="duplist">'+dups.slice(0,4).map((d,i)=>
@@ -3064,6 +3126,12 @@ document.getElementById("peSave").onclick = function(){
   closePipeEdit();
   afterPipeChange(pipeEditDm ? "已更新管线商机" : "已新增管线商机");
 };
+
+/* 语言切换后重绘列表（2026-10-21 v61）
+   国名由 Intl.DisplayNames 按界面语言生成，且包了 .noi18n（防止反查字典把国名
+   当界面文案再翻一次）。.noi18n 的代价是**引擎不会就地改它** → 必须自己重绘，
+   否则切成英文后旗子下面的国名还停在中文。render() 幂等，只重建列表 DOM。 */
+if (window.__falOnRefresh) window.__falOnRefresh(function(){ try { render(); } catch(e){} });
 </script>
 <script src="app-update.js"></script>
 <script src="app-nav.js"></script>

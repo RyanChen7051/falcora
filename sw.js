@@ -680,7 +680,64 @@
            Stanley Black & Decker / Dräger / Phocos / DHL）—— 域名真实、本机网络确实连不上
            （python3.13 实测 SSL EOF / 超时 / 403），已用红虚线 + 悬停说明 + 行内「命中依据」
            三重标注，**没有把它们伪装成可达**。 */
-const CACHE = 'falcora-v60';
+
+/* ── v61（2026-10-21）：L2 覆盖率扩大 + 国旗下方国名 ──────────────────────────
+   A. 国旗下面标国名（用户直接提出的需求）
+     · 原来线索列表只显示一面国旗 emoji，非该国使用者根本认不出是哪个国家。
+       现在 `.co` 改成 58px 竖排 `flagbox`：上排 19px 旗帜、下排 10.5px 国名（两行 clamp，
+       超长自动省略）。⑤ 客户深挖页 hero 同样加了 `lgwrap > .cn`。
+     · 国名**不靠字典硬堆**：新增 `app-vals.js` 的 `__falCountry(ccOrFlag, lang)`，
+       走 `Intl.DisplayNames({type:"region"})` 按当前界面语言实时本地化，覆盖 10 语言；
+       只有 Intl 不可用时才落到 50+ 国简中兜底表。国名节点带 `.noi18n`，避免引擎二次改写。
+     · 旗帜改为**全量确定性推导**：`__falFlagOf(cc)` = ISO 3166-1 alpha-2 两个字母
+       → 两个 Regional Indicator 码点（`0x1F1E6 + c - 65`）。旧 `CC_FLAG` 只手写了 16 国，
+       其余国家全渲染成白旗 🏳（实测 398 行里一半是白旗）→ 现在 **398 行 0 白旗**。
+       另加 `__falCCof(flag)` 反向推导，`addToPipe` / `realList` 补 `cc` 字段，
+       让 ⑤ 页即使只有旗帜也能取出国名。
+     · 切语言不 reload 也重绘：文末注册 `__falOnRefresh(render)`。
+
+   B. L2 企业职能联系方式：169 → 398 条记录（与真实名录 398 家一一对应），有值 186 家（47.8%）
+     · 抓取器 `scripts/fetch_l2.js` 三处放宽（都是「原来明明有、只是没被识别」）：
+       ① 候选联系页路径 21 → 60+ 条，补多语种（/contacto /contatti /contactez-nous
+          /contacteer-ons /contato /kontakta-oss /ota-yhteytta）、`/` 结尾变体、`.php` 变体；
+       ② 角色邮箱判定从「正则」改为**按分隔符切词逐词判定**：
+          `ROLE_WORDS`（info/sales/contact/hr/...）命中 + 其余词必须是 `SAFE_QUAL`
+          （team/office/de/uk/us/emea/gmbh/ag/inc...）或纯序号，且总词数 ≤3。
+          于是 `sales.uk` / `info.de` / `service.emea` / `sales-uae` / `info1` 收；
+          `john.smith` / `info.smith` / `m.kowalski` / `bob` 拒（16/16 单测通过）；
+       ③ 新增**二次跳转**：第一轮零结果时，从已抓页面里再挑最多 3 个同域联系类链接抓一轮。
+     · 单轮补抓 274 家 → 81 家取到值。
+     · 9 家 `reach=0`（官网反爬 / 本机网络拦截）**补记 note-only 记录**（`scripts/add_l2_unreachable.js`）：
+       原来这 9 家连记录都没有 → 弹窗一片空白，使用者分不清「平台没做」还是「做了拿不到」。
+       2026-10-21 逐条复测：leupold / sightron / ior.ro / bulgin 为 SSL 握手失败（curl exit 35），
+       molex / stanleyblackdecker / draeger / dhl 为 HTTP/2 协议错误（curl exit 92），phocos 返回 403。
+       记录里只写「官网反爬或网络拦截，未能自动读取」，**不含任何号码 / 邮箱 / 地址**。
+       → 记录数 389 → **398**，与名录分母严格对齐；有值 186 + 无值 212 = 398。
+     · 数据清洗三层（`scripts/fix_l2_trunk.js`）：
+       ① 干线前缀 (0)：`+49 (0) 202 …` → `+492024…`（意大利 +39 / 梵蒂冈 +378 例外，保留 0）；
+       ② 记录内按纯数字去重（同一号码不同写法只留一条）；
+       ③ 删「重复块开头」假号（`/^(\d{3,4})\1/`，如 `+123123456789`）。终态 dup 0 / junk 0。
+     · 区域站标注（`scripts/annotate_l2_locale.js`）：抓取机在亚太，全球站会按 IP 跳区域站
+       （puma.com → ph.puma.com），值是真的但**不是总部**。不删值，改标 `loc` 国家码
+       （电话看国际冠号最长匹配，邮箱/地址看 ccTLD > 主机首标签 > 路径首段；与公司 cc 相同则不标），
+       共 **114 条**被标注。UI 用金色徽章 + 脚注说明「带国旗标记的值来自该企业的区域站点（不是总部）」。
+     · 覆盖率面板口径修正（截图抓到的自相矛盾）：旧版只数静态 `l.contact` 字段，
+       永远显示 `L2 0 / 未覆盖 0`，与实际能拿到联系方式的企业数完全对不上。
+       改为按 `contactsOf()` 实际结果统计，拆成四行：L2 覆盖（带百分比徽章）/ 其中电话·部门邮箱 /
+       L3 自备联系人 / 两者皆无（未覆盖），并在 `render()` 末尾重算，池子一变面板就跟着变。
+       实测：**L2 186 / 398（47%）· 电话 180 · 部门邮箱 70 · 未覆盖 212**。
+     · 面板去重（截图二次确认时发现）：原「已录入 L3 关系档案（线索 / 字段）」与新增的
+       「L3 自备联系人」数的是同一件事（`l3Count>0` 与 `peopleOf().length>0`），并排两个 0 像 bug
+       → 合并为一行「L3 自备联系人（企业 / 字段）」= `nL3 / l3items`，旧行与 `l3done` 变量一并删除。
+     · 字典 +5 键（区域站说明、L2 覆盖、其中电话/邮箱、L3 自备、L3 自备（企业/字段）、两者皆无）
+       → **2659 键**，bad 0。
+     · 验证 `scripts/verify_v61.js`：**14/14**（中文态 398 行全有国名 / 零白旗 / 英文态零汉字残留 /
+       切语言不 reload 重绘 / 弹窗 4 个 🇵🇭 PH 区域标记 + 脚注 / ⑤ 页 hero「美国」「奥地利」/ 零 JS 异常）。
+       ⚠️ 注意：SW 的 PRECACHE 会缓存 `data-l2-contacts.js`，验证脚本必须先 unregister SW + 清 caches，
+       只设 `Network.setCacheDisabled` 不够，否则读到旧数据。
+     · 截图 `scripts/shot_v61.js` → `_shots/v61_20261021/`（中/英态国名、⑤ 页 hero）。
+       1440 / 1180 / 900 / 390 四宽度实测无溢出。 */
+const CACHE = 'falcora-v61';
 const PRECACHE = [
   './',
   './app-design.css?v=3',
