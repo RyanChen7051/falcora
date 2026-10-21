@@ -421,6 +421,10 @@
   /* 2026-10-15 新增：类别 / 关键词筛选 chips + 示例（非真实）样本 */
   .chip.dim{opacity:.55;cursor:default;border-style:dashed;background:transparent}
   .chip.dim:hover{border-color:var(--border);background:transparent}
+  /* 「还有 N 个 · 展开」—— 27 族扩张后关键词从 40 个涨到几百个，
+     不收起的话整屏全是 chip，线索列表被挤到看不见。 */
+  .chip.more{border-style:dashed;color:var(--muted);background:transparent;font-weight:600}
+  .chip.more:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(94,234,212,.06)}
   .scopebar.sample{background:linear-gradient(100deg,rgba(245,184,65,.14),rgba(245,184,65,.04));border-color:rgba(245,184,65,.45)}
   .scopebar.sample .sb-ic{background:rgba(245,184,65,.2);color:var(--gold)}
   .scopebar.sample .sb-t{color:var(--gold)}
@@ -969,7 +973,64 @@ const FAM = [
     b:[["品牌商","外包服务 · 项目合作","专业服务","官网公开合作与供应商入口"],
        ["工程商 / 项目方","项目服务 · 分包","项目服务","公开中标项目，分包为常态"],
        ["采购代理 / 贸易","服务采购 · 代理","服务采购","公开采购部门职能邮箱"],
-       ["系统集成商","集成服务 · 分包","集成服务","公开集成项目案例"]]}
+       ["系统集成商","集成服务 · 分包","集成服务","公开集成项目案例"]]},
+
+  /* ================= v60 新增 12 族（2026-10-21）=================
+     定位修正：L1/L2 服务的是**各个出口行业的中小企业**，不是某一行业。
+     原 15 族里 optics 39 家 + tactical 28 家 = 27%，是种子取自单一行业的历史包袱。
+     这里只补广度，不动任何已有条目（价值只能提升）。
+     ⚠️ suf / b 自 v58 起已不再用于生成公司名（真实名录取代），保留空数组只为结构一致，
+        绝不填任何「编造后缀 / 编造采购描述」。
+     ⚠️ kw 只收本族特有词：鞋类不收「运动鞋」（留给 sports）、运动不收「户外」（留给 tactical），
+        否则同一个词会让两个族同时命中，把分组语义搅乱。 */
+  { id:"furniture", lab:"家居 / 家具", ind:"家居家具", cat:["消费品/快消","其他"],
+    suf:[], b:[],
+    kw:["家具","家居","沙发","床垫","橱柜","桌椅","软装","床架","衣柜","餐桌","办公家具","木制家具","板式家具"],
+    mk:["北美","欧盟","中东","东南亚","东亚"]},
+  { id:"lighting", lab:"照明 / 灯具", ind:"照明灯具", cat:["电子/电气","其他"],
+    suf:[], b:[],
+    kw:["照明","灯具","灯饰","吊灯","射灯","筒灯","路灯","台灯","光源","灯带","轨道灯","户外灯"],
+    mk:["北美","欧盟","中东","东南亚","东亚"]},
+  { id:"toys", lab:"玩具 / 母婴", ind:"玩具母婴", cat:["消费品/快消","其他"],
+    suf:[], b:[],
+    kw:["玩具","积木","拼图","模型","娃娃","母婴","婴儿","儿童","奶瓶","婴儿车","桌游","蜡笔"],
+    mk:["北美","欧盟","中东","东南亚","东亚"]},
+  { id:"footwear", lab:"鞋类 / 箱包", ind:"鞋类箱包", cat:["纺织/服装","消费品/快消"],
+    suf:[], b:[],
+    kw:["鞋","靴","拖鞋","凉鞋","皮鞋","箱包","背包","行李箱","手袋","皮具","拉杆箱","女包"],
+    mk:["北美","欧盟","中东","东南亚","东亚"]},
+  { id:"sports", lab:"运动 / 健身", ind:"运动健身", cat:["消费品/快消","纺织/服装"],
+    suf:[], b:[],
+    kw:["运动","健身","健身器材","球类","瑜伽","骑行","钓具","登山","露营","护具","跑步","运动鞋"],
+    mk:["北美","欧盟","中东","东南亚","东亚"]},
+  { id:"food", lab:"食品 / 饮料", ind:"食品饮料", cat:["消费品/快消","其他"],
+    suf:[], b:[],
+    kw:["食品","饮料","乳制品","零食","调味","烘焙","咖啡","罐头","冷冻食品","糖果","巧克力"],
+    mk:["北美","欧盟","中东","东南亚","东亚"]},
+  { id:"agri", lab:"农业 / 园林", ind:"农业园林", cat:["机械设备","五金/工具"],
+    suf:[], b:[],
+    kw:["农业","农机","拖拉机","灌溉","园林","割草机","植保","播种","施肥","温室","畜牧","油锯"],
+    mk:["北美","欧盟","中东","东南亚","拉美"]},
+  { id:"pet", lab:"宠物用品", ind:"宠物用品", cat:["消费品/快消","其他"],
+    suf:[], b:[],
+    kw:["宠物","宠物食品","宠物用品","猫","狗","水族","宠物玩具","笼具","牵引绳"],
+    mk:["北美","欧盟","东南亚","东亚"]},
+  { id:"jewelry", lab:"珠宝 / 饰品", ind:"珠宝饰品", cat:["消费品/快消","其他"],
+    suf:[], b:[],
+    kw:["珠宝","首饰","饰品","钻石","黄金","银饰","腕表","水晶","串饰","陈列道具"],
+    mk:["北美","欧盟","中东","东亚","东南亚"]},
+  { id:"office", lab:"办公 / 文具", ind:"办公用品", cat:["消费品/快消","其他"],
+    suf:[], b:[],
+    kw:["办公","文具","办公用品","书写","纸张","文件夹","标签","打印耗材","碎纸机","铅笔"],
+    mk:["北美","欧盟","东亚","东南亚"]},
+  { id:"appliance", lab:"家用电器", ind:"家用电器", cat:["电子/电气","消费品/快消"],
+    suf:[], b:[],
+    kw:["家电","白电","厨电","小家电","冰箱","洗衣机","空调","咖啡机","厨房电器","洗碗机"],
+    mk:["北美","欧盟","中东","东南亚","东亚"]},
+  { id:"security", lab:"安防 / 门禁", ind:"安防门禁", cat:["电子/电气","五金/工具"],
+    suf:[], b:[],
+    kw:["安防","监控","门禁","报警","摄像机","楼控","消防","门锁","对讲","读卡器","视频管理"],
+    mk:["北美","欧盟","中东","东南亚","东亚"]}
 ];
 
 /* 相邻品类族（用于推导「第二类别标签」）—— 只收**商业上真实相邻**的配对。
@@ -990,7 +1051,20 @@ const ADJ = {
   building:    ["hardware",    "machinery"],   /* 建材 ↔ 五金 / 机械 */
   consumer:    ["packaging",   "textile"],     /* 消费品 ↔ 包装 / 纺织 */
   software:    ["electronics", "service"],     /* 软件 ↔ 电子（工控配套）/ 专业服务 */
-  service:     ["software",    "chemical"]     /* 服务 ↔ 软件 / 化工（检测） */
+  service:     ["software",    "chemical"],    /* 服务 ↔ 软件 / 化工（检测） */
+  /* ---- v60 新增 12 族 ---- */
+  furniture:   ["consumer",    "building"],    /* 家具 ↔ 消费品（家居日用）/ 建材（木作·板材） */
+  lighting:    ["electronics", "building"],    /* 照明 ↔ 电子（驱动·光源）/ 建材（工程照明） */
+  toys:        ["consumer",    "textile"],     /* 玩具 ↔ 消费品 / 纺织（毛绒·童装） */
+  footwear:    ["textile",     "consumer"],    /* 鞋类 ↔ 纺织（面料·辅料）/ 消费品 */
+  sports:      ["textile",     "consumer"],    /* 运动 ↔ 纺织（运动服饰）/ 消费品 */
+  food:        ["packaging",   "consumer"],    /* 食品 ↔ 包装 / 消费品 */
+  agri:        ["machinery",   "hardware"],    /* 农机 ↔ 机械（传动·液压）/ 五金（刀片·紧固） */
+  pet:         ["consumer",    "packaging"],   /* 宠物用品 ↔ 消费品 / 包装 */
+  jewelry:     ["consumer",    "packaging"],   /* 珠宝 ↔ 消费品 / 包装陈列 */
+  office:      ["consumer",    "packaging"],   /* 办公文具 ↔ 消费品 / 包装 */
+  appliance:   ["electronics", "hardware"],    /* 家电 ↔ 电子（控制板）/ 五金（结构件） */
+  security:    ["electronics", "building"]     /* 安防 ↔ 电子（摄像·控制）/ 建材（门禁工程） */
 };
 const FAM_BY_ID = {};
 FAM.forEach(function(f){ FAM_BY_ID[f.id] = f; });
@@ -1461,7 +1535,7 @@ function renderChannels(){
      这句必须撤掉，否则等于告诉使用者「这些公司名是编的」，与事实相反。
      两句各自独立成键（不拼成一整句）：各自命中字典，拼串会整段回落中文。 */
   if(note) note.innerHTML = T("渠道能力为「接入后的设计口径」，不是当前已接通；当前线索池为平台真实企业名录（域名已实测可达）。「部分待接入 / 待接入」表示该渠道的数据尚未接通，不是没有线索。")
-    + ' ' + T("名录内企业均来自公开渠道，联系方式一律未收录；待接入渠道接通后才会补充对应字段。");
+    + ' ' + T("名录内企业均来自公开渠道；L2 企业职能联系方式由平台从官网公开页检索，逐条带来源链接；L3 个人联系方式由你自备。");
   /* 刷新后若展会仍在选中态，面板保持展开（否则条件生效却看不到依据） */
   if(state.chan.has("expo")) toggleExpo(true);
 }
@@ -1642,14 +1716,13 @@ fIndustry.onchange=()=>{state.industry=fIndustry.value;touch();};
    在按档案收敛之后一定对不上（池里根本没有那些类别）。池空时整行隐藏，
    不摆一排点了没反应的灰按钮。
    chip 上带条数角标：点之前就知道这个关键词 / 类别下有几家。 */
-function buildChipRow(boxId, rowId, valOf, sel, hintId, hintTpl, trans){
+function buildChipRow(boxId, rowId, valOf, sel, hintId, hintTpl, trans, maxShow){
   const box=document.getElementById(boxId), row=document.getElementById(rowId);
   if(!box || !row) return;
   const cnt={};
   allLeads().forEach(function(l){ (valOf(l)||[]).forEach(function(v){ if(v) cnt[v]=(cnt[v]||0)+1; }); });
   const keys=Object.keys(cnt).sort();
   row.hidden = keys.length===0;
-  const sig=keys.map(function(k){return k+":"+cnt[k];}).join("|");
   /* ⚠️ 提示语必须在 sig 早退【之前】重算（2026-10-15 修）：
      · 它走 T()，要跟着语言变；被 sig 挡掉后，若首屏渲染早于 i18n 引擎就绪，
        提示语会永久停在中文 —— 表现为「切英文后筛选区还挂着两句中文」。
@@ -1660,23 +1733,54 @@ function buildChipRow(boxId, rowId, valOf, sel, hintId, hintTpl, trans){
     hint.hidden = keys.length===0;
     hint.innerHTML = keys.length ? Tv(hintTpl, {n:"<b>"+keys.length+"</b>"}) : "";
   }
-  if(box.dataset.sig===sig) return;      /* 池没变就不重建 chips，避免每帧重绘丢焦点 */
-  box.dataset.sig=sig;
-  box.innerHTML=keys.map(function(k){
+  /* 27 族扩张后关键词 chip 从 ~40 个涨到几百个 —— 一屏全被 chip 占满，
+     线索列表要滚很久才看得见（2026-10-21 截图发现）。改为：
+     **按条数降序取前 maxShow 个 + 已选中的始终保留 + 「还有 N 个 · 展开」**。
+     顺序按条数而非字母：条数高的才是这个池的主流体量，先给用户看。 */
+  const ordered = keys.slice().sort(function(a,b){ return (cnt[b]-cnt[a]) || (a<b?-1:1); });
+  const chipHTML = function(k){
     /* trans=true（产品类别）= 系统定义的品类名 → 走字典翻译；
        trans=false（关键词）= 使用者自填的业务数据 → 包 .noi18n 原样显示，
        绝不做机器翻译（否则半英文半中文，见 app-i18n.js SKIP_SEL 注释）。 */
     const lab = trans ? esc(T(k)) : '<span class="noi18n">'+esc(k)+'</span>';
     return '<span class="chip" data-v="'+esc(k)+'">'+lab+'<i class="n">'+cnt[k]+'</i></span>';
-  }).join("");
-  box.querySelectorAll(".chip").forEach(function(c){
-    const v=c.dataset.v;
-    if(sel.has(v)) c.classList.add("active");
-    c.onclick=function(){ sel.has(v)?sel.delete(v):sel.add(v); c.classList.toggle("active"); touch(); };
-  });
+  };
+  function render(){
+    const expanded = box.dataset.expand === "1";
+    let show = ordered, truncated = 0;
+    if(maxShow && !expanded && ordered.length > maxShow){
+      const head = ordered.slice(0, maxShow);
+      const pinned = ordered.filter(function(k){ return sel.has(k) && head.indexOf(k) === -1; });
+      show = head.concat(pinned);
+      truncated = ordered.length - show.length;
+    }
+    let html = show.map(chipHTML).join("");
+    if(truncated > 0){
+      html += '<span class="chip more" data-more="1">'+esc(Tv("还有 {n} 个 · 展开", {n:String(truncated)}))+'</span>';
+    } else if(maxShow && expanded && ordered.length > maxShow){
+      html += '<span class="chip more" data-more="0">'+esc(T("收起"))+'</span>';
+    }
+    box.innerHTML = html;
+    box.querySelectorAll(".chip").forEach(function(c){
+      if(c.dataset.more) return;
+      const v=c.dataset.v;
+      if(sel.has(v)) c.classList.add("active");
+      c.onclick=function(){ sel.has(v)?sel.delete(v):sel.add(v); c.classList.toggle("active"); touch(); };
+    });
+    const more=box.querySelector(".chip.more");
+    if(more) more.onclick=function(){
+      box.dataset.expand = more.dataset.more === "1" ? "1" : "0";
+      render();
+    };
+  }
+  /* sig 里带上展开态：展开 / 收起后池没变也要重绘 */
+  const sig=keys.map(function(k){return k+":"+cnt[k];}).join("|")+"#"+(box.dataset.expand||"0");
+  if(box.dataset.sig===sig) return;      /* 池没变就不重建 chips，避免每帧重绘丢焦点 */
+  box.dataset.sig=sig;
+  render();
 }
 function fillKw(){ buildChipRow("fKw","rowKw", function(l){ return [String(l.kw||"").trim()].filter(function(k){return k&&k!=="—";}); },
-  state.kw, "kwHint2", "共 {n} 个关键词在池中有命中 —— 多选可只看某几个词带来的采购方。", false); }
+  state.kw, "kwHint2", "共 {n} 个关键词在池中有命中 —— 多选可只看某几个词带来的采购方。", false, 12); }
 function fillCat(){ buildChipRow("fCat","rowCat", function(l){ return l.cats||[]; },
   state.cat, "catHint", "共 {n} 个产品类别；一家公司可能同时属于多个类别。", true); }
 const fBtype=document.getElementById("fBtype");
@@ -1818,7 +1922,7 @@ function emptyDiagnosis(){
        并给出唯一能立刻补数据的动作（导入自备名单）。 */
     const covN = (window.FAL_REAL_META || {}).total || 0;
     const covTxt = covN
-      ? Tv("当前真实名录共 {n} 家，覆盖 15 个行业族（光学 / 光电、战术 / 户外装备、电子 / 电气、机械设备、五金 / 工具、化工 / 材料、医疗器械、新能源、汽车零部件、纺织 / 服装、包装、建材、消费品 / 快消、软件 / SaaS、专业服务），均为 2026-10-20 实测可达。你的主营行业若不在其中，这里就是空的 —— 平台不会编造公司来填满它。",
+      ? Tv("当前真实名录共 {n} 家，覆盖 27 个行业族，均为 2026-10-21 实测可达。你的主营行业若不在其中，这里就是空的 —— 平台不会编造公司来填满它。",
            {n:"<b>"+covN+"</b>"})
       : "";
     const impBtn2 = '<button class="sb-btn pri" id="diagImport">'+T("导入我自己的真实名单")+'</button>';
@@ -1896,7 +2000,7 @@ function render(){
     /* 2026-10-20 v59：名录已覆盖 15 个行业族，但使用者的主营品类仍可能落在覆盖外 ——
        不编数据填充，直接说清覆盖范围 + 给导入入口。 */
     list.innerHTML='<div class="guidebox"><b>'+T("你的主营品类不在当前真实名录覆盖内")+'</b>'
-      +'<span>'+Tv("当前真实名录共 {n} 家，覆盖 15 个行业族（2026-10-20 实测可达）。平台不会为了填满列表而编造公司 —— 你的行业需要你自己的名单。",{n:"<b>"+((window.FAL_REAL_META||{}).total||0)+"</b>"})+'</span>'
+      +'<span>'+Tv("当前真实名录共 {n} 家，覆盖 27 个行业族（2026-10-21 实测可达）。平台不会为了填满列表而编造公司 —— 你的行业需要你自己的名单。",{n:"<b>"+((window.FAL_REAL_META||{}).total||0)+"</b>"})+'</span>'
       +'<div style="margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
       +'<button class="sb-btn pri" id="diagImport">'+T("导入我自己的真实名单")+'</button>'
       +'<a class="sb-btn" href="01_战略_企业战略档案.html" style="text-decoration:none">'+T("回档案补充关键词")+'</a>'
@@ -1945,13 +2049,20 @@ function render(){
       /* 域名：真实线索渲染成可点外链，指向实测能打开的那条 URL；
          反爬 / 本机不通的用黄 / 红虚线提示 —— 点之前就知道会发生什么，不至于又踩一次「连不上」。 */
       const rcls = !l.real ? '' : ((l.reach>=200&&l.reach<400) ? '' : ((l.reach===403||l.reach===429) ? ' rch-warn' : ' rch-off'));
+      /* title 必须跟着可达性走：红虚线的域名还挂「实测地址」，鼠标一悬停就是误导。
+         现在悬停即显示真实状态（可达 / 反爬 / 本机未连通），点之前就知道会发生什么。 */
       const dmHTML = l.real
-        ? `<a class="dm dmlink${rcls}" href="${esc(l.url||('https://'+l.dm))}" target="_blank" rel="noopener noreferrer" title="${esc(T("点击打开官网 · 实测地址"))}">${esc(l.dm)}</a>`
+        ? `<a class="dm dmlink${rcls}" href="${esc(l.url||('https://'+l.dm))}" target="_blank" rel="noopener noreferrer" title="${esc(Tv("点击打开官网 · {note}", {note: reachNote(l.reach)}))}">${esc(l.dm)}</a>`
         : `<div class="dm">${esc(l.dm)}</div>`;
       /* 命中关键词：真实名录的 kw 是**平台定义**的品类词（瞄准镜 / 战术装备），
          应当翻译；自备线索（名片 / 导入）的 kw 是使用者自己的业务字段，绝不机器翻译。
          2026-10-20 v58：原来一律 `.noi18n` → 英文态残留中文「瞄准镜」。 */
-      const kwTxt = (l.card || l.imp) ? l.kw : T(l.kw);
+      /* ⚠️ 真实名录的 kw 是平台生成的**逗号分隔品类词串**（398 家共 145 种自由组合）。
+         整串丢给 T() 永远命中不了字典 → 英文界面整条残留中文（2026-10-21 截图发现）。
+         改为**逐词翻译再重拼**；自备线索（名片 / 导入）的 kw 是使用者业务字段，原样不译。 */
+      const kwTxt = (l.card || l.imp)
+        ? l.kw
+        : String(l.kw||"").split(/[,，、]/).map(function(t){ return T(t.trim()); }).filter(Boolean).join(T("、"));
       return `<div class="lrow">
         <div class="co"><span class="flag">${l.flag}</span><div style="min-width:0"><div class="nm" data-cm="${l.dm}" data-nm="${l.nm}" title="点击查看联系方式与命中依据">${l.nm}</div>${l.sample?'<span class="sflag" title="示例样本 · 公司名由系统按品类确定性生成，不对应任何真实企业">示例</span>':''}${dmHTML}<div class="dm2"><span>${l.region}</span><span> · </span><span>${l.ind}</span>${szTxt?`<span> · </span><span>${szTxt}</span>`:''}</div><div class="btline"><span class="badge b-bt">${l.btype||'—'}</span>${chBadge}</div>${hint?`<button class="link-co" data-cm="${l.dm}" data-nm="${l.nm}" title="${esc(Tf("已录入 {n} 位联系人",{n:ppl.length}))}">☎ ${esc(hint)}${more}</button>`:''}</div></div>
         <div class="need">${needNA?'<span class="needna">待验证</span>':esc(l.need)}<small title="${esc(l.why||'')}">${esc(l.why||'')}</small>${needNA?'':'<span class="kwb"><span>命中：</span><span class="noi18n">'+esc(kwTxt)+'</span></span>'}</div>
@@ -2000,7 +2111,7 @@ function renderScopeBar(){
   if(state.scope==="all"){
     el.className="scopebar warn";
     h='<div class="sb-ic">◎</div><div class="sb-t"><span>'+T("当前范围")+'</span></div>'
-      +'<div class="sb-d">'+Tv("全部线索池 = 平台真实企业名录共 {n} 家，域名已于 2026-10-20 实测可达（反爬 / 本机不通的单独标注）。名录只含 L1 公开信息（公司 / 官网 / 国家）：L2 企业职能联系方式待数据源接入，L3 个人联系方式由你自备。点「按我的档案筛选」可按 ① 战略档案的主营关键词与目标区域收敛范围。",{n:"<b>"+((window.FAL_REAL_META||{}).total||0)+"</b>"})+'</div>'
+      +'<div class="sb-d">'+Tv("全部线索池 = 平台真实企业名录共 {n} 家，域名已于 2026-10-21 实测可达（反爬 / 本机不通的单独标注）。名录含 L1 公开信息（公司 / 官网 / 国家），L2 企业职能联系方式来自官网公开页并逐条带来源，L3 个人联系方式由你自备。点「按我的档案筛选」可按 ① 战略档案的主营关键词与目标区域收敛范围。",{n:"<b>"+((window.FAL_REAL_META||{}).total||0)+"</b>"})+'</div>'
       +'<div class="sb-acts"><button class="sb-btn pri" id="sbProfile">'+T("按我的档案筛选")+'</button></div>';
   } else if(pool.mode==="empty"){
     el.className="scopebar warn";
@@ -2050,7 +2161,7 @@ function renderScopeBar(){
       + '</div>';
   } else {
     h += '<div class="sb-note">'
-      + T("名录内为真实注册主体，域名已实测可达；联系方式一律未收录 —— 点「联系方式」可按公开渠道核验 L2，或自备录入 L3。")
+      + T("名录内为真实注册主体，域名已实测可达；L2 职能联系方式来自官网公开页并逐条带来源，L3 个人联系方式由你自备 —— 点「联系方式」可核验或录入。")
       + '</div>';
   }
   el.innerHTML=h;
@@ -2068,7 +2179,7 @@ function renderInsight(){
   let h="";
   if(state.scope==="all"){
     h='<span>'+Tv("全部线索池 = 平台真实企业名录共 {n} 家，均为真实注册主体、域名已实测可达。",{n:"<b>"+((window.FAL_REAL_META||{}).total||0)+"</b>"})+'</span>'
-     +'<span>'+T("名录只含 L1 公开信息（公司 / 官网 / 国家）；联系方式未收录。点上方「按我的档案筛选」可按 ① 战略档案的主营关键词与目标区域收敛范围。")+'</span>';
+     +'<span>'+T("名录含 L1 公开信息（公司 / 官网 / 国家）与 L2 官网公开的职能联系方式（逐条带来源）；L3 个人联系方式由你自备。点上方「按我的档案筛选」可按 ① 战略档案的主营关键词与目标区域收敛范围。")+'</span>';
   } else if(pool.mode==="empty"){
     h='<span>'+T("尚未填写 ① 战略档案，线索池无法判断你的主营品类，因此暂不生成任何采购方 —— 避免混入与你无关的行业。")+'</span>'
      +'<span>'+T("填好档案后，这里会按关键词与目标区域收敛，只出对你有实际采购需求的企业。")+'</span>';
@@ -2082,7 +2193,7 @@ function renderInsight(){
     } else {
       h='<span>'+Tv("依据 ① 战略档案的主营关键词，已收敛到 {fams} 品类族、{n} 家采购方 —— 名录内均为真实注册主体，域名已实测可达（反爬 / 本机不通的会单独标注）。",{fams:"<b>"+fams+"</b>",n:"<b>"+pool.leads.length+"</b>"})+'</span>'
        +'<span>'+T("已剔除纯同业竞争者、上游供应商与无采购行为的企业。")+'</span>'
-       +'<span>'+T("联系方式一律未收录：点「联系方式」可按公开渠道核验 L2，或自备录入 L3。「未覆盖」标记代表该层数据尚未接入，并非无风险。")+'</span>';
+       +'<span>'+T("L2 职能联系方式来自官网公开页并逐条带来源；L3 个人联系方式由你自备 —— 点「联系方式」可核验或录入。「未覆盖」标记代表该层数据尚未检索到，并非无风险。")+'</span>';
     }
   }
   el.innerHTML=h;

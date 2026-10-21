@@ -281,7 +281,158 @@ window.FAL_REAL = [
   {nm:"Shoprite", dm:"shoprite.co.za", cc:"ZA", region:"非洲", famId:"consumer", ind:"日用消费品", btype:"零售商/连锁", need:"日用消费品采购（品类推断）", kw:"日用消费品", reach:200, url:"https://www.shoprite.co.za/", title:"Shoprite ZA | Home"},
   {nm:"Harvey Norman", dm:"harveynorman.com.au", cc:"AU", region:"大洋洲", famId:"consumer", ind:"日用消费品", btype:"零售商/连锁", need:"日用消费品采购（品类推断）", kw:"日用消费品", reach:200, url:"https://www.harveynorman.com.au/", title:"Pardon Our Interruption"},
   {nm:"Bunnings", dm:"bunnings.com.au", cc:"AU", region:"大洋洲", famId:"hardware", ind:"五金工具", btype:"零售商/连锁", need:"五金工具 / 紧固件采购（品类推断）", kw:"五金工具", reach:403, url:"https://www.bunnings.com.au/", title:""},
-  {nm:"Reece", dm:"reece.com.au", cc:"AU", region:"大洋洲", famId:"hardware", ind:"五金工具", btype:"分销商 / 代理", need:"五金工具 / 紧固件采购（品类推断）", kw:"五金工具", reach:200, url:"https://www.reece.com.au/", title:"Reece | Plumbing, Bathroom & Trade Supplies"}
+  {nm:"Reece", dm:"reece.com.au", cc:"AU", region:"大洋洲", famId:"hardware", ind:"五金工具", btype:"分销商 / 代理", need:"五金工具 / 紧固件采购（品类推断）", kw:"五金工具", reach:200, url:"https://www.reece.com.au/", title:"Reece | Plumbing, Bathroom & Trade Supplies"},
+  {nm:"Ashley Furniture", dm:"ashleyfurniture.com", cc:"US", region:"北美", famId:"furniture", ind:"家居家具", btype:"品牌商", need:"家具 / 家居配件采购（品类推断）", kw:"家具,沙发,床垫,餐桌", reach:403, url:"https://ashleyfurniture.com/", title:""},
+  {nm:"Wayfair", dm:"wayfair.com", cc:"US", region:"北美", famId:"furniture", ind:"家居家具", btype:"零售商/连锁", need:"家具 / 家居配件采购（品类推断）", kw:"家具,家居,灯具,家纺", reach:429, url:"https://www.wayfair.com/", title:""},
+  {nm:"Herman Miller", dm:"hermanmiller.com", cc:"US", region:"北美", famId:"furniture", ind:"家居家具", btype:"品牌商", need:"家具 / 家居配件采购（品类推断）", kw:"办公家具,座椅,工位", reach:200, url:"https://www.hermanmiller.com/", title:"Herman Miller – Modern Furnishings for Office and Workplaces"},
+  {nm:"Steelcase", dm:"steelcase.com", cc:"US", region:"北美", famId:"furniture", ind:"家居家具", btype:"品牌商", need:"家具 / 家居配件采购（品类推断）", kw:"办公家具,工位,储物柜", reach:200, url:"https://www.steelcase.com:443/", title:"Steelcase - Office Furniture Solutions, Education & Healthcare Furniture"},
+  {nm:"La-Z-Boy", dm:"lazboy.com", cc:"US", region:"北美", famId:"furniture", ind:"家居家具", btype:"品牌商", need:"家具 / 家居配件采购（品类推断）", kw:"沙发,功能椅,家具", reach:200, url:"https://www.la-z-boy.com/", title:"Home Furniture: Living Room & Bedroom Furniture | La-Z-Boy"},
+  {nm:"Natuzzi", dm:"natuzzi.com", cc:"IT", region:"欧盟", famId:"furniture", ind:"家居家具", btype:"品牌商", need:"家具 / 家居配件采购（品类推断）", kw:"沙发,软体家具,皮革", reach:403, url:"https://www.natuzzi.com/", title:""},
+  {nm:"BoConcept", dm:"boconcept.com", cc:"DK", region:"欧盟", famId:"furniture", ind:"家居家具", btype:"零售商/连锁", need:"家具 / 家居配件采购（品类推断）", kw:"家具,家居,软装", reach:200, url:"https://www.boconcept.com/da-dk/", title:"Danske designmøbler og indretning | BoConcept"},
+  {nm:"XXXLutz", dm:"xxxlutz.com", cc:"AT", region:"欧盟", famId:"furniture", ind:"家居家具", btype:"零售商/连锁", need:"家具 / 家居配件采购（品类推断）", kw:"家具,家居,床垫", reach:403, url:"https://xxxlutz.com/", title:""},
+  {nm:"Conforama", dm:"conforama.fr", cc:"FR", region:"欧盟", famId:"furniture", ind:"家居家具", btype:"零售商/连锁", need:"家具 / 家居配件采购（品类推断）", kw:"家具,家居,家电", reach:403, url:"https://conforama.fr/", title:""},
+  {nm:"home24", dm:"home24.de", cc:"DE", region:"欧盟", famId:"furniture", ind:"家居家具", btype:"零售商/连锁", need:"家具 / 家居配件采购（品类推断）", kw:"家具,家居,线上零售", reach:403, url:"https://home24.de/", title:""},
+  {nm:"DFS", dm:"dfs.co.uk", cc:"GB", region:"欧盟", famId:"furniture", ind:"家居家具", btype:"零售商/连锁", need:"家具 / 家居配件采购（品类推断）", kw:"沙发,家具", reach:403, url:"https://www.dfs.co.uk/", title:""},
+  {nm:"Vitra", dm:"vitra.com", cc:"CH", region:"欧盟", famId:"furniture", ind:"家居家具", btype:"品牌商", need:"家具 / 家居配件采购（品类推断）", kw:"办公家具,设计师家具", reach:403, url:"https://www.vitra.com:443/", title:""},
+  {nm:"Signify", dm:"signify.com", cc:"NL", region:"欧盟", famId:"lighting", ind:"照明灯具", btype:"品牌商", need:"灯具 / 照明组件采购（品类推断）", kw:"照明,灯具,LED,光源", reach:200, url:"https://www.signify.com/global", title:"Home | Signify"},
+  {nm:"OSRAM", dm:"osram.com", cc:"DE", region:"欧盟", famId:"lighting", ind:"照明灯具", btype:"品牌商", need:"灯具 / 照明组件采购（品类推断）", kw:"照明,光源,LED,车灯", reach:200, url:"https://www.osram.com/cb/", title:"OSRAM Global | Light is OSRAM"},
+  {nm:"LEDVANCE", dm:"ledvance.com", cc:"DE", region:"欧盟", famId:"lighting", ind:"照明灯具", btype:"品牌商", need:"灯具 / 照明组件采购（品类推断）", kw:"照明,LED,灯具", reach:200, url:"https://www.ledvance.com/en-int", title:"Corporate website | LEDVANCE"},
+  {nm:"Zumtobel", dm:"zumtobel.com", cc:"AT", region:"欧盟", famId:"lighting", ind:"照明灯具", btype:"品牌商", need:"灯具 / 照明组件采购（品类推断）", kw:"照明,商业照明,灯具", reach:403, url:"https://zumtobel.com/", title:""},
+  {nm:"Artemide", dm:"artemide.com", cc:"IT", region:"欧盟", famId:"lighting", ind:"照明灯具", btype:"品牌商", need:"灯具 / 照明组件采购（品类推断）", kw:"装饰灯具,照明", reach:200, url:"https://www.artemide.com/en/home", title:"Artemide - Home"},
+  {nm:"Flos", dm:"flos.com", cc:"IT", region:"欧盟", famId:"lighting", ind:"照明灯具", btype:"品牌商", need:"灯具 / 照明组件采购（品类推断）", kw:"装饰灯具,照明", reach:200, url:"https://flos.com/en/wo/", title:"Flos Official Online Store | Contemporary Lighting and Decorative Lights"},
+  {nm:"Kichler", dm:"kichler.com", cc:"US", region:"北美", famId:"lighting", ind:"照明灯具", btype:"品牌商", need:"灯具 / 照明组件采购（品类推断）", kw:"照明,户外灯,吊灯", reach:200, url:"https://www.kichler.com/", title:"Kichler Lighting-pendant,bath,landscape | Kichler Lighting"},
+  {nm:"Progress Lighting", dm:"progresslighting.com", cc:"US", region:"北美", famId:"lighting", ind:"照明灯具", btype:"品牌商", need:"灯具 / 照明组件采购（品类推断）", kw:"照明,吊灯,壁灯", reach:429, url:"https://progresslighting.com/", title:""},
+  {nm:"Acuity Brands", dm:"acuitybrands.com", cc:"US", region:"北美", famId:"lighting", ind:"照明灯具", btype:"品牌商", need:"灯具 / 照明组件采购（品类推断）", kw:"照明,商业照明,控制", reach:403, url:"https://www.acuitybrands.com/", title:""},
+  {nm:"SLV", dm:"slv.com", cc:"DE", region:"欧盟", famId:"lighting", ind:"照明灯具", btype:"品牌商", need:"灯具 / 照明组件采购（品类推断）", kw:"照明,轨道灯,户外灯", reach:200, url:"https://www.slv.com/de", title:"Leuchten & Lampen in Top Qualität vom Leuchten Profi"},
+  {nm:"BEGA", dm:"bega.de", cc:"DE", region:"欧盟", famId:"lighting", ind:"照明灯具", btype:"品牌商", need:"灯具 / 照明组件采购（品类推断）", kw:"户外照明,灯具", reach:200, url:"https://www.bega.com/en/", title:"BEGA · Das gute Licht."},
+  {nm:"Fagerhult", dm:"fagerhult.com", cc:"SE", region:"欧盟", famId:"lighting", ind:"照明灯具", btype:"品牌商", need:"灯具 / 照明组件采购（品类推断）", kw:"商业照明,灯具", reach:200, url:"https://www.fagerhult.com/", title:"Light for better living - Fagerhult"},
+  {nm:"Hasbro", dm:"hasbro.com", cc:"US", region:"北美", famId:"toys", ind:"玩具母婴", btype:"品牌商", need:"玩具 / 母婴用品采购（品类推断）", kw:"玩具,桌游,模型", reach:200, url:"https://consumercare.hasbro.com/worldwide", title:"worldwide"},
+  {nm:"LEGO", dm:"lego.com", cc:"DK", region:"欧盟", famId:"toys", ind:"玩具母婴", btype:"品牌商", need:"玩具 / 母婴用品采购（品类推断）", kw:"玩具,积木", reach:403, url:"https://www.lego.com/", title:""},
+  {nm:"Ravensburger", dm:"ravensburger.com", cc:"DE", region:"欧盟", famId:"toys", ind:"玩具母婴", btype:"品牌商", need:"玩具 / 母婴用品采购（品类推断）", kw:"玩具,拼图,桌游", reach:200, url:"https://www.ravensburger.com/start/index.html", title:"Ravensburger Shop - Puzzles, Games and Creative Toys"},
+  {nm:"Playmobil", dm:"playmobil.com", cc:"DE", region:"欧盟", famId:"toys", ind:"玩具母婴", btype:"品牌商", need:"玩具 / 母婴用品采购（品类推断）", kw:"玩具,模型", reach:200, url:"https://www.playmobil.com/en-us/", title:"PLAYMOBIL® USA"},
+  {nm:"Chicco", dm:"chicco.com", cc:"IT", region:"欧盟", famId:"toys", ind:"玩具母婴", btype:"品牌商", need:"玩具 / 母婴用品采购（品类推断）", kw:"母婴,婴儿车,儿童用品", reach:200, url:"https://www.chicco.com/", title:"Official Corporate Chicco website"},
+  {nm:"Munchkin", dm:"munchkin.com", cc:"US", region:"北美", famId:"toys", ind:"玩具母婴", btype:"品牌商", need:"玩具 / 母婴用品采购（品类推断）", kw:"母婴,喂养用品", reach:429, url:"https://munchkin.com/", title:""},
+  {nm:"Ergobaby", dm:"ergobaby.com", cc:"US", region:"北美", famId:"toys", ind:"玩具母婴", btype:"品牌商", need:"玩具 / 母婴用品采购（品类推断）", kw:"母婴,背带,婴儿用品", reach:403, url:"https://ergobaby.com/", title:""},
+  {nm:"TOMY", dm:"tomy.com", cc:"JP", region:"东亚", famId:"toys", ind:"玩具母婴", btype:"品牌商", need:"玩具 / 母婴用品采购（品类推断）", kw:"玩具,模型", reach:200, url:"https://us.tomy.com/", title:"TOMY"},
+  {nm:"The Entertainer", dm:"thetoyshop.com", cc:"GB", region:"欧盟", famId:"toys", ind:"玩具母婴", btype:"零售商/连锁", need:"玩具 / 母婴用品采购（品类推断）", kw:"玩具,零售", reach:403, url:"https://thetoyshop.com/", title:""},
+  {nm:"Crayola", dm:"crayola.com", cc:"US", region:"北美", famId:"toys", ind:"玩具母婴", btype:"品牌商", need:"玩具 / 母婴用品采购（品类推断）", kw:"蜡笔,美术用品,玩具", reach:200, url:"https://www.crayola.com/", title:"Home | Products, Coloring Pages, Crafts & More"},
+  {nm:"Schleich", dm:"schleich-s.com", cc:"DE", region:"欧盟", famId:"toys", ind:"玩具母婴", btype:"品牌商", need:"玩具 / 母婴用品采购（品类推断）", kw:"玩具,模型,动物模型", reach:429, url:"https://gb.schleich-s.com/pages/language-not-found", title:""},
+  {nm:"Clarks", dm:"clarks.com", cc:"GB", region:"欧盟", famId:"footwear", ind:"鞋类箱包", btype:"品牌商", need:"鞋类 / 箱包采购（品类推断）", kw:"鞋,皮鞋,休闲鞋", reach:403, url:"https://www.clarks.com/", title:""},
+  {nm:"ECCO", dm:"ecco.com", cc:"DK", region:"欧盟", famId:"footwear", ind:"鞋类箱包", btype:"品牌商", need:"鞋类 / 箱包采购（品类推断）", kw:"鞋,皮革,休闲鞋", reach:200, url:"https://global.ecco.com/", title:"ECCO is a global leader in innovative comfort footwear for men, women, and kids. - ECCO.com"},
+  {nm:"Dr. Martens", dm:"drmartens.com", cc:"GB", region:"欧盟", famId:"footwear", ind:"鞋类箱包", btype:"品牌商", need:"鞋类 / 箱包采购（品类推断）", kw:"鞋,靴子,皮革", reach:200, url:"https://www.drmartens.com/", title:"Dr. Martens™"},
+  {nm:"Timberland", dm:"timberland.com", cc:"US", region:"北美", famId:"footwear", ind:"鞋类箱包", btype:"品牌商", need:"鞋类 / 箱包采购（品类推断）", kw:"鞋,靴子,户外鞋", reach:403, url:"https://timberland.com/", title:""},
+  {nm:"Crocs", dm:"crocs.com", cc:"US", region:"北美", famId:"footwear", ind:"鞋类箱包", btype:"品牌商", need:"鞋类 / 箱包采购（品类推断）", kw:"鞋,洞洞鞋,休闲鞋", reach:403, url:"https://www.crocs.com/", title:""},
+  {nm:"Skechers", dm:"skechers.com", cc:"US", region:"北美", famId:"footwear", ind:"鞋类箱包", btype:"品牌商", need:"鞋类 / 箱包采购（品类推断）", kw:"鞋,运动鞋,休闲鞋", reach:200, url:"https://www.ph.skechers.com/", title:"Welcome - SKECHERS Philippines"},
+  {nm:"Deichmann", dm:"deichmann.com", cc:"DE", region:"欧盟", famId:"footwear", ind:"鞋类箱包", btype:"零售商/连锁", need:"鞋类 / 箱包采购（品类推断）", kw:"鞋,零售", reach:403, url:"https://www.deichmann.com/", title:""},
+  {nm:"Schuh", dm:"schuh.co.uk", cc:"GB", region:"欧盟", famId:"footwear", ind:"鞋类箱包", btype:"零售商/连锁", need:"鞋类 / 箱包采购（品类推断）", kw:"鞋,零售", reach:403, url:"https://schuh.co.uk/", title:""},
+  {nm:"Samsonite", dm:"samsonite.com", cc:"LU", region:"欧盟", famId:"footwear", ind:"鞋类箱包", btype:"品牌商", need:"鞋类 / 箱包采购（品类推断）", kw:"箱包,行李箱,背包", reach:200, url:"https://www.samsonite.com.ph/", title:"Samsonite Philippines | Luggage, Suitcases, Backpacks"},
+  {nm:"TUMI", dm:"tumi.com", cc:"US", region:"北美", famId:"footwear", ind:"鞋类箱包", btype:"品牌商", need:"鞋类 / 箱包采购（品类推断）", kw:"箱包,商务包,行李箱", reach:307, url:"https://tumi.com/", title:"Access to this page has been denied"},
+  {nm:"Kipling", dm:"kipling.com", cc:"BE", region:"欧盟", famId:"footwear", ind:"鞋类箱包", btype:"品牌商", need:"鞋类 / 箱包采购（品类推断）", kw:"箱包,背包,女包", reach:403, url:"https://kipling.com/", title:""},
+  {nm:"Rieker", dm:"rieker.com", cc:"CH", region:"欧盟", famId:"footwear", ind:"鞋类箱包", btype:"品牌商", need:"鞋类 / 箱包采购（品类推断）", kw:"鞋,休闲鞋", reach:403, url:"https://rieker.com/", title:""},
+  {nm:"Gabor", dm:"gabor.de", cc:"DE", region:"欧盟", famId:"footwear", ind:"鞋类箱包", btype:"品牌商", need:"鞋类 / 箱包采购（品类推断）", kw:"鞋,女鞋", reach:200, url:"https://www.gabor.com/de_de", title:"Gabor Shoes GmbH | Offizieller Online-Shop für Gabor Schuhe"},
+  {nm:"Intersport", dm:"intersport.com", cc:"CH", region:"欧盟", famId:"sports", ind:"运动健身", btype:"零售商/连锁", need:"运动器材 / 健身用品采购（品类推断）", kw:"运动用品,户外装备", reach:403, url:"https://intersport.com/", title:""},
+  {nm:"Dick's Sporting Goods", dm:"dickssportinggoods.com", cc:"US", region:"北美", famId:"sports", ind:"运动健身", btype:"零售商/连锁", need:"运动器材 / 健身用品采购（品类推断）", kw:"运动用品,健身器材", reach:403, url:"https://www.dickssportinggoods.com/", title:""},
+  {nm:"JD Sports", dm:"jdsports.com", cc:"GB", region:"欧盟", famId:"sports", ind:"运动健身", btype:"零售商/连锁", need:"运动器材 / 健身用品采购（品类推断）", kw:"运动鞋,运动服饰", reach:403, url:"https://www.jdsports.com/", title:""},
+  {nm:"Amer Sports", dm:"amersports.com", cc:"FI", region:"欧盟", famId:"sports", ind:"运动健身", btype:"品牌商", need:"运动器材 / 健身用品采购（品类推断）", kw:"运动器材,户外装备", reach:200, url:"https://www.amersports.com/", title:"Global group of iconic sports and outdoor brands | Amer Sports"},
+  {nm:"Life Fitness", dm:"lifefitness.com", cc:"US", region:"北美", famId:"sports", ind:"运动健身", btype:"品牌商", need:"运动器材 / 健身用品采购（品类推断）", kw:"健身器材,商用健身", reach:200, url:"https://www.lifefitness.com/en-us", title:"Commercial & Home Fitness Equipment | Life Fitness"},
+  {nm:"Garmin", dm:"garmin.com", cc:"US", region:"北美", famId:"sports", ind:"运动健身", btype:"品牌商", need:"运动器材 / 健身用品采购（品类推断）", kw:"运动手表,导航,传感器", reach:200, url:"https://WWW.garmin.com/en-PH/", title:"Garmin Philippines"},
+  {nm:"New Balance", dm:"newbalance.com", cc:"US", region:"北美", famId:"sports", ind:"运动健身", btype:"品牌商", need:"运动器材 / 健身用品采购（品类推断）", kw:"运动鞋,运动服饰", reach:403, url:"https://www.newbalance.com/", title:""},
+  {nm:"Gymshark", dm:"gymshark.com", cc:"GB", region:"欧盟", famId:"sports", ind:"运动健身", btype:"品牌商", need:"运动器材 / 健身用品采购（品类推断）", kw:"运动服饰,健身服", reach:429, url:"https://gymshark.com/", title:""},
+  {nm:"Nestle", dm:"nestle.com", cc:"CH", region:"欧盟", famId:"food", ind:"食品饮料", btype:"品牌商", need:"食品原料 / 包装材料采购（品类推断）", kw:"食品,饮料,咖啡,宠物食品", reach:403, url:"https://www.nestle.com/", title:""},
+  {nm:"Danone", dm:"danone.com", cc:"FR", region:"欧盟", famId:"food", ind:"食品饮料", btype:"品牌商", need:"食品原料 / 包装材料采购（品类推断）", kw:"乳制品,饮料,食品", reach:200, url:"https://www.danone.com/", title:"Danone: World food company | Danone Group"},
+  {nm:"Lactalis", dm:"lactalis.com", cc:"FR", region:"欧盟", famId:"food", ind:"食品饮料", btype:"品牌商", need:"食品原料 / 包装材料采购（品类推断）", kw:"乳制品,食品", reach:200, url:"https://www.lactalis.com/fr/", title:"Lactalis"},
+  {nm:"Ferrero", dm:"ferrero.com", cc:"IT", region:"欧盟", famId:"food", ind:"食品饮料", btype:"品牌商", need:"食品原料 / 包装材料采购（品类推断）", kw:"巧克力,糖果,包装", reach:200, url:"https://www.ferrero.com/int/en/", title:"Ferrero Group Official Website | Ferrero Group"},
+  {nm:"Tyson Foods", dm:"tyson.com", cc:"US", region:"北美", famId:"food", ind:"食品饮料", btype:"品牌商", need:"食品原料 / 包装材料采购（品类推断）", kw:"食品,肉类,加工", reach:200, url:"https://www.tyson.com/", title:"Tyson® Brand"},
+  {nm:"Kraft Heinz", dm:"kraftheinzcompany.com", cc:"US", region:"北美", famId:"food", ind:"食品饮料", btype:"品牌商", need:"食品原料 / 包装材料采购（品类推断）", kw:"调味,食品,包装", reach:200, url:"https://www.kraftheinzcompany.com/", title:"The Kraft Heinz Company"},
+  {nm:"US Foods", dm:"usfoods.com", cc:"US", region:"北美", famId:"food", ind:"食品饮料", btype:"分销商 / 代理", need:"食品原料 / 包装材料采购（品类推断）", kw:"食品分销,餐饮供应", reach:403, url:"https://www.usfoods.com/", title:""},
+  {nm:"Almarai", dm:"almarai.com", cc:"SA", region:"中东", famId:"food", ind:"食品饮料", btype:"品牌商", need:"食品原料 / 包装材料采购（品类推断）", kw:"乳制品,食品,饮料", reach:200, url:"https://www.almarai.com/ar", title:"منتجات صحية عالية الجودة لجميع أفراد الأسرة | المراعي"},
+  {nm:"Cargill", dm:"cargill.com", cc:"US", region:"北美", famId:"food", ind:"食品饮料", btype:"品牌商", need:"食品原料 / 包装材料采购（品类推断）", kw:"食品原料,农产品", reach:403, url:"https://www.cargill.com/", title:""},
+  {nm:"METRO", dm:"metroag.de", cc:"DE", region:"欧盟", famId:"food", ind:"食品饮料", btype:"分销商 / 代理", need:"食品原料 / 包装材料采购（品类推断）", kw:"食品批发,餐饮供应", reach:403, url:"https://metroag.de/", title:""},
+  {nm:"Bidfood", dm:"bidfood.co.uk", cc:"GB", region:"欧盟", famId:"food", ind:"食品饮料", btype:"分销商 / 代理", need:"食品原料 / 包装材料采购（品类推断）", kw:"食品分销,餐饮供应", reach:200, url:"https://www.bidfood.co.uk/", title:"Wholesale Food Service Suppliers & Distributors - Bidfood"},
+  {nm:"Deere", dm:"deere.com", cc:"US", region:"北美", famId:"agri", ind:"农业园林", btype:"品牌商", need:"农机配件 / 园林工具采购（品类推断）", kw:"农机,拖拉机,园林机械", reach:200, url:"https://www.deere.com/en-us/", title:"Home | John Deere US"},
+  {nm:"AGCO", dm:"agcocorp.com", cc:"US", region:"北美", famId:"agri", ind:"农业园林", btype:"品牌商", need:"农机配件 / 园林工具采购（品类推断）", kw:"农机,拖拉机,收获机", reach:200, url:"https://www.agcocorp.com/us/en/home.html", title:"AGCO Corporation - Your Agriculture Company"},
+  {nm:"Kubota", dm:"kubota.com", cc:"JP", region:"东亚", famId:"agri", ind:"农业园林", btype:"品牌商", need:"农机配件 / 园林工具采购（品类推断）", kw:"农机,拖拉机,发动机", reach:200, url:"https://www.kubota.com/", title:"Kubota Global Site"},
+  {nm:"STIHL", dm:"stihl.com", cc:"DE", region:"欧盟", famId:"agri", ind:"农业园林", btype:"品牌商", need:"农机配件 / 园林工具采购（品类推断）", kw:"园林机械,油锯,割草机", reach:200, url:"https://www.stihl.com/en", title:"STIHL International Website - Your manufacturer for power garden tools"},
+  {nm:"Husqvarna", dm:"husqvarnagroup.com", cc:"SE", region:"欧盟", famId:"agri", ind:"农业园林", btype:"品牌商", need:"农机配件 / 园林工具采购（品类推断）", kw:"园林机械,割草机,机器人", reach:200, url:"https://www.husqvarnagroup.com/", title:"Husqvarna Group"},
+  {nm:"The Toro Company", dm:"thetorocompany.com", cc:"US", region:"北美", famId:"agri", ind:"农业园林", btype:"品牌商", need:"农机配件 / 园林工具采购（品类推断）", kw:"园林机械,灌溉,割草机", reach:403, url:"https://www.thetorocompany.com/", title:""},
+  {nm:"Yanmar", dm:"yanmar.com", cc:"JP", region:"东亚", famId:"agri", ind:"农业园林", btype:"品牌商", need:"农机配件 / 园林工具采购（品类推断）", kw:"农机,发动机,拖拉机", reach:403, url:"https://www.yanmar.com/", title:""},
+  {nm:"Kverneland", dm:"kvernelandgroup.com", cc:"NO", region:"欧盟", famId:"agri", ind:"农业园林", btype:"品牌商", need:"农机配件 / 园林工具采购（品类推断）", kw:"农机具,播种,犁", reach:200, url:"https://ien.kvernelandgroup.com/", title:"Kverneland Group - The Future of Farming"},
+  {nm:"LEMKEN", dm:"lemken.com", cc:"DE", region:"欧盟", famId:"agri", ind:"农业园林", btype:"品牌商", need:"农机配件 / 园林工具采购（品类推断）", kw:"农机具,犁,播种机", reach:200, url:"https://lemken.com/en-en/", title:"LEMKEN – Innovative farming technology for high-yield agriculture | LEMKEN"},
+  {nm:"AMAZONE", dm:"amazone.de", cc:"DE", region:"欧盟", famId:"agri", ind:"农业园林", btype:"品牌商", need:"农机配件 / 园林工具采购（品类推断）", kw:"农机具,施肥,播种", reach:200, url:"https://amazone.de/de-de", title:"Amazone - Landmaschinen"},
+  {nm:"Netafim", dm:"netafim.com", cc:"IL", region:"中东", famId:"agri", ind:"农业园林", btype:"品牌商", need:"农机配件 / 园林工具采购（品类推断）", kw:"灌溉,滴灌,农业", reach:200, url:"https://www.netafim.com/", title:"Global leader in sustainable irrigation solutions | Netafim"},
+  {nm:"Petco", dm:"petco.com", cc:"US", region:"北美", famId:"pet", ind:"宠物用品", btype:"零售商/连锁", need:"宠物用品 / 包装采购（品类推断）", kw:"宠物用品,宠物食品", reach:403, url:"https://petco.com/", title:""},
+  {nm:"Chewy", dm:"chewy.com", cc:"US", region:"北美", famId:"pet", ind:"宠物用品", btype:"零售商/连锁", need:"宠物用品 / 包装采购（品类推断）", kw:"宠物用品,线上零售", reach:429, url:"https://www.chewy.com/", title:""},
+  {nm:"Pets at Home", dm:"petsathome.com", cc:"GB", region:"欧盟", famId:"pet", ind:"宠物用品", btype:"零售商/连锁", need:"宠物用品 / 包装采购（品类推断）", kw:"宠物用品,宠物食品", reach:200, url:"https://www.petsathome.com/", title:"Pets at Home | Pet Shop | The UK's Leader In Pet Care"},
+  {nm:"Jollyes", dm:"jollyes.co.uk", cc:"GB", region:"欧盟", famId:"pet", ind:"宠物用品", btype:"零售商/连锁", need:"宠物用品 / 包装采购（品类推断）", kw:"宠物用品,宠物食品", reach:403, url:"https://www.jollyes.co.uk/", title:""},
+  {nm:"Ferplast", dm:"ferplast.com", cc:"IT", region:"欧盟", famId:"pet", ind:"宠物用品", btype:"品牌商", need:"宠物用品 / 包装采购（品类推断）", kw:"宠物用品,笼具,配件", reach:429, url:"https://ferplast.com/", title:""},
+  {nm:"TRIXIE", dm:"trixie.de", cc:"DE", region:"欧盟", famId:"pet", ind:"宠物用品", btype:"品牌商", need:"宠物用品 / 包装采购（品类推断）", kw:"宠物用品,配件", reach:200, url:"https://www.trixie.de/de/", title:"TRIXIE Heimtierbedarf - Dein Großhandel für Haustierzubehör, Snacks und mehr"},
+  {nm:"KONG", dm:"kongcompany.com", cc:"US", region:"北美", famId:"pet", ind:"宠物用品", btype:"品牌商", need:"宠物用品 / 包装采购（品类推断）", kw:"宠物玩具,宠物用品", reach:200, url:"https://www.kongcompany.com/", title:"Buy KONG Dog and Cat Toys"},
+  {nm:"Mars Petcare", dm:"mars.com", cc:"US", region:"北美", famId:"pet", ind:"宠物用品", btype:"品牌商", need:"宠物用品 / 包装采购（品类推断）", kw:"宠物食品,宠物护理", reach:403, url:"https://www.mars.com/", title:""},
+  {nm:"Purina", dm:"purina.com", cc:"US", region:"北美", famId:"pet", ind:"宠物用品", btype:"品牌商", need:"宠物用品 / 包装采购（品类推断）", kw:"宠物食品", reach:403, url:"https://www.purina.com/", title:""},
+  {nm:"Pet Supplies Plus", dm:"petsuppliesplus.com", cc:"US", region:"北美", famId:"pet", ind:"宠物用品", btype:"零售商/连锁", need:"宠物用品 / 包装采购（品类推断）", kw:"宠物用品,零售", reach:403, url:"https://www.petsuppliesplus.com/", title:""},
+  {nm:"Vitakraft", dm:"vitakraft.com", cc:"DE", region:"欧盟", famId:"pet", ind:"宠物用品", btype:"品牌商", need:"宠物用品 / 包装采购（品类推断）", kw:"宠物食品,宠物用品", reach:200, url:"https://www.vitakraft.com/asia/en/", title:"Discover the variety of Vitakraft | Vitakraft Sun Seed"},
+  {nm:"Swarovski", dm:"swarovski.com", cc:"AT", region:"欧盟", famId:"jewelry", ind:"珠宝饰品", btype:"品牌商", need:"珠宝饰品 / 包装陈列采购（品类推断）", kw:"珠宝,水晶,饰品", reach:403, url:"https://www.swarovski.com/", title:""},
+  {nm:"Signet Jewelers", dm:"signetjewelers.com", cc:"US", region:"北美", famId:"jewelry", ind:"珠宝饰品", btype:"零售商/连锁", need:"珠宝饰品 / 包装陈列采购（品类推断）", kw:"珠宝,饰品,零售", reach:403, url:"https://signetjewelers.com/", title:""},
+  {nm:"Tiffany & Co.", dm:"tiffany.com", cc:"US", region:"北美", famId:"jewelry", ind:"珠宝饰品", btype:"品牌商", need:"珠宝饰品 / 包装陈列采购（品类推断）", kw:"珠宝,饰品,银饰", reach:403, url:"https://tiffany.com/", title:""},
+  {nm:"Blue Nile", dm:"bluenile.com", cc:"US", region:"北美", famId:"jewelry", ind:"珠宝饰品", btype:"零售商/连锁", need:"珠宝饰品 / 包装陈列采购（品类推断）", kw:"珠宝,钻石,线上零售", reach:200, url:"https://www.bluenile.com/", title:"Blue Nile: Diamond Jewelers – Engagement, Wedding Rings & Fine Jewelry"},
+  {nm:"Chow Tai Fook", dm:"chowtaifook.com", cc:"HK", region:"东亚", famId:"jewelry", ind:"珠宝饰品", btype:"品牌商", need:"珠宝饰品 / 包装陈列采购（品类推断）", kw:"珠宝,黄金,饰品", reach:200, url:"https://www.chowtaifook.com/zh-hk", title:"首頁 | 周大福珠寶"},
+  {nm:"Helzberg Diamonds", dm:"helzberg.com", cc:"US", region:"北美", famId:"jewelry", ind:"珠宝饰品", btype:"零售商/连锁", need:"珠宝饰品 / 包装陈列采购（品类推断）", kw:"珠宝,钻石,零售", reach:200, url:"https://www.helzberg.com/", title:"Helzberg | Engagement Rings, Wedding & Diamond Jewelry"},
+  {nm:"Ernest Jones", dm:"ernestjones.co.uk", cc:"GB", region:"欧盟", famId:"jewelry", ind:"珠宝饰品", btype:"零售商/连锁", need:"珠宝饰品 / 包装陈列采购（品类推断）", kw:"珠宝,腕表,零售", reach:403, url:"https://www.ernestjones.co.uk/", title:""},
+  {nm:"H.Samuel", dm:"hsamuel.co.uk", cc:"GB", region:"欧盟", famId:"jewelry", ind:"珠宝饰品", btype:"零售商/连锁", need:"珠宝饰品 / 包装陈列采购（品类推断）", kw:"珠宝,腕表,零售", reach:403, url:"https://www.hsamuel.co.uk/", title:""},
+  {nm:"Christ", dm:"christ.de", cc:"DE", region:"欧盟", famId:"jewelry", ind:"珠宝饰品", btype:"零售商/连锁", need:"珠宝饰品 / 包装陈列采购（品类推断）", kw:"珠宝,腕表,零售", reach:403, url:"https://christ.de/", title:""},
+  {nm:"Thomas Sabo", dm:"thomassabo.com", cc:"DE", region:"欧盟", famId:"jewelry", ind:"珠宝饰品", btype:"品牌商", need:"珠宝饰品 / 包装陈列采购（品类推断）", kw:"珠宝,银饰,饰品", reach:200, url:"https://www.thomassabo.com/INT/en/home", title:"Official THOMAS SABO Shop – Jewellery & watches"},
+  {nm:"Bulgari", dm:"bulgari.com", cc:"IT", region:"欧盟", famId:"jewelry", ind:"珠宝饰品", btype:"品牌商", need:"珠宝饰品 / 包装陈列采购（品类推断）", kw:"珠宝,腕表,饰品", reach:403, url:"https://www.bulgari.com/", title:""},
+  {nm:"Fossil", dm:"fossil.com", cc:"US", region:"北美", famId:"jewelry", ind:"珠宝饰品", btype:"品牌商", need:"珠宝饰品 / 包装陈列采购（品类推断）", kw:"腕表,饰品,皮具", reach:403, url:"https://www.fossil.com/en-us/", title:""},
+  {nm:"Daniel Wellington", dm:"danielwellington.com", cc:"SE", region:"欧盟", famId:"jewelry", ind:"珠宝饰品", btype:"品牌商", need:"珠宝饰品 / 包装陈列采购（品类推断）", kw:"腕表,饰品", reach:429, url:"https://danielwellington.com/", title:""},
+  {nm:"Office Depot", dm:"officedepot.com", cc:"US", region:"北美", famId:"office", ind:"办公用品", btype:"零售商/连锁", need:"文具 / 办公用品采购（品类推断）", kw:"办公用品,文具,耗材", reach:200, url:"https://www.officedepot.com/", title:"Site Maintenance"},
+  {nm:"Lyreco", dm:"lyreco.com", cc:"FR", region:"欧盟", famId:"office", ind:"办公用品", btype:"分销商 / 代理", need:"文具 / 办公用品采购（品类推断）", kw:"办公用品,文具,耗材", reach:403, url:"https://lyreco.com/", title:""},
+  {nm:"Viking", dm:"viking.de", cc:"DE", region:"欧盟", famId:"office", ind:"办公用品", btype:"分销商 / 代理", need:"文具 / 办公用品采购（品类推断）", kw:"办公用品,文具,耗材", reach:403, url:"https://www.viking.de/", title:""},
+  {nm:"STAEDTLER", dm:"staedtler.com", cc:"DE", region:"欧盟", famId:"office", ind:"办公用品", btype:"品牌商", need:"文具 / 办公用品采购（品类推断）", kw:"文具,铅笔,书写工具", reach:200, url:"https://www.staedtler.com/intl/en/", title:"Welcome to STAEDTLER | STAEDTLER"},
+  {nm:"Faber-Castell", dm:"faber-castell.com", cc:"DE", region:"欧盟", famId:"office", ind:"办公用品", btype:"品牌商", need:"文具 / 办公用品采购（品类推断）", kw:"文具,铅笔,美术用品", reach:200, url:"https://www.faber-castell.com/", title:"Official Website of Faber-Castell"},
+  {nm:"BIC", dm:"bicworld.com", cc:"FR", region:"欧盟", famId:"office", ind:"办公用品", btype:"品牌商", need:"文具 / 办公用品采购（品类推断）", kw:"文具,打火机,剃须刀", reach:200, url:"https://corporate.bic.com/en-us", title:"BIC Corporate | BIC"},
+  {nm:"Avery Dennison", dm:"avery.com", cc:"US", region:"北美", famId:"office", ind:"办公用品", btype:"品牌商", need:"文具 / 办公用品采购（品类推断）", kw:"标签,办公用品,材料", reach:200, url:"https://www.avery.com/", title:"Buy Custom & Blank Labels, Stickers, Cards & Tags | Avery.com"},
+  {nm:"Herlitz", dm:"herlitz.de", cc:"DE", region:"欧盟", famId:"office", ind:"办公用品", btype:"品牌商", need:"文具 / 办公用品采购（品类推断）", kw:"文具,办公用品", reach:200, url:"https://www.herlitz.de/herlitzhp/Pulsar/de.CMS.display.1./herlitz", title:"Willkommen - Herlitz"},
+  {nm:"Maped", dm:"maped.com", cc:"FR", region:"欧盟", famId:"office", ind:"办公用品", btype:"品牌商", need:"文具 / 办公用品采购（品类推断）", kw:"文具,书写工具", reach:200, url:"https://maped.com/", title:"Maped – Tomorrow is in your hands"},
+  {nm:"Esselte", dm:"esselte.com", cc:"SE", region:"欧盟", famId:"office", ind:"办公用品", btype:"品牌商", need:"文具 / 办公用品采购（品类推断）", kw:"办公用品,文件夹", reach:200, url:"https://www.esselte.com/en-gb/change-country/", title:"Select your country"},
+  {nm:"Fellowes", dm:"fellowes.com", cc:"US", region:"北美", famId:"office", ind:"办公用品", btype:"品牌商", need:"文具 / 办公用品采购（品类推断）", kw:"办公设备,碎纸机,配件", reach:200, url:"https://www.fellowes.com/us/en", title:"English (United States) - Fellowes®"},
+  {nm:"ACCO Brands", dm:"accobrands.com", cc:"US", region:"北美", famId:"office", ind:"办公用品", btype:"品牌商", need:"文具 / 办公用品采购（品类推断）", kw:"办公用品,文具", reach:200, url:"https://www.accobrands.com/", title:"ACCO Brands"},
+  {nm:"BSH Home Appliances", dm:"bsh-group.com", cc:"DE", region:"欧盟", famId:"appliance", ind:"家用电器", btype:"品牌商", need:"家电配件 / 注塑结构件采购（品类推断）", kw:"家电,厨电,白电", reach:200, url:"https://www.bsh-group.com/", title:"Home | BSH Hausgeräte GmbH"},
+  {nm:"Whirlpool", dm:"whirlpool.com", cc:"US", region:"北美", famId:"appliance", ind:"家用电器", btype:"品牌商", need:"家电配件 / 注塑结构件采购（品类推断）", kw:"家电,白电,厨电", reach:403, url:"https://www.whirlpool.com/", title:""},
+  {nm:"Gorenje", dm:"gorenje.com", cc:"SI", region:"欧盟", famId:"appliance", ind:"家用电器", btype:"品牌商", need:"家电配件 / 注塑结构件采购（品类推断）", kw:"家电,白电", reach:403, url:"https://www.gorenje.com/", title:""},
+  {nm:"Arcelik", dm:"arcelik.com", cc:"TR", region:"中东", famId:"appliance", ind:"家用电器", btype:"品牌商", need:"家电配件 / 注塑结构件采购（品类推断）", kw:"家电,白电,厨电", reach:403, url:"https://www.arcelik.com.tr/", title:""},
+  {nm:"SMEG", dm:"smeg.com", cc:"IT", region:"欧盟", famId:"appliance", ind:"家用电器", btype:"品牌商", need:"家电配件 / 注塑结构件采购（品类推断）", kw:"家电,厨电", reach:200, url:"https://www.smeg.com/", title:"Smeg - Technology with style | Smeg.com"},
+  {nm:"Panasonic", dm:"panasonic.com", cc:"JP", region:"东亚", famId:"appliance", ind:"家用电器", btype:"品牌商", need:"家电配件 / 注塑结构件采购（品类推断）", kw:"家电,电子,元器件", reach:403, url:"https://www.panasonic.com/", title:""},
+  {nm:"Miele", dm:"miele.com", cc:"DE", region:"欧盟", famId:"appliance", ind:"家用电器", btype:"品牌商", need:"家电配件 / 注塑结构件采购（品类推断）", kw:"家电,白电,厨电", reach:200, url:"https://www.miele.com/en/com/index.htm", title:"Home"},
+  {nm:"Bosch Home", dm:"bosch-home.com", cc:"DE", region:"欧盟", famId:"appliance", ind:"家用电器", btype:"品牌商", need:"家电配件 / 注塑结构件采购（品类推断）", kw:"家电,厨电", reach:200, url:"https://www.bosch-home.com:443/", title:"Home Appliances Global Website | Bosch"},
+  {nm:"Haier Europe", dm:"haier-europe.com", cc:"IT", region:"欧盟", famId:"appliance", ind:"家用电器", btype:"品牌商", need:"家电配件 / 注塑结构件采购（品类推断）", kw:"家电,白电", reach:200, url:"https://www.haier-europe.com/locale.html", title:"Choose your country or region | Haier Europe"},
+  {nm:"Honeywell", dm:"honeywell.com", cc:"US", region:"北美", famId:"security", ind:"安防门禁", btype:"品牌商", need:"安防配件 / 五金结构件采购（品类推断）", kw:"安防,楼控,传感器", reach:200, url:"https://www.honeywell.com/us/en", title:"Honeywell Technologies: Leading the Autonomy Shift"},
+  {nm:"Bosch Security", dm:"boschsecurity.com", cc:"DE", region:"欧盟", famId:"security", ind:"安防门禁", btype:"品牌商", need:"安防配件 / 五金结构件采购（品类推断）", kw:"安防,监控,门禁", reach:200, url:"https://www.boschbuildingtechnologies.com/lifesafetysystems/en/", title:"Home | Life Safety Systems"},
+  {nm:"Axis Communications", dm:"axis.com", cc:"SE", region:"欧盟", famId:"security", ind:"安防门禁", btype:"品牌商", need:"安防配件 / 五金结构件采购（品类推断）", kw:"安防,网络摄像机", reach:200, url:"https://www.axis.com/en-ph", title:"Axis Communications - Leader in network cameras and other IP networking solutions | Axis Communications"},
+  {nm:"ADT", dm:"adt.com", cc:"US", region:"北美", famId:"security", ind:"安防门禁", btype:"系统集成商", need:"安防配件 / 五金结构件采购（品类推断）", kw:"安防,报警,监控", reach:403, url:"https://www.adt.com/", title:""},
+  {nm:"Vivint", dm:"vivint.com", cc:"US", region:"北美", famId:"security", ind:"安防门禁", btype:"系统集成商", need:"安防配件 / 五金结构件采购（品类推断）", kw:"安防,智能家居", reach:403, url:"https://vivint.com/", title:""},
+  {nm:"Allegion", dm:"allegion.com", cc:"IE", region:"欧盟", famId:"security", ind:"安防门禁", btype:"品牌商", need:"安防配件 / 五金结构件采购（品类推断）", kw:"门锁,门禁,五金", reach:200, url:"https://www.allegion.com/corp/en/index.html", title:"Allegion | Creating a Safer and More Accessible World"},
+  {nm:"Nedap", dm:"nedap.com", cc:"NL", region:"欧盟", famId:"security", ind:"安防门禁", btype:"品牌商", need:"安防配件 / 五金结构件采购（品类推断）", kw:"门禁,识别,安防", reach:200, url:"https://www.nedap.com/en", title:"Technology for Life - Nedap"},
+  {nm:"Paxton", dm:"paxton-access.com", cc:"GB", region:"欧盟", famId:"security", ind:"安防门禁", btype:"品牌商", need:"安防配件 / 五金结构件采购（品类推断）", kw:"门禁,读卡器", reach:200, url:"https://www.paxton-access.com/", title:"Paxton Access Control Systems | Paxton Access Control"},
+  {nm:"Johnson Controls", dm:"johnsoncontrols.com", cc:"IE", region:"欧盟", famId:"security", ind:"安防门禁", btype:"系统集成商", need:"安防配件 / 五金结构件采购（品类推断）", kw:"楼控,安防,消防", reach:200, url:"https://www.johnsoncontrols.com/", title:"Johnson Controls | Johnson Controls"},
+  {nm:"Genetec", dm:"genetec.com", cc:"CA", region:"北美", famId:"security", ind:"安防门禁", btype:"系统集成商", need:"安防配件 / 五金结构件采购（品类推断）", kw:"安防,视频管理", reach:200, url:"https://www.genetec.com/", title:"Genetec Inc: Leader in unified physical security software"},
+  {nm:"Milestone Systems", dm:"milestonesys.com", cc:"DK", region:"欧盟", famId:"security", ind:"安防门禁", btype:"系统集成商", need:"安防配件 / 五金结构件采购（品类推断）", kw:"安防,视频管理", reach:200, url:"https://www.milestonesys.com/", title:"Milestone Systems | Global leading video management software provider"},
+  {nm:"HID Global", dm:"hidglobal.com", cc:"US", region:"北美", famId:"security", ind:"安防门禁", btype:"品牌商", need:"安防配件 / 五金结构件采购（品类推断）", kw:"门禁,证卡,识别", reach:403, url:"https://www.hidglobal.com/", title:""},
+  {nm:"ERCO", dm:"erco.com", cc:"DE", region:"欧盟", famId:"lighting", ind:"照明灯具", btype:"品牌商", need:"灯具 / 照明组件采购（品类推断）", kw:"建筑照明,灯具", reach:200, url:"https://www.erco.com/en/", title:"Efficient LED architectural lighting | ERCO"},
+  {nm:"Paulmann", dm:"paulmann.com", cc:"DE", region:"欧盟", famId:"lighting", ind:"照明灯具", btype:"品牌商", need:"灯具 / 照明组件采购（品类推断）", kw:"照明,LED,家居灯", reach:200, url:"https://en.paulmann.com/", title:"Paulmann – Lamps & Luminaires from the Manufacturer"},
+  {nm:"Mattel", dm:"mattel.com", cc:"US", region:"北美", famId:"toys", ind:"玩具母婴", btype:"品牌商", need:"玩具 / 母婴用品采购（品类推断）", kw:"玩具,娃娃,模型", reach:200, url:"https://about.mattel.com/", title:"Mattel | About"},
+  {nm:"Birkenstock", dm:"birkenstock.com", cc:"DE", region:"欧盟", famId:"footwear", ind:"鞋类箱包", btype:"品牌商", need:"鞋类 / 箱包采购（品类推断）", kw:"鞋,凉鞋,鞋床", reach:200, url:"https://www.birkenstock.com/ph", title:"BIRKENSTOCK Philippines OFFICIAL ONLINE STORE"},
+  {nm:"Foot Locker", dm:"footlocker.com", cc:"US", region:"北美", famId:"sports", ind:"运动健身", btype:"零售商/连锁", need:"运动器材 / 健身用品采购（品类推断）", kw:"运动鞋,运动服饰", reach:200, url:"https://www.footlocker.com/", title:"Sneakers, Apparel & More | Foot Locker"},
+  {nm:"Technogym", dm:"technogym.com", cc:"IT", region:"欧盟", famId:"sports", ind:"运动健身", btype:"品牌商", need:"运动器材 / 健身用品采购（品类推断）", kw:"健身器材,商用健身", reach:200, url:"https://www.technogym.com/en-INT/", title:"Home Gym equipment & Commercial Gym machines | Technogym International"},
+  {nm:"Puma", dm:"puma.com", cc:"DE", region:"欧盟", famId:"sports", ind:"运动健身", btype:"品牌商", need:"运动器材 / 健身用品采购（品类推断）", kw:"运动鞋,运动服饰", reach:200, url:"https://ph.puma.com/ph/en/home", title:"PUMA Shoes and Apparel | PUMA Philippines"},
+  {nm:"Mondelez", dm:"mondelez.com", cc:"US", region:"北美", famId:"food", ind:"食品饮料", btype:"品牌商", need:"食品原料 / 包装材料采购（品类推断）", kw:"零食,饼干,巧克力", reach:200, url:"https://www.mondelezinternational.com:443/", title:"Home | Mondelēz International, Inc."},
+  {nm:"Hardi International", dm:"hardi-international.com", cc:"DK", region:"欧盟", famId:"agri", ind:"农业园林", btype:"品牌商", need:"农机配件 / 园林工具采购（品类推断）", kw:"植保机械,喷雾机", reach:200, url:"https://hardi.com/en?popup=1", title:"HARDI – Your Crop Care Partner"},
+  {nm:"PetSmart", dm:"petsmart.com", cc:"US", region:"北美", famId:"pet", ind:"宠物用品", btype:"零售商/连锁", need:"宠物用品 / 包装采购（品类推断）", kw:"宠物用品,宠物食品", reach:200, url:"https://www.petsmart.com/", title:"Pet Supplies, Accessories, and Pet Food - Pet Stores | PetSmart"},
+  {nm:"Zooplus", dm:"zooplus.com", cc:"DE", region:"欧盟", famId:"pet", ind:"宠物用品", btype:"零售商/连锁", need:"宠物用品 / 包装采购（品类推断）", kw:"宠物用品,线上零售", reach:200, url:"https://www.zooplus.com/", title:"Online Pet Shop, Pet Food, Supplies & Accessories - zooplus"},
+  {nm:"Fressnapf", dm:"fressnapf.de", cc:"DE", region:"欧盟", famId:"pet", ind:"宠物用品", btype:"零售商/连锁", need:"宠物用品 / 包装采购（品类推断）", kw:"宠物用品,宠物食品", reach:200, url:"https://www.fressnapf.de/", title:"Tierbedarf & Tiernahrung im Online-Shop | FRESSNAPF"},
+  {nm:"Pandora", dm:"pandora.net", cc:"DK", region:"欧盟", famId:"jewelry", ind:"珠宝饰品", btype:"品牌商", need:"珠宝饰品 / 包装陈列采购（品类推断）", kw:"珠宝,饰品,串饰", reach:200, url:"https://stores.pandora.net/store-finder", title:"Pandora Jewellery Store Locator - Find a Store Near You"},
+  {nm:"Staples", dm:"staples.com", cc:"US", region:"北美", famId:"office", ind:"办公用品", btype:"零售商/连锁", need:"文具 / 办公用品采购（品类推断）", kw:"办公用品,文具,耗材", reach:200, url:"https://www.staples.com/", title:"Staples® Official Online Store"},
+  {nm:"LG Electronics", dm:"lg.com", cc:"KR", region:"东亚", famId:"appliance", ind:"家用电器", btype:"品牌商", need:"家电配件 / 注塑结构件采购（品类推断）", kw:"家电,显示,电子", reach:200, url:"https://www.lg.com/ph/", title:"LG Electronics: TVs, Home Entertainment & Appliances | LG Philippines"},
+  {nm:"Samsung", dm:"samsung.com", cc:"KR", region:"东亚", famId:"appliance", ind:"家用电器", btype:"品牌商", need:"家电配件 / 注塑结构件采购（品类推断）", kw:"家电,电子,显示", reach:200, url:"https://www.samsung.com/ph/", title:"Samsung Philippines | Shop Mobile, TV & Home Appliances Online"}
 ];
 
 /* 统计（供 UI 显示「名录规模」与可达性构成，不参与筛选）
@@ -292,7 +443,7 @@ window.FAL_REAL_META = (function () {
   const cnt = function (f) { return A.filter(f).length; };
   return {
     total: A.length,
-    verifiedAt: "2026-10-20",
+    verifiedAt: "2026-10-21",
     method: "DNS-over-HTTPS 查 A 记录 + curl 实测（https / www / http 四路）+ 抓首页 <title>",
     ok:      cnt(function (r) { return r.reach >= 200 && r.reach < 400; }),   /* 实测可打开 */
     block:   cnt(function (r) { return r.reach === 403 || r.reach === 429; }),/* 反爬，域名真实 */
@@ -354,7 +505,43 @@ window.FAL_REAL_FAM_HAY = {
             "软件 系统 平台 数字化 云 数据 信息化 工业软件 集成",
   service: "professional service testing certification consulting logistics legal tax accounting design " +
            "engineering advisory customs clearance inspection " +
-           "专业服务 检测 认证 咨询 物流 法律 财税 设计 工程咨询 报关"
+           "专业服务 检测 认证 咨询 物流 法律 财税 设计 工程咨询 报关",
+  /* ---- v60 新增 12 族（2026-10-21）：族级同义词，只描述「这个族是什么」，不含任何公司信息 ---- */
+  furniture: "furniture home furnishing sofa mattress cabinet table chair wardrobe bedding upholstery " +
+             "living room bedroom office furniture flat pack wooden panel " +
+             "家具 家居 沙发 床垫 橱柜 桌椅 衣柜 软装 床架 餐桌 办公家具 板式家具 木制家具",
+  lighting: "lighting luminaire lamp fixture chandelier downlight spotlight street light bulb led driver " +
+            "track light outdoor light decorative light " +
+            "照明 灯具 灯饰 吊灯 射灯 筒灯 路灯 台灯 光源 灯带 轨道灯 户外灯 驱动电源",
+  toys: "toy toys baby infant kid children plush puzzle building block doll stroller bottle nursery " +
+        "board game crayon model figure " +
+        "玩具 积木 拼图 模型 娃娃 母婴 婴儿 儿童 奶瓶 婴儿车 桌游 蜡笔 毛绒",
+  footwear: "footwear shoe shoes boot sandal slipper sneaker leather bag handbag backpack luggage suitcase " +
+            "wallet leather goods " +
+            "鞋 靴 拖鞋 凉鞋 皮鞋 箱包 背包 行李箱 手袋 皮具 拉杆箱 女包 皮革",
+  sports: "sports sport fitness gym exercise equipment dumbbell treadmill bike cycling yoga camping hiking " +
+          "fishing ball protective gear running outdoor recreation " +
+          "运动 健身 健身器材 球类 瑜伽 骑行 钓具 登山 露营 护具 跑步 运动鞋 户外运动",
+  food: "food beverage drink dairy snack confectionery chocolate candy seasoning sauce bakery coffee tea " +
+        "canned frozen ingredient " +
+        "食品 饮料 乳制品 零食 调味 烘焙 咖啡 罐头 冷冻食品 糖果 巧克力 食品原料",
+  agri: "agriculture agricultural farm farming machinery tractor harvester irrigation sprayer greenhouse " +
+        "seeding fertilizing garden lawn mower chainsaw livestock horticulture " +
+        "农业 农机 拖拉机 灌溉 园林 割草机 植保 播种 施肥 温室 畜牧 油锯 园艺",
+  pet: "pet pets dog cat animal supplies food toy leash cage aquarium grooming treat " +
+       "宠物 宠物食品 宠物用品 猫 狗 水族 宠物玩具 笼具 牵引绳 宠物零食",
+  jewelry: "jewelry jewellery jewel gem diamond gold silver watch wristwatch pearl crystal accessory " +
+           "display packaging ornament " +
+           "珠宝 首饰 饰品 钻石 黄金 银饰 腕表 水晶 串饰 陈列道具 珍珠 宝石",
+  office: "office stationery supply paper notebook folder label pen pencil printer consumable shredder " +
+          "writing desk accessory " +
+          "办公 文具 办公用品 书写 纸张 文件夹 标签 打印耗材 碎纸机 铅笔 笔记本",
+  appliance: "home appliance household electrical refrigerator washing machine air conditioner kitchen " +
+             "cookware small appliance coffee machine dishwasher white goods " +
+             "家电 白电 厨电 小家电 冰箱 洗衣机 空调 咖啡机 厨房电器 洗碗机",
+  security: "security surveillance cctv camera access control door lock alarm intercom video management " +
+            "building automation fire safety reader biometric " +
+            "安防 监控 门禁 报警 摄像机 楼控 消防 门锁 对讲 读卡器 视频管理 门禁五金"
 };
 /* 国家名中英双语（搜索用）：使用者会输「德国」「Germany」「DE」——
    只存 cc 代码等于只能按代码搜，等于搜不到国家。 */
