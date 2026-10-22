@@ -1,4 +1,4 @@
-/* FALCORA 获客通AI — 侧栏「每日汇率」小组件（2026-10-14）
+/* FALCORA 获客通AI — 侧栏「每日汇率」小组件
    --------------------------------------------------------------------------
    用户需求（2026-10-14）：「帮我在主导航上方加入一排每日最新国际汇率，基础汇率是人民币，
    换算币种包含 美金、欧元、日币、韩元、台币、泰铢、印度卢比、英镑…等主要货币。
@@ -6,6 +6,14 @@
 
    位置：注入到 `.sidebar` 里、**第一个 `.nav-label`（主导航）之前** → 视觉上位于「主导航」上方。
    基准：1 人民币（CNY）= 各币种金额。
+
+   ⚠️ 2026-10-22 v62 重构：本组件不再自己拉数据、不再自己写 localStorage。
+   原实现自带三个数据源并写 `falcora_fx_v1`，与 08 页新增的 fx-rates.js **共用同一个存储键
+   但数据结构不同**（本组件写 {ts,src}，fx-rates 写 {source,fetchedAt}）：
+     · 本组件 load() 要求 `typeof o.ts === 'number'` → 读 fx-rates 的缓存判定为「无缓存」→ 每次开页都重拉并覆盖；
+     · fx-rates 读本组件的缓存 → 缺 `source` 字段 → 08 页徽章显示「—」。
+   更糟的是同页会出现**两份牌价、两个日期口径**（侧栏 7.10、08 页 7.09）。
+   故统一为：**fx-rates.js 是唯一数据源**，本组件只负责展示与「到点即刷」的调度。
 
    ⚠️ 关于「每天早上 8 点自动更新」的诚实口径：
    本项目是**纯前端静态页**（GitHub Pages / 双击即开），没有服务器定时任务。
@@ -15,11 +23,6 @@
      · 标签页从后台切回前台时，若数据已过期也补拉。
    这与「服务器 cron」效果等价（用户看到的永远不早于最近一次 08:00），但**不假装有后端**。
 
-   数据源（2026-10-14 实测：从 https 源 fetch 均 200 + CORS 放行）：
-     1. cdn.jsdelivr.net/npm/@fawazahmed0/currency-api   （含 TWD/THB/KRW 等全部所需币种）
-     2. latest.currency-api.pages.dev                    （同上，同一项目的备用域名）
-     3. open.er-api.com/v6/latest/CNY                    （ExchangeRate-API 开放端点）
-   三个源全部失败时，退回 localStorage 缓存并**明确标注「离线缓存」**，不静默假装成功。
    ⚠️ 币种名称与数字格式**走 Intl**（DisplayNames / NumberFormat），不进 i18n 字典 ——
       与本项目「动态日期/数字不走字典」的既有铁律一致，避免逐语言维护 20+ 币种名。
    ⚠️ 界面文案（每日汇率 / 基准 / 更新 / 展开 / 参考汇率…）仍走 i18n 字典：
@@ -27,7 +30,6 @@
       注册 `__falOnRefresh` 回调**整体重绘**（否则 __src 会被缓存成外文，切回中文会残留外文）。
    -------------------------------------------------------------------------- */
 (function () {
-  var STORE = 'falcora_fx_v1';
   var BASE = 'CNY';
 
   /* 用户指定的 8 个币种（顺序即用户列举顺序：美金 / 欧元 / 日币 / 韩元 / 台币 / 泰铢 / 印度卢比 / 英镑） */
@@ -35,14 +37,6 @@
   /* 展开后追加的常用币种（出口业务高频：港/新/澳/加 + 东南亚） */
   var MORE = ['HKD', 'SGD', 'AUD', 'CAD', 'MYR', 'VND', 'IDR', 'PHP'];
   var ALL = MAIN.concat(MORE);
-
-  var SOURCES = [
-    { name: 'cdn.jsdelivr.net', url: 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/cny.json', kind: 'fawaz' },
-    { name: 'currency-api.pages.dev', url: 'https://latest.currency-api.pages.dev/v1/currencies/cny.json', kind: 'fawaz' },
-    { name: 'open.er-api.com', url: 'https://open.er-api.com/v6/latest/CNY', kind: 'erapi' }
-  ];
-  var TIMEOUT = 9000;          /* 单源超时 */
-  var STALE_MS = 12 * 3600e3;  /* 兜底：距上次更新超过 12h 也刷一次 */
 
   /* ---------- 时间：北京时间 08:00 = UTC 00:00，故无需时区库 ---------- */
   function utcMidnight(ts) {
@@ -99,73 +93,68 @@
       return z(d.getMonth() + 1) + '-' + z(d.getDate()) + ' ' + z(d.getHours()) + ':' + z(d.getMinutes());
     }
   }
-
-  /* ---------- 存储 ---------- */
-  function load() {
-    try {
-      var o = JSON.parse(localStorage.getItem(STORE) || 'null');
-      if (o && o.rates && typeof o.ts === 'number') return o;
-    } catch (e) {}
-    return null;
-  }
-  function save(o) { try { localStorage.setItem(STORE, JSON.stringify(o)); } catch (e) {} }
-
-  /* ---------- 数据源归一化 ---------- */
-  function normalize(src, j) {
-    var rates = {}, date = '';
-    if (src.kind === 'fawaz') {
-      if (!j || !j.cny) return null;
-      ALL.forEach(function (c) { var v = j.cny[c.toLowerCase()]; if (typeof v === 'number') rates[c] = v; });
-      date = j.date || '';
-    } else {
-      if (!j || j.result !== 'success' || !j.rates) return null;
-      ALL.forEach(function (c) { var v = j.rates[c]; if (typeof v === 'number') rates[c] = v; });
-      var t = Date.parse(j.time_last_update_utc || '');
-      if (isFinite(t)) { var d = new Date(t); date = d.toISOString().slice(0, 10); }
-    }
-    if (!rates.USD || !rates.EUR) return null;   /* 关键币种缺失视为该源不可用 */
-    return { ts: Date.now(), base: BASE, date: date, src: src.name, rates: rates };
+  /* 只有日期、没有抓取时刻（内置快照 / 旧缓存没有 fetchedAt）→ 只显示月-日，不编造时分 */
+  function dayOnly(date) {
+    var s = String(date || '');
+    return /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(5, 10) : s;
   }
 
-  /* ---------- 拉取（多源顺序回退） ---------- */
-  function fetchJson(url) {
-    return new Promise(function (res, rej) {
-      var ctl = null, tid = null;
-      try { ctl = new AbortController(); } catch (e) {}
-      var opt = { cache: 'no-store' };
-      if (ctl) opt.signal = ctl.signal;
-      tid = setTimeout(function () { if (ctl) ctl.abort(); rej(new Error('timeout')); }, TIMEOUT);
-      fetch(url, opt).then(function (r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      }).then(function (j) { clearTimeout(tid); res(j); })
-        .catch(function (e) { clearTimeout(tid); rej(e); });
-    });
+  /* ---------- 唯一数据源：fx-rates.js ---------- */
+  function FX() { return window.__falFx || null; }
+
+  function data() {
+    var f = FX();
+    if (!f) return null;
+    try { return f.current(); } catch (e) { return null; }
+  }
+  function stat() {
+    var f = FX();
+    if (!f) return null;
+    try { return f.status(); } catch (e) { return null; }
+  }
+  /* 上次抓取时刻（毫秒）；无 fetchedAt 返回 0 */
+  function fetchedTs(d) {
+    if (!d || !d.fetchedAt) return 0;
+    var t = Date.parse(d.fetchedAt);
+    return isFinite(t) ? t : 0;
   }
 
-  var state = { mode: 'loading', data: load(), more: false, busy: false };
+  var state = { mode: 'loading', more: false, busy: false };
 
-  function pull(i) {
-    if (i >= SOURCES.length) {
-      state.mode = state.data ? 'stale' : 'error';
-      state.busy = false;
-      render();
-      return;
-    }
-    fetchJson(SOURCES[i].url).then(function (j) {
-      var r = normalize(SOURCES[i], j);
-      if (!r) return pull(i + 1);
-      state.data = r; state.mode = 'ok'; state.busy = false;
-      save(r); render();
-    }).catch(function () { pull(i + 1); });
+  /* 是否该去拉一次：
+     · 没有数据 / 没有库 → 拉
+     · fx-rates 判定过期（date 不是今天）→ 拉
+     · 抓取时刻早于最近一次北京 08:00 → 拉
+     · 从没抓过（只有内置快照，fetchedAt 空）→ 拉 */
+  function needsPull() {
+    if (!FX()) return true;
+    var s = stat(), d = data();
+    if (!s || !d) return true;
+    if (s.stale) return true;
+    var ts = fetchedTs(d);
+    if (!ts) return true;
+    if (ts < lastBeijing8()) return true;
+    return false;
   }
 
-  function refresh(manual) {
+  function pull(manual) {
+    var f = FX();
+    if (!f) return;
     if (state.busy) return;
     state.busy = true;
-    if (manual || !state.data) { state.mode = 'loading'; }
-    render();
-    pull(0);
+    if (manual) { state.mode = 'loading'; render(); }
+    try {
+      f.refresh(function (st) {
+        state.busy = false;
+        if (st && st.ok) state.mode = 'ok';
+        else state.mode = data() ? 'stale' : 'error';
+        render();
+      });
+    } catch (e) {
+      state.busy = false;
+      state.mode = data() ? 'stale' : 'error';
+      render();
+    }
   }
 
   /* ---------- 渲染 ---------- */
@@ -173,20 +162,25 @@
 
   function render() {
     if (!card) return;
-    var d = state.data, D = dn();
+    var d = data(), D = dn(), s = stat();
     var list = state.more ? ALL : MAIN;
     var baseName = cname(BASE, D);
+    var mode = state.mode;
+    if (state.busy && mode === 'loading') mode = 'loading';
+    else if (!d) mode = 'error';
+    else if (s && s.stale) mode = 'stale';
+    else if (mode !== 'ok') mode = 'ok';
     var h = '';
 
     /* 头部 */
     h += '<div class="fx-h"><span class="fx-ic">💱</span><b>每日汇率</b>'
-      + '<button type="button" class="fx-r' + (state.mode === 'loading' ? ' spin' : '') + '" title="刷新汇率" aria-label="刷新汇率">'
+      + '<button type="button" class="fx-r' + (state.busy ? ' spin' : '') + '" title="刷新汇率" aria-label="刷新汇率">'
       + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">'
       + '<path d="M20 11a8 8 0 1 0-2.3 6.3"/><path d="M20 4v7h-7"/></svg></button></div>';
 
-    if (state.mode === 'loading' && !d) {
+    if (mode === 'loading' && !d) {
       h += '<div class="fx-msg">正在获取汇率…</div>';
-    } else if (state.mode === 'error' && !d) {
+    } else if (mode === 'error' && !d) {
       h += '<div class="fx-msg fx-bad">汇率数据源暂不可用</div>'
         + '<button type="button" class="fx-retry">重试</button>';
     } else {
@@ -207,18 +201,20 @@
       h += '<div class="fx-note">参考汇率 · 非交易牌价</div>';
       /* 页脚：前缀与时间拆成两个节点 —— 前缀才能被字典单独翻译。
          若拼成「更新 10-14 08:00」整串，反查落空 → 英文界面会残留中文。 */
+      var ts = fetchedTs(d);
+      var when = ts ? stamp(ts) : dayOnly(d.date);
       h += '<div class="fx-foot"><span class="t">'
-        + '<span class="pfx">' + (state.mode === 'stale' ? '离线缓存' : '更新于') + '</span>'
-        + '<span class="ts num">' + stamp(d.ts) + '</span></span>'
+        + '<span class="pfx">' + (mode === 'stale' ? '离线缓存' : '更新于') + '</span>'
+        + '<span class="ts num">' + when + '</span></span>'
         + '<button type="button" class="fx-more">' + (state.more ? '收起' : '展开全部') + '</button></div>';
-      if (state.mode === 'stale') h += '<div class="fx-msg fx-bad">数据源不可达，显示本机缓存</div>';
+      if (mode === 'stale') h += '<div class="fx-msg fx-bad">数据源不可达，显示本机缓存</div>';
     }
 
-    card.className = 'fx-card' + (state.mode === 'error' ? ' err' : (state.mode === 'stale' ? ' warn' : ''));
+    card.className = 'fx-card' + (mode === 'error' ? ' err' : (mode === 'stale' ? ' warn' : ''));
     card.innerHTML = h;
     /* ⚠️ title 不能含中文：applyAttrs 是「整串反查字典」，拼接串永远查不到 →
        英文界面下会把中文原样留下。故这里只用 Intl 产出的本地化名称 + 数据源 + 日期。 */
-    var ttl = baseName + (d ? ' · ' + d.src + (d.date ? ' · ' + d.date : '') : '');
+    var ttl = baseName + (d ? ' · ' + (d.source || '—') + (d.date ? ' · ' + d.date : '') : '');
     card.title = ttl;
     /* ⚠️ 属性缓存同步（必须）：app-i18n.js 的 applyAttrs 会**永久缓存**节点首次出现的
        title（el.__fal_title），之后每次翻译都从该缓存回写。`.fx-card` 是**持久节点**
@@ -228,9 +224,9 @@
     card.__fal_title = ttl;
 
     var rb = card.querySelector('.fx-r');
-    if (rb) rb.addEventListener('click', function () { refresh(true); });
+    if (rb) rb.addEventListener('click', function () { pull(true); });
     var rt = card.querySelector('.fx-retry');
-    if (rt) rt.addEventListener('click', function () { refresh(true); });
+    if (rt) rt.addEventListener('click', function () { pull(true); });
     var mb = card.querySelector('.fx-more');
     if (mb) mb.addEventListener('click', function () { state.more = !state.more; render(); });
   }
@@ -294,33 +290,43 @@
     return true;
   }
 
+  /* 兜底：万一某页 HTML 还没挂 fx-rates.js（SW 缓存了旧版 HTML），动态补一个，
+     而不是自己另起一套拉取逻辑把存储键再搅一次。 */
+  function ensureLib(cb) {
+    if (FX()) { cb(true); return; }
+    var s = document.createElement('script');
+    s.src = 'fx-rates.js';
+    s.onload = function () { cb(!!FX()); };
+    s.onerror = function () { cb(false); };
+    document.head.appendChild(s);
+  }
+
   /* ---------- 定时与唤醒 ---------- */
   var timer = null;
   function schedule() {
     clearTimeout(timer);
-    timer = setTimeout(function () { refresh(false); schedule(); }, msToNextBeijing8());
-  }
-  function stale() {
-    var d = state.data;
-    if (!d) return true;
-    if (d.ts < lastBeijing8()) return true;      /* 上次更新早于最近一次北京 08:00 */
-    if (Date.now() - d.ts > STALE_MS) return true;
-    return false;
+    timer = setTimeout(function () { pull(false); schedule(); }, msToNextBeijing8());
   }
 
   function boot() {
     if (!inject()) { setTimeout(boot, 300); return; }   /* 等 DOM 就绪（SW 首装竞态） */
-    if (state.data) { state.mode = 'ok'; render(); }
-    if (stale()) refresh(false); else render();
-    schedule();
+    ensureLib(function (ok) {
+      if (!ok) { state.mode = 'error'; render(); return; }
+      state.mode = 'ok';
+      render();
+      if (needsPull()) pull(false);
+      schedule();
+    });
     /* 切语言：整体重绘（避免 __src 缓存外文；数字/币种名走 Intl 重新格式化） */
     if (window.__falOnRefresh) window.__falOnRefresh(function () { render(); });
     else setTimeout(function () { if (window.__falOnRefresh) window.__falOnRefresh(function () { render(); }); }, 400);
+    /* 08 页点「刷新汇率」或 fx-rates 自身刷新成功 → 侧栏同步更新，不必等下一次定时 */
+    window.addEventListener('fal-fx-updated', function () { state.mode = 'ok'; render(); });
   }
 
   /* 后台切回前台：过期就补拉 */
   document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'visible' && stale()) { refresh(false); schedule(); }
+    if (document.visibilityState === 'visible' && needsPull()) { pull(false); schedule(); }
   });
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
@@ -330,10 +336,10 @@
 
   /* 可测钩子（与 app-panel.js 的 __falPanel 同风格） */
   window.__falFX = {
-    refresh: function () { refresh(true); },
-    state: function () { return state; },
+    refresh: function () { pull(true); },
+    state: function () { return { mode: state.mode, busy: state.busy, more: state.more, data: data() }; },
     next8: function () { return new Date(Date.now() + msToNextBeijing8()).toISOString(); },
     last8: function () { return new Date(lastBeijing8()).toISOString(); },
-    stale: stale
+    stale: needsPull
   };
 })();

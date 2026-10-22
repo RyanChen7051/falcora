@@ -158,6 +158,26 @@
   .note b{color:var(--warn);font-weight:650}
   .foot{font-size:11.5px;color:var(--muted-2);line-height:1.6;border-top:1px solid var(--border);padding-top:14px}
 
+  /* 汇率状态条（v62）：一眼看到「这份汇率是哪天的、从哪来、是不是过期了」 */
+  .fxbar{display:flex;align-items:center;gap:9px;margin-top:14px;padding:9px 12px;border-radius:10px;
+    background:rgba(94,234,212,.05);border:1px solid var(--border);flex-wrap:wrap}
+  .fxdot{width:7px;height:7px;border-radius:50%;background:var(--muted-2);flex:0 0 auto;box-shadow:0 0 0 3px rgba(148,163,184,.12)}
+  .fxdot.ok{background:#34d399;box-shadow:0 0 0 3px rgba(52,211,153,.16)}
+  .fxdot.stale{background:var(--warn);box-shadow:0 0 0 3px rgba(245,184,65,.18)}
+  .fxdot.err{background:#f87171;box-shadow:0 0 0 3px rgba(248,113,113,.16)}
+  .fxtxt{font-size:12px;color:var(--muted);min-width:0;line-height:1.5}
+  .fxtxt b{color:var(--ink);font-weight:650}
+  .fxsp{flex:1 1 auto}
+  .mini{padding:6px 11px;border-radius:8px;border:1px solid var(--border-2);background:rgba(94,234,212,.08);
+    color:var(--cyan);font-size:11.5px;cursor:pointer;font-family:inherit;white-space:nowrap}
+  .mini:hover{background:rgba(94,234,212,.16)}
+  .mini:disabled{opacity:.55;cursor:default}
+
+  /* 术语角标：EXW / FOB / CFR / CIF / DDP —— 纯拉丁，不参与翻译 */
+  .tchip{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:5px;font-style:normal;
+    font-size:9.5px;letter-spacing:.4px;vertical-align:2px;color:var(--gold);
+    background:rgba(245,184,65,.12);border:1px solid rgba(245,184,65,.28)}
+
   @media (max-width:1080px){
     .layout{grid-template-columns:minmax(0,1fr)}
     .resgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -236,13 +256,24 @@
                   <option value="JPY">JPY</option><option value="TWD">TWD</option><option value="HKD">HKD</option>
                 </select><span class="u"></span></div>
                 <div class="frow"><label for="qty">订单数量</label><input id="qty" class="num" type="number" min="0" step="1" /><span class="u">件</span></div>
+                <div class="frow"><label for="terms">报价术语</label><select class="sel" id="terms" style="width:118px;padding:9px 10px;font-size:13.5px">
+                  <option value="EXW">EXW 出厂</option><option value="FOB">FOB 离岸</option><option value="CFR">CFR 到岸</option>
+                  <option value="CIF">CIF 到岸含险</option><option value="DDP">DDP 完税交货</option>
+                </select><span class="u"></span></div>
                 <div class="frow"><label for="fxQuote">报价汇率</label><input id="fxQuote" class="num" type="number" min="0" step="0.0001" /><span class="u">本币</span></div>
                 <div class="frow"><label for="fxNow">当前汇率</label><input id="fxNow" class="num" type="number" min="0" step="0.0001" /><span class="u">本币</span></div>
                 <div class="frow"><label for="margin">目标毛利率</label><input id="margin" class="num" type="number" min="0" max="99" step="0.1" /><span class="u">%</span></div>
                 <div class="frow"><label for="floorM">可接受最低毛利率</label><input id="floorM" class="num" type="number" min="0" max="99" step="0.1" /><span class="u">%</span></div>
                 <div class="frow"><label for="comm">佣金率</label><input id="comm" class="num" type="number" min="0" max="99" step="0.1" /><span class="u">%</span></div>
               </div>
+              <div class="fxbar">
+                <span class="fxdot" id="fxDot"></span>
+                <span class="fxtxt" id="fxBadge">汇率加载中…</span>
+                <span class="fxsp"></span>
+                <button class="mini ghost" id="fxBtn" type="button"><span class="noi18n">↻</span> <span id="fxBtnTxt">刷新汇率</span></button>
+              </div>
               <div class="note" style="margin-top:12px">报价汇率填「1 单位报价币 = 多少本币」。本页全部国内费用按本币填，国际运费与目的国费用按报价币填。</div>
+              <div class="note" style="margin-top:6px">汇率每日自动更新（公开参考牌价，不是银行结汇价，实际结汇还有价差与手续费）；也可直接手输覆盖。</div>
             </div>
           </div>
 
@@ -299,7 +330,8 @@
                 <div class="fm"><div class="fl"><b>国内段分摊</b><code>d = (D_inland + D_clear + D_port + D_other) ÷ N ÷ e_q</code></div><div class="fv num" id="rDom">—</div></div>
                 <div class="fm"><div class="fl"><b>FOB 单价</b><code>FOB = EXW + d</code></div><div class="fv num" id="rFob">—</div></div>
                 <div class="fm"><div class="fl"><b>CFR 单价</b><code>CFR = FOB + F_freight ÷ N</code></div><div class="fv num" id="rCfr">—</div></div>
-                <div class="fm hi"><div class="fl"><b>CIF 单价</b><code>CIF = CFR ÷ (1 − r_ins × (1 + k))</code></div><div class="fv num" id="rCif">—</div></div>
+                <div class="fm"><div class="fl"><b>CIF 单价</b><code>CIF = CFR ÷ (1 − r_ins × (1 + k))</code></div><div class="fv num" id="rCif">—</div></div>
+                <div class="fm"><div class="fl"><b>其中 保险费</b><code>Ins = CIF − CFR = CIF × r_ins × (1 + k)</code></div><div class="fv num" id="rIns">—</div></div>
               </div>
               <div class="note" style="margin-top:12px">保险费不能用「CFR × 费率」直接算 —— 因为保费本身也计入保险金额。正确做法是先把 CFR 除以 (1 − 费率 × 投保加成)，反推出 CIF，再倒推保费。</div>
             </div>
@@ -332,14 +364,15 @@
               <div class="fgrid">
                 <div class="frow"><label for="price">当前报价</label><input id="price" class="num" type="number" min="0" step="0.01" /><span class="u">/件</span></div>
                 <div class="frow"><label for="varCost">单位变动成本</label><input id="varCost" class="num" type="number" min="0" step="0.01" /><span class="u">/件</span></div>
-                <div class="frow"><label for="fixedCost">固定费用总额</label><input id="fixedCost" class="num" type="number" min="0" step="0.01" /><span class="u">整批</span></div>
+                <div class="frow"><label for="fixedCost">固定费用总额</label><input id="fixedCost" class="num" type="number" min="0" step="0.01" /><span class="u">整批·报价币</span></div>
               </div>
               <div class="fmlist">
                 <div class="fm"><div class="fl"><b>完全成本（折报价币）</b><code>FC_q = FC ÷ e_q</code></div><div class="fv num" id="rFullQ">—</div></div>
-                <div class="fm"><div class="fl"><b>毛利</b><code>GM = Price − FC_q</code></div><div class="fv num" id="rGross">—</div></div>
+                <div class="fm hi"><div class="fl"><b>成本基数（按报价术语）</b><code>CB = L_T − EXW × r_target</code></div><div class="fv num" id="rCostB">—</div></div>
+                <div class="fm"><div class="fl"><b>毛利</b><code>GM = Price − CB</code></div><div class="fv num" id="rGross">—</div></div>
                 <div class="fm"><div class="fl"><b>毛利率</b><code>r_gm = GM ÷ Price × 100%</code></div><div class="fv num" id="rMargin">—</div></div>
-                <div class="fm"><div class="fl"><b>成本加成率</b><code>r_mk = GM ÷ FC_q × 100%</code></div><div class="fv num" id="rMarkup">—</div></div>
-                <div class="fm hi"><div class="fl"><b>目标价（按目标毛利率反推）</b><code>Price* = FC_q ÷ (1 − r_target)</code></div><div class="fv num" id="rTarget">—</div></div>
+                <div class="fm"><div class="fl"><b>成本加成率</b><code>r_mk = GM ÷ CB × 100%</code></div><div class="fv num" id="rMarkup">—</div></div>
+                <div class="fm"><div class="fl"><b>目标价（按目标毛利率反推）</b><code>Price* = L_T</code></div><div class="fv num" id="rTarget">—</div></div>
                 <div class="fm"><div class="fl"><b>盈亏平衡量</b><code>Q_be = K ÷ (Price − V)</code></div><div class="fv num" id="rBe">—</div></div>
               </div>
               <div class="note" style="margin-top:12px"><b>最常见的错误：把毛利率当加成率用。</b>想赚 30% 毛利，售价是 成本 ÷ (1 − 30%)＝成本的 1.4286 倍，不是 成本 × 1.3。用错公式会直接把利润算少一截。</div>
@@ -371,7 +404,7 @@
 
           <!-- ============ 公式速查 ============ -->
           <div class="card">
-            <div class="card-h"><div class="ic">∑</div><h3>公式速查表</h3><span class="tag">共 26 条 · 可直接抄用</span></div>
+            <div class="card-h"><div class="ic">∑</div><h3>公式速查表</h3><span class="tag" id="fCountTag">共 27 条 · 可直接抄用</span></div>
             <div class="card-b">
               <div class="leg" style="margin-bottom:16px">
                 <div><span>M</span>原材料/件</div><div><span>L</span>直接人工/件</div>
@@ -379,6 +412,7 @@
                 <div><span>C</span>检测认证分摊/件</div><div><span>X</span>其他直接费用/件</div>
                 <div><span>MC</span>单位制造成本</div><div><span>MC′</span>含损耗成本</div>
                 <div><span>FC</span>完全成本（本币）</div><div><span>FC_q</span>完全成本（报价币）</div>
+                <div><span>CB</span>成本基数（按报价术语）</div><div><span>L_T</span>该术语阶梯价</div>
                 <div><span>N</span>订单数量</div><div><span>e_q</span>报价汇率</div>
                 <div><span>e_n</span>当前汇率</div><div><span>r_gm</span>毛利率</div>
                 <div><span>r_mk</span>成本加成率</div><div><span>r_comm</span>佣金率</div>
@@ -412,17 +446,18 @@
                   <tr><td>进口增值税</td><td><code>VAT = (DPV + Duty + Anti) × r_vat</code></td><td>计税基数是完税价加关税，不是完税价本身</td></tr>
                   <tr><td>到岸总成本</td><td><code>Landed = CIF + Duty + Anti + VAT + B ÷ N</code></td><td>即 DDP 口径的落地成本</td></tr>
                   <tr class="grp"><td colspan="3"><b>四、利润与毛利率</b></td></tr>
-                  <tr><td>毛利</td><td><code>GM = Price − FC_q</code></td><td>售价减完全成本，单位必须统一到同一币种</td></tr>
+                  <tr><td>成本基数（按报价术语）</td><td><code>CB = L_T − EXW × r_target</code></td><td>该报价术语下不含利润的成本</td></tr>
+                  <tr><td>毛利</td><td><code>GM = Price − CB</code></td><td>售价减成本基数，单位必须统一到同一币种</td></tr>
                   <tr><td>毛利率</td><td><code>r_gm = GM ÷ Price × 100%</code></td><td>分母是售价</td></tr>
-                  <tr><td>成本加成率</td><td><code>r_mk = GM ÷ FC_q × 100%</code></td><td>分母是成本，恒大于毛利率</td></tr>
-                  <tr><td>目标价反推</td><td><code>Price* = FC_q ÷ (1 − r_target)</code></td><td>最常被用错的一条</td></tr>
-                  <tr><td>保本价</td><td><code>Price_be = FC_q</code></td><td>毛利率为零的售价</td></tr>
+                  <tr><td>成本加成率</td><td><code>r_mk = GM ÷ CB × 100%</code></td><td>分母是成本，恒大于毛利率</td></tr>
+                  <tr><td>目标价反推</td><td><code>Price* = L_T</code></td><td>最常被用错的一条</td></tr>
+                  <tr><td>保本价</td><td><code>Price_be = CB</code></td><td>毛利率为零的售价</td></tr>
                   <tr><td>盈亏平衡量</td><td><code>Q_be = K ÷ (Price − V)</code></td><td>覆盖固定费用所需的最小销量</td></tr>
                   <tr class="grp"><td colspan="3"><b>五、汇率 · 佣金 · 退税</b></td></tr>
                   <tr><td>本币收入</td><td><code>R = Price × e_n × N</code></td><td>按结算日汇率折算</td></tr>
                   <tr><td>汇率损益</td><td><code>FX = Price × (e_n − e_q) × N</code></td><td>正数为汇兑收益，负数为损失</td></tr>
                   <tr><td>含佣金报价</td><td><code>Price_c = Net ÷ (1 − r_comm)</code></td><td>佣金按成交价计，故要除不是乘</td></tr>
-                  <tr><td>底价</td><td><code>Floor = FC_q ÷ (1 − r_floor)</code></td><td>低于此价即跌破最低毛利率</td></tr>
+                  <tr><td>底价</td><td><code>Floor = L_T(r_floor)</code></td><td>低于此价即跌破最低毛利率</td></tr>
                   <tr><td>议价空间</td><td><code>Room = Price − Floor</code></td><td>业务员可自主让价的额度</td></tr>
                   <tr><td>外贸企业退税</td><td><code>Refund = C_incl ÷ (1 + r_vat_out) × r_refund</code></td><td>免退税办法，按采购不含税额乘退税率</td></tr>
                   <tr><td>生产企业免抵退上限</td><td><code>Refund* = FOB × e_q × r_refund</code></td><td>实际退税额另受留抵税额限制</td></tr>
@@ -431,7 +466,7 @@
             </div>
           </div>
 
-          <div class="foot">本页为测算辅助工具，用于把口径讲清、把账算平。所有税率、费率、汇率均为您自行输入或示例值，未接入实时税则与汇率数据源；不构成税务、法律或投资意见。实际申报请以目的国海关税则、税局公告及专业顾问意见为准。</div>
+          <div class="foot">本页为测算辅助工具，用于把口径讲清、把账算平。汇率每日自动更新（公开参考牌价，非银行结汇价，实际结汇还有价差与手续费）；税率与费率仍需您自行输入，未接入实时税则数据源；不构成税务、法律或投资意见。实际申报请以目的国海关税则、税局公告及专业顾问意见为准。</div>
         </div>
 
         <!-- ============ 右栏 ============ -->
@@ -465,6 +500,7 @@
 <script src="app-update.js"></script>
 <script src="app-nav.js"></script>
 <script src="app-panel.js"></script>
+<script src="fx-rates.js"></script>
 <script>
 (function () {
   var STORE = 'falcora_calc_v1';
@@ -474,8 +510,15 @@
     'broker','destPort','lastMile','dutyRate','vatRate','antiRate',
     'price','varCost','fixedCost','netPrice','buyIncl','vatOut','refundRate'];
 
+  /* 报价术语：决定「毛利」拿哪一档成本去比。
+     v61 之前一律拿完全成本（EXW 口径）比 —— 报价若是 CIF/DDP，运费、保险、关税、
+     目的国费用全都算进毛利里了，毛利率会被系统性高估。v62 起按所选术语取成本基数。 */
+  var TERMS = ['EXW', 'FOB', 'CFR', 'CIF', 'DDP'];
+
+  /* 示例数据不再写死汇率（旧版写 7.18，是多年前的 CNY/USD）——
+     v62 起由 fx-rates.js 的当日牌价自动填充，示例只保留业务量级。 */
   var DEMO = {
-    qty:'500', fxQuote:'7.18', fxNow:'7.24', margin:'28', floorM:'18', comm:'3',
+    qty:'500', margin:'28', floorM:'18', comm:'3',
     mat:'168', lab:'42', ovh:'26', pack:'9', cert:'5', other:'4', loss:'2', period:'8',
     inland:'1800', clear:'600', port:'1200', exOther:'300',
     freight:'4200', insRate:'0.35', insMarkup:'10',
@@ -490,6 +533,14 @@
   function r(id) { return v(id) / 100; }
   function cur() { return (el('cur') && el('cur').value) || 'USD'; }
   function bcur() { return (el('baseCur') && el('baseCur').value) || 'CNY'; }
+  function term() { var e = el('terms'); return (e && TERMS.indexOf(e.value) >= 0) ? e.value : 'EXW'; }
+  /* 08 页原本没有 T/Tv —— 动态文案一律走引擎，避免英文态冒出中文 */
+  function T(s) { return (window.__falT ? window.__falT(s) : s); }
+  function Tv(s, vars) {
+    var o = T(s);
+    if (vars) for (var k in vars) o = o.split('{' + k + '}').join(vars[k]);
+    return o;
+  }
 
   /* 数字本地化：按当前界面语言格式化（不走字典） */
   function locale() {
@@ -508,42 +559,71 @@
 
   function compute() {
     var N = v('qty') || 1;
-    var eq = v('fxQuote') || 1;
-    var en = v('fxNow') || eq;
+    /* 汇率缺失时不能默认 1（那会把「USD 报价」当成「CNY 报价」算出看着很正常的一堆数）。
+       同币种 → 1 是对的；跨币种又没汇率 → NaN，界面显示「—」，让缺口暴露出来。 */
+    var eqRaw = v('fxQuote');
+    var eq = (eqRaw > 0) ? eqRaw : (cur() === bcur() ? 1 : NaN);
+    var enRaw = v('fxNow');
+    var en = (enRaw > 0) ? enRaw : eq;
 
     /* 一、单位成本（本币/件） */
     var MC = v('mat') + v('lab') + v('ovh') + v('pack') + v('cert') + v('other');
-    var rl = r('loss'); var MC2 = (rl < 1) ? MC / (1 - rl) : MC;
-    var rp = r('period'); var FC = MC2 * (1 + rp);
+    var rl = r('loss');
+    /* 损耗率 100% 时 1−r = 0，旧版静默回退成 MC（等于「没有损耗」），是个假数。
+       v62：分母 ≤0 一律给 NaN，界面显示「—」，让使用者看见「这个输入不成立」。 */
+    var okLoss = rl < 1;
+    var MC2 = okLoss ? MC / (1 - rl) : NaN;
+    var rp = r('period');
+    var FC = okLoss ? MC2 * (1 + rp) : NaN;
 
-    /* 二、报价阶梯（报价币/件） */
-    var rgm = r('margin');
-    /* ⚠️ FC 是本币，必须先 ÷ e_q 折成报价币，否则 EXW 会以本币金额顶着报价币的标签 */
-    var EXW = (rgm < 1) ? FC / (1 - rgm) / eq : 0;
+    /* 二、报价阶梯（报价币/件）
+       把「按某个毛利率反推整条阶梯」抽成函数 —— 目标价、底价、成本基数三处共用同一套算法，
+       避免三处各写一遍导致口径漂移。pass-through 费用（国内段 / 运费 / 保险 / 关税 / 目的国费用）
+       按成本原样叠加，不乘毛利率：这是本页一贯口径，v62 未改动。
+       ⚠️ FC 是本币，必须先 ÷ e_q 折成报价币，否则 EXW 会以本币金额顶着报价币的标签。 */
     var Dsum = v('inland') + v('clear') + v('port') + v('exOther');
     var d = Dsum / N / eq;
-    var FOB = EXW + d;
-    var CFR = FOB + v('freight') / N;
     var rins = r('insRate'), k = r('insMarkup');
     var denom = 1 - rins * (1 + k);
-    var CIF = (denom > 0) ? CFR / denom : 0;
-    var INS = CIF - CFR;
-
-    /* 三、关税与进口税费 */
-    var DPV = CIF;
-    var Duty = DPV * r('dutyRate');
-    var Anti = DPV * r('antiRate');
-    var VAT = (DPV + Duty + Anti) * r('vatRate');
+    var okIns = denom > 0;                 /* 费率×加成 ≥100% → 保费无解，给 NaN 而不是 0 */
+    var rd = r('dutyRate'), ra = r('antiRate'), rv = r('vatRate');
     var B = (v('broker') + v('destPort') + v('lastMile')) / N;
-    var DDP = CIF + Duty + Anti + VAT + B;
+
+    function ladderAt(gm) {
+      var EXW = (gm < 1 && isFinite(FC)) ? FC / (1 - gm) / eq : NaN;
+      var FOB = EXW + d;
+      var CFR = FOB + v('freight') / N;
+      var CIF = okIns ? CFR / denom : NaN;
+      var INS = CIF - CFR;
+      var Duty = CIF * rd;
+      var Anti = CIF * ra;
+      var VAT = (CIF + Duty + Anti) * rv;
+      var DDP = CIF + Duty + Anti + VAT + B;
+      return { EXW: EXW, FOB: FOB, CFR: CFR, CIF: CIF, INS: INS, DPV: CIF,
+        Duty: Duty, Anti: Anti, VAT: VAT, DDP: DDP };
+    }
+
+    var rgm = r('margin');
+    var TM = term();
+    var L = ladderAt(rgm);                       /* 目标毛利率下的整条阶梯 */
+    /* 成本基数：该术语阶梯价扣掉「已含的目标利润」。
+       因为 pass-through 费用不乘毛利率，利润额恒为 EXW × r_target，所以：
+         EXW 口径 → FC_q；FOB → FC_q + d；CIF → FC_q + d + 运费 + 保费；DDP → 再加关税/增值税/目的国费用。
+       验算：EXW − EXW×r = EXW(1−r) = FC_q ✓ */
+    var CB = L[TM] - L.EXW * rgm;
+
+    /* 三、关税与进口税费（以目标价口径的 CIF 为完税价格） */
+    var DPV = L.CIF, Duty = L.Duty, Anti = L.Anti, VAT = L.VAT;
+    var CIF = L.CIF, CFR = L.CFR, FOB = L.FOB, EXW = L.EXW, INS = L.INS;
+    var DDP = L.DDP;
 
     /* 四、利润与毛利率（报价币/件） */
     var FCq = FC / eq;
     var P = v('price');
-    var GM = P - FCq;
+    var GM = P - CB;                             /* v62：对「该术语成本基数」算毛利，不再一律对 EXW */
     var rgmNow = P > 0 ? GM / P : 0;
-    var rmk = FCq > 0 ? GM / FCq : 0;
-    var target = (rgm < 1) ? FCq / (1 - rgm) : 0;
+    var rmk = CB > 0 ? GM / CB : 0;
+    var target = L[TM];
     var Vc = v('varCost');
     var Qbe = (P - Vc) > 0 ? v('fixedCost') / (P - Vc) : 0;
 
@@ -551,26 +631,30 @@
     var Rev = P * en * N;
     var FXP = P * (en - eq) * N;
     var rcm = r('comm');
-    var PriceC = (rcm < 1) ? v('netPrice') / (1 - rcm) : 0;
+    var PriceC = (rcm < 1) ? v('netPrice') / (1 - rcm) : NaN;
     var rf = r('floorM');
-    var Floor = (rf < 1) ? FCq / (1 - rf) : 0;
+    var Floor = (rf < 1) ? ladderAt(rf)[TM] : NaN;   /* 底价也按术语取，与目标价同一套阶梯 */
     var Room = P - Floor;
     var Refund = v('buyIncl') / (1 + r('vatOut')) * r('refundRate');
     var Refund2 = FOB * eq * r('refundRate');
 
-    CALC = { N:N, eq:eq, en:en, MC:MC, MC2:MC2, FC:FC, EXW:EXW, d:d, FOB:FOB, CFR:CFR,
+    CALC = { N:N, eq:eq, en:en, term:TM, MC:MC, MC2:MC2, FC:FC, EXW:EXW, d:d, FOB:FOB, CFR:CFR,
       CIF:CIF, INS:INS, DPV:DPV, Duty:Duty, Anti:Anti, VAT:VAT, B:B, DDP:DDP,
-      FCq:FCq, P:P, GM:GM, rgmNow:rgmNow, rmk:rmk, target:target, Qbe:Qbe,
+      FCq:FCq, CB:CB, P:P, GM:GM, rgmNow:rgmNow, rmk:rmk, target:target, Qbe:Qbe,
       Rev:Rev, FXP:FXP, PriceC:PriceC, Floor:Floor, Room:Room, Refund:Refund, Refund2:Refund2 };
 
     render();
   }
 
-  function set(id, text, sub) {
+  /* chip = 纯拉丁的术语角标（EXW/FOB/CIF…），不需要翻译，故走 .noi18n，
+     避免把「/件」这种单位文案和术语粘成一个查不到字典的新字符串。 */
+  function set(id, text, sub, chip) {
     var e = el(id); if (!e) return;
-    e.innerHTML = text + (sub ? '<small>' + sub + '</small>' : '');
+    e.innerHTML = text + (sub ? '<small>' + sub + '</small>' : '')
+      + (chip ? '<i class="tchip noi18n">' + chip + '</i>' : '');
   }
-  function money(n, dec) { return cur() + ' ' + fmt(n, dec == null ? 2 : dec); }
+  function money(n, dec) { if (!isFinite(n)) return '—'; return cur() + ' ' + fmt(n, dec == null ? 2 : dec); }
+  function bmoney(n, dec) { if (!isFinite(n)) return '—'; return bcur() + ' ' + fmt(n, dec == null ? 2 : dec); }
 
   function render() {
     var c = CALC;
@@ -586,6 +670,7 @@
     set('rFob', money(c.FOB), '/件');
     set('rCfr', money(c.CFR), '/件');
     set('rCif', money(c.CIF), '/件');
+    set('rIns', money(c.INS), '/件');
 
     /* 三 */
     set('rDpv', money(c.DPV), '/件');
@@ -596,17 +681,18 @@
 
     /* 四 */
     set('rFullQ', money(c.FCq), '/件');
-    set('rGross', money(c.GM), '/件');
+    set('rCostB', money(c.CB), '/件', c.term);
+    set('rGross', money(c.GM), '/件', c.term);
     set('rMargin', pct(c.rgmNow), '');
     set('rMarkup', pct(c.rmk), '');
-    set('rTarget', money(c.target), '/件');
+    set('rTarget', money(c.target), '/件', c.term);
     set('rBe', (c.Qbe > 0 ? fmt(c.Qbe, 0) : '—'), '件');
 
     /* 五 */
     set('rRev', bcur() + ' ' + fmt(c.Rev, 0), '');
     set('rFx', bcur() + ' ' + fmt(c.FXP, 0), '');
     set('rComm', money(c.PriceC), '/件');
-    set('rFloor', money(c.Floor), '/件');
+    set('rFloor', money(c.Floor), '/件', c.term);
     set('rRoom', money(c.Room), '/件');
     set('rRefund', bcur() + ' ' + fmt(c.Refund, 2), '/件');
     set('rRefund2', bcur() + ' ' + fmt(c.Refund2, 2), '/件');
@@ -636,23 +722,82 @@
     /* 盈利体检 */
     var tone = c.rgmNow >= r('margin') ? 'gn' : (c.rgmNow >= r('floorM') ? 'gd' : 'bad');
     var kpi = [
-      { k: '毛利 / 件', v: money(c.GM), c: c.GM >= 0 ? 'gn' : 'bad' },
+      { k: '毛利 / 件', v: money(c.GM), c: c.GM >= 0 ? 'gn' : 'bad', chip: c.term },
       { k: '毛利率', v: pct(c.rgmNow), c: tone },
       { k: '成本加成率', v: pct(c.rmk), c: '' },
-      { k: '保本价', v: money(c.FCq), c: 'cy' },
+      /* 保本价 = 该术语的成本基数（毛利率为零的售价）。EXW 口径下等于完全成本，与旧版一致。 */
+      { k: '保本价', v: money(c.CB), c: 'cy', chip: c.term },
       { k: '议价空间', v: money(c.Room), c: c.Room >= 0 ? 'gd' : 'bad' },
       { k: '出口退税 / 件', v: bcur() + ' ' + fmt(c.Refund, 2), c: '' }
     ];
     var kh = '';
     kpi.forEach(function (x) {
-      kh += '<div class="res ' + x.c + '"><div class="rk">' + x.k + '</div><div class="rv num">' + x.v + '</div></div>';
+      kh += '<div class="res ' + x.c + '"><div class="rk">' + x.k + '</div><div class="rv num">' + x.v
+        + (x.chip ? '<i class="tchip noi18n">' + x.chip + '</i>' : '') + '</div></div>';
     });
     var ke = el('kpi'); if (ke) ke.innerHTML = kh;
   }
 
+  /* ---------- 汇率：每日自动更新（v62） ----------
+     设计取舍：
+       · 自动填，但不覆盖用户手输 —— 报价常要「锁价」，手输的汇率是有意为之。
+         所以用 fxManual 标记：用户动过 fxQuote / fxNow 就不再自动覆盖，直到点「刷新汇率」或换币种。
+       · 换币种时必须重填（旧汇率对新币种没有意义），故换币种会清掉 fxManual。
+       · 拿不到汇率（离线 / 接口挂 / 缺币种）→ 保留原值 + 徽章变黄/红说明，绝不静默改成 1。 */
+  var fxManual = false;
+  var fxLastErr = "";
+
+  function fxRate() {
+    if (!window.__falFx) return null;
+    return window.__falFx.rate(cur(), bcur());
+  }
+
+  function applyFx(force) {
+    var rt = fxRate();
+    if (rt == null || !isFinite(rt) || rt <= 0) return false;
+    var q = el('fxQuote'), n = el('fxNow');
+    if (!q || !n) return false;
+    if (force || !fxManual || !q.value) q.value = rt.toFixed(4);
+    if (force || !fxManual || !n.value) n.value = rt.toFixed(4);
+    return true;
+  }
+
+  function fxBadge() {
+    var b = el('fxBadge'), dot = el('fxDot');
+    if (!b) return;
+    if (!window.__falFx) { b.textContent = '—'; return; }
+    if (cur() === bcur()) {
+      b.textContent = T('同一币种，汇率恒为 1');
+      if (dot) dot.className = 'fxdot ok';
+      return;
+    }
+    var s = window.__falFx.status();
+    if (fxLastErr) {
+      b.textContent = Tv('刷新失败，沿用 {d} 牌价', { d: s.date });
+      if (dot) dot.className = 'fxdot err';
+      return;
+    }
+    if (s.stale) {
+      b.textContent = Tv('离线，沿用 {d} 牌价', { d: s.date });
+      if (dot) dot.className = 'fxdot stale';
+      return;
+    }
+    b.textContent = s.date + ' · ' + s.source;
+    /* 回退源（ECB）不含 AED / VND / TWD 这类币种 —— 这些币种沿用旧值，必须标出来，
+       不能让人以为整张表都是今天的牌价。 */
+    var part = s.partial || [];
+    var miss = part.indexOf(cur()) >= 0 ? cur() : (part.indexOf(bcur()) >= 0 ? bcur() : "");
+    if (miss) {
+      b.textContent += ' · ' + Tv('{c} 沿用旧牌价', { c: miss });
+      if (dot) dot.className = 'fxdot stale';
+    } else if (dot) {
+      dot.className = 'fxdot ok';
+    }
+  }
+
   /* ---------- 持久化 ---------- */
   function save() {
-    var o = { cur: cur(), baseCur: bcur() };
+    var o = { cur: cur(), baseCur: bcur(), terms: term(), fxManual: fxManual };
     IDS.forEach(function (id) { var e = el(id); if (e) o[id] = e.value; });
     try { localStorage.setItem(STORE, JSON.stringify(o)); } catch (e) {}
   }
@@ -662,22 +807,101 @@
     if (!o) return;
     if (o.cur && el('cur')) el('cur').value = o.cur;
     if (o.baseCur && el('baseCur')) el('baseCur').value = o.baseCur;
+    if (o.terms && el('terms') && TERMS.indexOf(o.terms) >= 0) el('terms').value = o.terms;
+    if (o.fxManual) fxManual = true;
     IDS.forEach(function (id) { var e = el(id); if (e && o[id] != null) e.value = o[id]; });
   }
 
   function fill(o) { IDS.forEach(function (id) { var e = el(id); if (e) e.value = (o[id] != null ? o[id] : ''); }); }
 
+  /* 公式速查表条数：由表格实际行数算，避免「标注 26 条、实有 27 条」这种漂移 */
+  function countFormulas() {
+    var t = document.querySelector('.ftab');
+    var tag = el('fCountTag');
+    if (!t || !tag) return;
+    var n = t.querySelectorAll('tbody tr').length - t.querySelectorAll('tbody tr.grp').length;
+    tag.textContent = Tv('共 {n} 条 · 可直接抄用', { n: String(n) });
+  }
+
   function boot() {
     load();
-    IDS.forEach(function (id) { var e = el(id); if (e) e.addEventListener('input', function () { save(); compute(); }); });
-    ['cur', 'baseCur'].forEach(function (id) { var e = el(id); if (e) e.addEventListener('change', function () { save(); compute(); }); });
+    /* 汇率优先：先按当日牌价填，再绑定事件，避免首帧闪一下旧值 */
+    if (window.__falFx) {
+      if (!fxManual) applyFx(true);
+      fxBadge();
+    }
+
+    IDS.forEach(function (id) {
+      var e = el(id);
+      if (!e) return;
+      e.addEventListener('input', function () {
+        /* 用户动了汇率 → 视为锁价，不再自动覆盖 */
+        if (id === 'fxQuote' || id === 'fxNow') fxManual = true;
+        save(); compute();
+      });
+    });
+    ['cur', 'baseCur'].forEach(function (id) {
+      var e = el(id);
+      if (e) e.addEventListener('change', function () {
+        /* 换币种：旧汇率对新币种无意义 → 清掉锁价标记并重填 */
+        fxManual = false;
+        applyFx(true);
+        fxBadge();
+        save(); compute();
+      });
+    });
+    var tsel = el('terms');
+    if (tsel) tsel.addEventListener('change', function () { save(); compute(); });
+
     var d = el('demoBtn');
-    if (d) d.addEventListener('click', function () { fill(DEMO); save(); compute(); });
+    if (d) d.addEventListener('click', function () {
+      fill(DEMO);
+      fxManual = false; applyFx(true); fxBadge();
+      save(); compute();
+    });
     var cb = el('clearBtn');
-    if (cb) cb.addEventListener('click', function () { fill({}); save(); compute(); });
+    if (cb) cb.addEventListener('click', function () {
+      fill({});
+      fxManual = false; applyFx(true); fxBadge();
+      save(); compute();
+    });
+
+    /* 刷新汇率按钮（文字放在 #fxBtnTxt 里，箭头 ↻ 单独一个 noi18n 节点 ——
+       否则「↻ 刷新汇率」整串不是字典键，英文态会漏出中文） */
+    var fb = el('fxBtn'), fbt = el('fxBtnTxt');
+    if (fb && window.__falFx) {
+      fb.addEventListener('click', function () {
+        fb.disabled = true;
+        if (fbt) fbt.textContent = T('刷新中…');
+        fxLastErr = "";
+        window.__falFx.refresh(function (st) {
+          fb.disabled = false;
+          if (fbt) fbt.textContent = T('刷新汇率');
+          if (st && st.ok) { fxManual = false; applyFx(true); }
+          else fxLastErr = (st && st.error) || "failed";
+          fxBadge(); save(); compute();
+        });
+      });
+    }
+
+    /* 后台补一次当日牌价：只在「跨天」时真的发请求，当天已拉过则直接命中缓存 */
+    if (window.__falFx) {
+      window.__falFx.ensureFresh(function (st) {
+        if (st && st.ok && !st.cached) {
+          if (!fxManual) applyFx(false);
+          fxBadge(); save(); compute();
+        } else if (st && !st.ok) {
+          fxLastErr = st.error || "failed";
+          fxBadge();
+        }
+      });
+      window.addEventListener('fal-fx-updated', function () { fxBadge(); });
+    }
+
+    countFormulas();
     compute();
-    /* 语言切换后重新格式化数字 */
-    if (window.__falOnRefresh) window.__falOnRefresh(function () { render(); });
+    /* 语言切换后重新格式化数字 + 重算条数文案 */
+    if (window.__falOnRefresh) window.__falOnRefresh(function () { countFormulas(); fxBadge(); render(); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
