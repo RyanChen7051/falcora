@@ -171,6 +171,12 @@
   .mini{padding:6px 11px;border-radius:8px;border:1px solid var(--border-2);background:rgba(94,234,212,.08);
     color:var(--cyan);font-size:11.5px;cursor:pointer;font-family:inherit;white-space:nowrap}
   .mini:hover{background:rgba(94,234,212,.16)}
+
+  /* 警示区（v64）：跟钱有关的缺口集中点名 */
+  .warnbox{margin:0 0 14px;padding:11px 14px;border-radius:11px;font-size:12.5px;line-height:1.85;
+    border:1px solid rgba(245,184,65,.36);background:rgba(245,184,65,.09);color:var(--warn)}
+  .warnbox[hidden]{display:none}
+  .warnbox div+div{margin-top:2px}
   .mini:disabled{opacity:.55;cursor:default}
 
   /* 术语角标：EXW / FOB / CFR / CIF / DDP —— 纯拉丁，不参与翻译 */
@@ -277,6 +283,9 @@
             </div>
           </div>
 
+          <!-- v64：跟钱有关的缺口在这里集中点名，不靠使用者自己从「—」里猜 -->
+          <div class="warnbox" id="warnBox" hidden></div>
+
           <!-- ============ 一、单位成本 ============ -->
           <div class="card">
             <div class="card-h"><div class="ic">1</div><h3>一、单位成本（料 · 工 · 费 → 完全成本）</h3><span class="tag">每件 · 本币</span></div>
@@ -306,24 +315,24 @@
             <div class="card-b">
               <div class="sub-h">国内段（整批合计 · 本币）</div>
               <div class="fgrid">
-                <div class="frow"><label for="inland">内陆运费</label><input id="inland" class="num" type="number" min="0" step="0.01" /><span class="u">整批</span></div>
-                <div class="frow"><label for="clear">报关报检</label><input id="clear" class="num" type="number" min="0" step="0.01" /><span class="u">整批</span></div>
-                <div class="frow"><label for="port">港杂与装柜</label><input id="port" class="num" type="number" min="0" step="0.01" /><span class="u">整批</span></div>
-                <div class="frow"><label for="exOther">其他出口费用</label><input id="exOther" class="num" type="number" min="0" step="0.01" /><span class="u">整批</span></div>
+                <div class="frow"><label for="inland">内陆运费</label><input id="inland" class="num" type="number" min="0" step="0.01" /><span class="u">整批·本币</span></div>
+                <div class="frow"><label for="clear">报关报检</label><input id="clear" class="num" type="number" min="0" step="0.01" /><span class="u">整批·本币</span></div>
+                <div class="frow"><label for="port">港杂与装柜</label><input id="port" class="num" type="number" min="0" step="0.01" /><span class="u">整批·本币</span></div>
+                <div class="frow"><label for="exOther">其他出口费用</label><input id="exOther" class="num" type="number" min="0" step="0.01" /><span class="u">整批·本币</span></div>
               </div>
               <div class="divider"></div>
               <div class="sub-h">国际段（报价币）</div>
               <div class="fgrid">
-                <div class="frow"><label for="freight">国际运费</label><input id="freight" class="num" type="number" min="0" step="0.01" /><span class="u">整批</span></div>
+                <div class="frow"><label for="freight">国际运费</label><input id="freight" class="num" type="number" min="0" step="0.01" /><span class="u">整批·报价币</span></div>
                 <div class="frow"><label for="insRate">保险费率</label><input id="insRate" class="num" type="number" min="0" step="0.01" /><span class="u">%</span></div>
                 <div class="frow"><label for="insMarkup">投保加成</label><input id="insMarkup" class="num" type="number" min="0" step="1" /><span class="u">%</span></div>
               </div>
               <div class="divider"></div>
               <div class="sub-h">目的国段（整批合计 · 报价币）</div>
               <div class="fgrid">
-                <div class="frow"><label for="broker">清关代理费</label><input id="broker" class="num" type="number" min="0" step="0.01" /><span class="u">整批</span></div>
-                <div class="frow"><label for="destPort">目的港杂费</label><input id="destPort" class="num" type="number" min="0" step="0.01" /><span class="u">整批</span></div>
-                <div class="frow"><label for="lastMile">末端派送</label><input id="lastMile" class="num" type="number" min="0" step="0.01" /><span class="u">整批</span></div>
+                <div class="frow"><label for="broker">清关代理费</label><input id="broker" class="num" type="number" min="0" step="0.01" /><span class="u">整批·报价币</span></div>
+                <div class="frow"><label for="destPort">目的港杂费</label><input id="destPort" class="num" type="number" min="0" step="0.01" /><span class="u">整批·报价币</span></div>
+                <div class="frow"><label for="lastMile">末端派送</label><input id="lastMile" class="num" type="number" min="0" step="0.01" /><span class="u">整批·报价币</span></div>
               </div>
               <div class="fmlist">
                 <div class="fm"><div class="fl"><b>EXW 单价</b><code>EXW = FC ÷ e_q ÷ (1 − r_gm)</code></div><div class="fv num" id="rExw">—</div></div>
@@ -362,8 +371,8 @@
             <div class="card-h"><div class="ic">4</div><h3>四、利润 · 毛利率 · 目标价反推</h3><span class="tag">每件 · 报价币</span></div>
             <div class="card-b">
               <div class="fgrid">
-                <div class="frow"><label for="price">当前报价</label><input id="price" class="num" type="number" min="0" step="0.01" /><span class="u">/件</span></div>
-                <div class="frow"><label for="varCost">单位变动成本</label><input id="varCost" class="num" type="number" min="0" step="0.01" /><span class="u">/件</span></div>
+                <div class="frow"><label for="price">当前报价</label><input id="price" class="num" type="number" min="0" step="0.01" /><span class="u">报价币/件</span></div>
+                <div class="frow"><label for="varCost">单位变动成本</label><input id="varCost" class="num" type="number" min="0" step="0.01" /><span class="u">报价币/件</span></div>
                 <div class="frow"><label for="fixedCost">固定费用总额</label><input id="fixedCost" class="num" type="number" min="0" step="0.01" /><span class="u">整批·报价币</span></div>
               </div>
               <div class="fmlist">
@@ -384,8 +393,8 @@
             <div class="card-h"><div class="ic">5</div><h3>五、汇率 · 佣金 · 议价空间 · 出口退税</h3><span class="tag">成交前后的账要算清</span></div>
             <div class="card-b">
               <div class="fgrid">
-                <div class="frow"><label for="netPrice">净价（不含佣）</label><input id="netPrice" class="num" type="number" min="0" step="0.01" /><span class="u">/件</span></div>
-                <div class="frow"><label for="buyIncl">采购含税单价</label><input id="buyIncl" class="num" type="number" min="0" step="0.01" /><span class="u">本币</span></div>
+                <div class="frow"><label for="netPrice">净价（不含佣）</label><input id="netPrice" class="num" type="number" min="0" step="0.01" /><span class="u">报价币/件</span></div>
+                <div class="frow"><label for="buyIncl">采购含税单价</label><input id="buyIncl" class="num" type="number" min="0" step="0.01" /><span class="u">本币/件</span></div>
                 <div class="frow"><label for="vatOut">采购增值税率</label><input id="vatOut" class="num" type="number" min="0" step="0.1" /><span class="u">%</span></div>
                 <div class="frow"><label for="refundRate">出口退税率</label><input id="refundRate" class="num" type="number" min="0" step="0.1" /><span class="u">%</span></div>
               </div>
@@ -473,7 +482,9 @@
         <div>
           <div class="card">
             <div class="card-h"><h3>报价阶梯</h3><span class="tag" id="ladderTag">每件 · 报价币</span></div>
-            <div class="card-b"><div class="ladder" id="ladder"></div></div>
+            <div class="card-b"><div class="ladder" id="ladder"></div>
+              <div class="note" style="margin-top:10px">界面保留 2 位小数；对外报价请向上取整，不要按显示值直接抄。</div>
+            </div>
           </div>
           <div class="card">
             <div class="card-h"><h3>盈利体检</h3><span class="tag">按当前报价</span></div>
@@ -529,8 +540,33 @@
   };
 
   function el(id) { return document.getElementById(id); }
-  function v(id) { var x = el(id); var n = x ? parseFloat(x.value) : NaN; return isNaN(n) ? 0 : n; }
-  function r(id) { return v(id) / 100; }
+
+  /* ---------- 取值分三类，绝不混用（v64） ----------
+     旧版只有一个 `v(id)`：空值一律当 0，再靠 `|| 1` 兜数量。这在「钱」上是危险的：
+       · 订单数量空着 → 按 1 件算 → 整批运费/国内段/目的国费用全摊到 1 件，每件成本暴涨几十倍；
+       · 当前汇率空着 → 退回报价汇率 → 汇兑损益恒等于 0，界面显示「没有汇兑风险」；
+       · 负数（-5% 损耗、-10% 毛利率）→ 分母变大 → 成本被算小 → 报价偏低直接亏钱。
+     所以拆成三个语义明确的入口，越界一律 NaN（界面显示「—」）并记进 BAD 由警示区点名：
+       opt(id[, hi])  可选项：空 = 0（「没有这项费用」是合法输入），负数/超上限 = NaN
+       req(id)        必填项：空 = NaN（**绝不默认成 1 或 0**）
+       r(id[, hi])    百分比项：空 = 0，越界 = NaN */
+  var BAD = [];
+  function raw(id) { var x = el(id); return x ? String(x.value).trim() : ''; }
+  function opt(id, hi) {
+    var s = raw(id);
+    if (s === '') return 0;
+    var n = parseFloat(s);
+    if (!isFinite(n)) { BAD.push(id); return NaN; }
+    if (n < 0 || (hi != null && n > hi)) { BAD.push(id); return NaN; }
+    return n;
+  }
+  function req(id) {
+    var s = raw(id);
+    if (s === '') return NaN;
+    var n = parseFloat(s);
+    return (isFinite(n) && n > 0) ? n : NaN;
+  }
+  function r(id, hi) { var n = opt(id, hi == null ? 100 : hi); return n / 100; }
   function cur() { return (el('cur') && el('cur').value) || 'USD'; }
   function bcur() { return (el('baseCur') && el('baseCur').value) || 'CNY'; }
   function term() { var e = el('terms'); return (e && TERMS.indexOf(e.value) >= 0) ? e.value : 'EXW'; }
@@ -558,19 +594,31 @@
   var CALC = {};
 
   function compute() {
-    var N = v('qty') || 1;
+    BAD = [];   /* 每次重算重新收集无效输入，供警示区点名 */
+
+    /* 数量是必填：旧版 `v('qty') || 1` 在空值时按「1 件」算，
+       整批运费 4200 + 国内段 3900 + 目的国 1640 全摊到 1 件 → 每件成本几千美元。
+       这种数字没人会真拿去报价，但页面一声不响地显示出来，就是隐患。
+       v64：空 → NaN，所有 ÷N 的结果显示「—」，并弹警示。 */
+    var N = req('qty');
+
     /* 汇率缺失时不能默认 1（那会把「USD 报价」当成「CNY 报价」算出看着很正常的一堆数）。
        同币种 → 1 是对的；跨币种又没汇率 → NaN，界面显示「—」，让缺口暴露出来。 */
-    var eqRaw = v('fxQuote');
+    var eqRaw = req('fxQuote');
     var eq = (eqRaw > 0) ? eqRaw : (cur() === bcur() ? 1 : NaN);
-    var enRaw = v('fxNow');
-    var en = (enRaw > 0) ? enRaw : eq;
+    /* ⚠️ 当前汇率空着时**绝不能退回报价汇率**（旧版就是 `en = enRaw > 0 ? enRaw : eq`）：
+       那样 FXP = P×(en−eq)×N 恒等于 0，界面显示「汇率损益 0」= 告诉使用者「没有汇兑风险」，
+       这是本页最危险的一处静默假数 —— 汇率一动，报价的利润可能就没了。
+       v64：空 → NaN，「本币收入」「汇率损益」显示「—」并警示。 */
+    var enRaw = req('fxNow');
+    var en = (enRaw > 0) ? enRaw : (cur() === bcur() ? 1 : NaN);
 
     /* 一、单位成本（本币/件） */
-    var MC = v('mat') + v('lab') + v('ovh') + v('pack') + v('cert') + v('other');
+    var MC = opt('mat') + opt('lab') + opt('ovh') + opt('pack') + opt('cert') + opt('other');
     var rl = r('loss');
     /* 损耗率 100% 时 1−r = 0，旧版静默回退成 MC（等于「没有损耗」），是个假数。
-       v62：分母 ≤0 一律给 NaN，界面显示「—」，让使用者看见「这个输入不成立」。 */
+       v62：分母 ≤0 一律给 NaN，界面显示「—」，让使用者看见「这个输入不成立」。
+       v64 起损耗率负数也会被 r() 挡成 NaN（负损耗会让成本变小 → 报价偏低 → 亏钱）。 */
     var okLoss = rl < 1;
     var MC2 = okLoss ? MC / (1 - rl) : NaN;
     var rp = r('period');
@@ -581,18 +629,19 @@
        避免三处各写一遍导致口径漂移。pass-through 费用（国内段 / 运费 / 保险 / 关税 / 目的国费用）
        按成本原样叠加，不乘毛利率：这是本页一贯口径，v62 未改动。
        ⚠️ FC 是本币，必须先 ÷ e_q 折成报价币，否则 EXW 会以本币金额顶着报价币的标签。 */
-    var Dsum = v('inland') + v('clear') + v('port') + v('exOther');
+    var Dsum = opt('inland') + opt('clear') + opt('port') + opt('exOther');   /* 本币 */
     var d = Dsum / N / eq;
-    var rins = r('insRate'), k = r('insMarkup');
+    var rins = r('insRate'), k = r('insMarkup', 1000);   /* 投保加成可 >100%，上限放宽 */
     var denom = 1 - rins * (1 + k);
     var okIns = denom > 0;                 /* 费率×加成 ≥100% → 保费无解，给 NaN 而不是 0 */
     var rd = r('dutyRate'), ra = r('antiRate'), rv = r('vatRate');
-    var B = (v('broker') + v('destPort') + v('lastMile')) / N;
+    var Ff = opt('freight');                                            /* 报价币 · 整批 */
+    var B = (opt('broker') + opt('destPort') + opt('lastMile')) / N;    /* 报价币 · 每件 */
 
     function ladderAt(gm) {
       var EXW = (gm < 1 && isFinite(FC)) ? FC / (1 - gm) / eq : NaN;
       var FOB = EXW + d;
-      var CFR = FOB + v('freight') / N;
+      var CFR = FOB + Ff / N;
       var CIF = okIns ? CFR / denom : NaN;
       var INS = CIF - CFR;
       var Duty = CIF * rd;
@@ -619,23 +668,25 @@
 
     /* 四、利润与毛利率（报价币/件） */
     var FCq = FC / eq;
-    var P = v('price');
+    var P = req('price');                        /* 必填：空 → NaN，毛利率显示「—」而不是 0% */
     var GM = P - CB;                             /* v62：对「该术语成本基数」算毛利，不再一律对 EXW */
-    var rgmNow = P > 0 ? GM / P : 0;
-    var rmk = CB > 0 ? GM / CB : 0;
+    var rgmNow = (P > 0) ? GM / P : NaN;
+    var rmk = (CB > 0) ? GM / CB : NaN;
     var target = L[TM];
-    var Vc = v('varCost');
-    var Qbe = (P - Vc) > 0 ? v('fixedCost') / (P - Vc) : 0;
+    var Vc = opt('varCost');                     /* 报价币/件，与 Price 同币种 */
+    var Kfix = opt('fixedCost');                 /* 整批 · 报价币 */
+    var Qbe = ((P - Vc) > 0) ? Kfix / (P - Vc) : NaN;   /* 边际贡献 ≤0 → 无解（NaN），不是 0 */
 
     /* 五、汇率 · 佣金 · 议价 · 退税 */
     var Rev = P * en * N;
     var FXP = P * (en - eq) * N;
     var rcm = r('comm');
-    var PriceC = (rcm < 1) ? v('netPrice') / (1 - rcm) : NaN;
+    var netP = req('netPrice');
+    var PriceC = (rcm < 1) ? netP / (1 - rcm) : NaN;    /* 净价没填 → 「—」，不再显示 0 */
     var rf = r('floorM');
     var Floor = (rf < 1) ? ladderAt(rf)[TM] : NaN;   /* 底价也按术语取，与目标价同一套阶梯 */
     var Room = P - Floor;
-    var Refund = v('buyIncl') / (1 + r('vatOut')) * r('refundRate');
+    var Refund = opt('buyIncl') / (1 + r('vatOut')) * r('refundRate');
     var Refund2 = FOB * eq * r('refundRate');
 
     CALC = { N:N, eq:eq, en:en, term:TM, MC:MC, MC2:MC2, FC:FC, EXW:EXW, d:d, FOB:FOB, CFR:CFR,
@@ -658,6 +709,39 @@
 
   function render() {
     var c = CALC;
+
+    /* ---------- 警示区（v64） ----------
+       跟钱有关的缺口必须在算出来的那一刻说出来，不能只让某个数字变成「—」——
+       使用者会以为那是「这项没有」，而实际是「这项算不出来」。
+       这里只收「会直接导致报价错」的四种情况，其余（负数等）统一归到「输入无效」一条。 */
+    var wb = el('warnBox');
+    if (wb) {
+      var msgs = [];
+      if (!(c.N > 0)) msgs.push(T('订单数量未填，每件分摊费用无法计算'));
+      if (!(c.en > 0)) msgs.push(T('当前汇率未填，本币收入与汇率损益无法计算'));
+      if (c.P > 0 && c.Floor > 0 && c.P < c.Floor) msgs.push(T('当前报价低于底价，按此价成交达不到最低毛利率'));
+      if (BAD.length) {
+        msgs.push(Tv('有 {n} 个输入无效（负数或超出范围），相关结果已标「—」', { n: BAD.length }));
+        /* 只说「有 N 项无效」等于没说 —— 把字段名点出来（取前 3 个，避免刷屏）。
+           字段名取自 label[for]，英文态下 label 已是英文，所以这条在英文界面也读得通。 */
+        var names = [];
+        BAD.slice(0, 3).forEach(function (id) {
+          var lb = document.querySelector('label[for="' + id + '"]');
+          var t = lb ? lb.textContent.trim() : '';
+          if (t && names.indexOf(t) < 0) names.push(t);
+        });
+        if (names.length) msgs.push(Tv('无效项：{list}', { list: names.join(' / ') }));
+      }
+      /* 汇率非当日：只在「确实尝试过拉取且没拿到当日价」时才提示，避免首屏闪一下 */
+      var fxst = (fxTried && window.__falFx && window.__falFx.status) ? window.__falFx.status() : null;
+      if (fxst && fxst.stale && cur() !== bcur()) msgs.push(T('汇率不是当日牌价，报价前请先刷新并复核'));
+      if (msgs.length) {
+        wb.hidden = false;
+        wb.innerHTML = msgs.map(function (m) { return '<div>· ' + m + '</div>'; }).join('');
+      } else if (!wb.hidden) {
+        wb.hidden = true; wb.innerHTML = '';
+      }
+    }
 
     /* 一 */
     set('rMfg', fmt(c.MC), bcur());
@@ -705,16 +789,22 @@
       { t: 'CIF', v: c.CIF, cls: '' },
       { t: 'DDP', v: c.DDP, cls: 'last' }
     ];
-    var max = 0; steps.forEach(function (s) { if (s.v > max) max = s.v; });
-    var base = c.EXW || 1;
+    var max = 0; steps.forEach(function (s) { if (isFinite(s.v) && s.v > max) max = s.v; });
+    /* 基准必须真的有限且 >0 才算得动；旧版 `c.EXW || 1` 会把 NaN 当成 1，
+       于是每个术语都显示「+几千%」，看着像暴涨，其实是没算出来。 */
+    var base = (isFinite(c.EXW) && c.EXW > 0) ? c.EXW : NaN;
     var html = '';
     steps.forEach(function (s) {
-      var w = max > 0 ? Math.max(14, s.v / max * 100) : 0;
-      var delta = base > 0 ? ((s.v - base) / base * 100) : 0;
+      /* 无效值给一个能放下「—」的最小宽度，否则 width:NaN% 会让条形塌成一条缝，
+         使用者会把它读成「0」——这正是要避免的误读。 */
+      var ok = isFinite(s.v);
+      var w = (ok && max > 0) ? Math.max(14, s.v / max * 100) : 14;
+      var delta = (isFinite(base) && ok) ? ((s.v - base) / base * 100) : NaN;
+      var dtxt = (s.t === 'EXW') ? '基准' : (isFinite(delta) ? '+' + fmt(delta, 1) + '%' : '—');
       html += '<div class="ld ' + s.cls + '">'
         + '<div class="lt">' + s.t + '</div>'
         + '<div class="lbar" style="width:' + w.toFixed(1) + '%">' + fmt(s.v, 2) + '</div>'
-        + '<div class="lv">' + cur() + '<small>' + (s.t === 'EXW' ? '基准' : '+' + fmt(delta, 1) + '%') + '</small></div>'
+        + '<div class="lv">' + cur() + '<small>' + dtxt + '</small></div>'
         + '</div>';
     });
     var lad = el('ladder'); if (lad) lad.innerHTML = html;
@@ -746,6 +836,9 @@
        · 拿不到汇率（离线 / 接口挂 / 缺币种）→ 保留原值 + 徽章变黄/红说明，绝不静默改成 1。 */
   var fxManual = false;
   var fxLastErr = "";
+  /* 是否已经真的尝试拉过当日牌价 —— 只有拉过才知道「汇率不是今天的」，
+     否则首屏（还没发请求）就会闪一条「汇率不是当日牌价」，属于狼来了。 */
+  var fxTried = false;
 
   function fxRate() {
     if (!window.__falFx) return null;
@@ -876,6 +969,7 @@
         fxLastErr = "";
         window.__falFx.refresh(function (st) {
           fb.disabled = false;
+          fxTried = true;
           if (fbt) fbt.textContent = T('刷新汇率');
           if (st && st.ok) { fxManual = false; applyFx(true); }
           else fxLastErr = (st && st.error) || "failed";
@@ -887,12 +981,15 @@
     /* 后台补一次当日牌价：只在「跨天」时真的发请求，当天已拉过则直接命中缓存 */
     if (window.__falFx) {
       window.__falFx.ensureFresh(function (st) {
+        fxTried = true;
         if (st && st.ok && !st.cached) {
           if (!fxManual) applyFx(false);
           fxBadge(); save(); compute();
         } else if (st && !st.ok) {
           fxLastErr = st.error || "failed";
-          fxBadge();
+          fxBadge(); compute();
+        } else {
+          fxBadge(); compute();     /* 命中当日缓存：也要重算一次，让警示区知道汇率是当日的 */
         }
       });
       window.addEventListener('fal-fx-updated', function () { fxBadge(); });
