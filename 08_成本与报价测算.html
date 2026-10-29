@@ -165,6 +165,10 @@
   .fxdot.ok{background:#34d399;box-shadow:0 0 0 3px rgba(52,211,153,.16)}
   .fxdot.stale{background:var(--warn);box-shadow:0 0 0 3px rgba(245,184,65,.18)}
   .fxdot.err{background:#f87171;box-shadow:0 0 0 3px rgba(248,113,113,.16)}
+  /* 手输锁价：蓝色＝「这个数是你定的，不是数据源给的」，与过期的琥珀色、失败的红色区分开 */
+  .fxdot.manual{background:#60a5fa;box-shadow:0 0 0 3px rgba(96,165,250,.18)}
+  /* 两个方向的对照（纯数字与币种代码，不走字典） */
+  .fxinv{font-size:11.5px;color:var(--muted);margin-top:7px;font-variant-numeric:tabular-nums;letter-spacing:.2px}
   .fxtxt{font-size:12px;color:var(--muted);min-width:0;line-height:1.5}
   .fxtxt b{color:var(--ink);font-weight:650}
   .fxsp{flex:1 1 auto}
@@ -278,8 +282,12 @@
                 <span class="fxsp"></span>
                 <button class="mini ghost" id="fxBtn" type="button"><span class="noi18n">↻</span> <span id="fxBtnTxt">刷新汇率</span></button>
               </div>
+              <!-- 两个方向并排显示：百度/银行挂的是「1 本币 = ? 报价币」，本页要的是反过来那个。
+                   只写一个方向，使用者拿百度一对照就会以为算错了（2026-10-29 实际发生）。 -->
+              <div class="fxinv" id="fxInv"></div>
               <div class="note" style="margin-top:12px">报价汇率填「1 单位报价币 = 多少本币」。本页全部国内费用按本币填，国际运费与目的国费用按报价币填。</div>
-              <div class="note" style="margin-top:6px">汇率每日自动更新（公开参考牌价，不是银行结汇价，实际结汇还有价差与手续费）；也可直接手输覆盖。</div>
+              <div class="note" style="margin-top:6px">汇率每日自动更新，取自公开参考牌价（中间价）。它与银行实际结售汇价通常差 0.1%~0.5%，大额报价请以银行成交价为准。</div>
+              <div class="note" style="margin-top:4px">不同来源之间也会差 0.1%~0.4%（新台币、越南盾这类管制货币按美元交叉折算，差得更明显）。要按自己的结算价报价，直接改上面两个框，状态条会标「手动锁价」。</div>
             </div>
           </div>
 
@@ -735,6 +743,21 @@
       /* 汇率非当日：只在「确实尝试过拉取且没拿到当日价」时才提示，避免首屏闪一下 */
       var fxst = (fxTried && window.__falFx && window.__falFx.status) ? window.__falFx.status() : null;
       if (fxst && fxst.stale && cur() !== bcur()) msgs.push(T('汇率不是当日牌价，报价前请先刷新并复核'));
+      /* 方向填反（2026-10-29 用户拿百度 CNYTWD 4.8588 对照时暴露）：
+         本页要的是「1 报价币 = ? 本币」（TWD→CNY 约 0.2059），
+         而百度/银行挂的是「1 本币 = ? 报价币」（CNY→TWD 约 4.8588）—— 互为倒数。
+         填反一次报价差 23 倍，页面却一声不响，这是最贵的错，必须拦。 */
+      if (window.__falFx && cur() !== bcur() && isFinite(c.eq) && c.eq > 0) {
+        var srt = window.__falFx.rate(cur(), bcur());
+        if (isFinite(srt) && srt > 0) {
+          var kk = c.eq / srt;
+          if (kk > 3 || kk < 1 / 3) {
+            msgs.push(Tv('报价汇率 {v} 与数据源 {s} 相差 {k} 倍，很可能把方向填反了：这里要填「1 {c} = ? {b}」，不是「1 {b} = ? {c}」', {
+              v: fmt(c.eq, 4), s: fmt(srt, 4), k: fmt(kk > 1 ? kk : 1 / kk, 0), c: cur(), b: bcur()
+            }));
+          }
+        }
+      }
       if (msgs.length) {
         wb.hidden = false;
         wb.innerHTML = msgs.map(function (m) { return '<div>· ' + m + '</div>'; }).join('');
@@ -859,29 +882,61 @@
     var b = el('fxBadge'), dot = el('fxDot');
     if (!b) return;
     if (!window.__falFx) { b.textContent = '—'; return; }
+    /* 两个方向并排：使用者拿百度/银行牌价对照时，能立刻看出「哦，我要的是反过来的那个」 */
+    var inv = el('fxInv');
+    if (inv) {
+      if (cur() === bcur()) inv.textContent = '';
+      else {
+        var r1 = window.__falFx.rate(cur(), bcur()), r2 = window.__falFx.rate(bcur(), cur());
+        inv.textContent = (isFinite(r1) && isFinite(r2) && r1 > 0)
+          ? '1 ' + cur() + ' = ' + fmt(r1, 4) + ' ' + bcur() + '　｜　1 ' + bcur() + ' = ' + fmt(r2, 4) + ' ' + cur()
+          : '';
+      }
+    }
     if (cur() === bcur()) {
       b.textContent = T('同一币种，汇率恒为 1');
       if (dot) dot.className = 'fxdot ok';
       return;
     }
     var s = window.__falFx.status();
+
+    /* 手输锁价：用户自己改过数字，状态条必须说清「这已经不是你给的牌价了」，
+       否则过几天他会以为页面上这个数还是自动更新的。同时把源的值摆出来做对照。 */
+    if (fxManual) {
+      var q = el('fxQuote'), n = el('fxNow');
+      var mine = (q && q.value) ? q.value : '—';
+      var src = window.__falFx.rate(cur(), bcur());
+      var txt = Tv('手动锁价 {v}（源 {s}）', { v: mine, s: (src ? src.toFixed(4) : '—') });
+      if (n && n.value && q && n.value !== q.value) txt += ' · ' + Tv('当前汇率 {v}', { v: n.value });
+      b.textContent = txt;
+      if (dot) dot.className = 'fxdot manual';
+      return;
+    }
     if (fxLastErr) {
       b.textContent = Tv('刷新失败，沿用 {d} 牌价', { d: s.date });
       if (dot) dot.className = 'fxdot err';
       return;
     }
-    if (s.stale) {
+    /* 「离线」只在今天确实没拉到过时才说。源每天北京 08:00 才滚档，
+       早上打开拿到的还是昨天的牌价 —— 那是源没更新，不是断网，不能混为一谈。 */
+    if (!s.fetchedToday && s.stale) {
       b.textContent = Tv('离线，沿用 {d} 牌价', { d: s.date });
       if (dot) dot.className = 'fxdot stale';
       return;
     }
     b.textContent = s.date + ' · ' + s.source;
+    if (s.stale) b.textContent += ' · ' + T('源最新，尚未更新到今日');
     /* 回退源（ECB）不含 AED / VND / TWD 这类币种 —— 这些币种沿用旧值，必须标出来，
        不能让人以为整张表都是今天的牌价。 */
     var part = s.partial || [];
     var miss = part.indexOf(cur()) >= 0 ? cur() : (part.indexOf(bcur()) >= 0 ? bcur() : "");
     if (miss) {
       b.textContent += ' · ' + Tv('{c} 沿用旧牌价', { c: miss });
+      if (dot) dot.className = 'fxdot stale';
+    } else if (part.length) {
+      /* 当前这一对币种没受影响，但表里确实有币种是旧值（回退源 ECB 没有 TWD / AED / VND）。
+         不说「哪几个」，但必须给出数量 —— 否则「ECB / frankfurter」会让人以为整张表都是 ECB 的。 */
+      b.textContent += ' · ' + Tv('另有 {n} 个币种沿用旧牌价', { n: String(part.length) });
       if (dot) dot.className = 'fxdot stale';
     } else if (dot) {
       dot.className = 'fxdot ok';
@@ -928,8 +983,10 @@
       var e = el(id);
       if (!e) return;
       e.addEventListener('input', function () {
-        /* 用户动了汇率 → 视为锁价，不再自动覆盖 */
-        if (id === 'fxQuote' || id === 'fxNow') fxManual = true;
+        /* 用户动了汇率 → 视为锁价，不再自动覆盖。
+           必须同时重画状态条：否则输入框里的数变了、状态条还写着「2026-10-29 · 源」，
+           使用者会以为这个手填的值仍在自动更新（v64 就是这个毛病）。 */
+        if (id === 'fxQuote' || id === 'fxNow') { fxManual = true; fxBadge(); }
         save(); compute();
       });
     });
