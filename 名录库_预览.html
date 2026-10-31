@@ -24,6 +24,19 @@ body{background:radial-gradient(1200px 600px at 15% -10%,#0F3A45 0%,var(--bg) 55
 .topnav a.tn:hover{border-color:var(--cyan);background:rgba(94,234,212,.10);color:#fff;transform:translateY(-1px)}
 .topnav .tn.cur{border-color:rgba(94,234,212,.38);
   background:linear-gradient(180deg,rgba(94,234,212,.18),rgba(14,154,142,.22));color:#EAFBF7;cursor:default}
+.acts{display:flex;flex-direction:column;gap:5px;min-width:96px}
+.act{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:5px 9px;border-radius:8px;
+  border:1px solid var(--border);background:rgba(0,0,0,.24);color:#CFE3E6;font-family:inherit;
+  font-size:11.5px;font-weight:700;cursor:pointer;text-decoration:none;line-height:1.15;white-space:nowrap;transition:.16s}
+.act:hover{border-color:var(--cyan);background:rgba(94,234,212,.12);color:#fff}
+.act.done{border-color:rgba(52,211,153,.55);background:rgba(52,211,153,.14);color:#8FF0C8;cursor:default}
+.act.dd{border-color:rgba(245,184,65,.42);background:rgba(245,184,65,.10);color:#F7CE84}
+.act.dd:hover{border-color:var(--gold);background:rgba(245,184,65,.20);color:#fff}
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);opacity:0;pointer-events:none;
+  padding:10px 18px;border-radius:10px;background:rgba(9,40,48,.96);border:1px solid rgba(94,234,212,.4);
+  color:#EAFBF7;font-size:12.5px;font-weight:600;box-shadow:0 8px 28px rgba(0,0,0,.45);
+  transition:.22s;z-index:99;max-width:82vw;text-align:center;line-height:1.5}
+.toast.on{opacity:1;transform:translate(-50%,0)}
 h1{font-size:22px;font-weight:700;letter-spacing:.4px}
 h1 span{color:var(--cyan)}
 .sub{color:var(--muted);font-size:13px;margin-top:6px;line-height:1.7}
@@ -125,12 +138,121 @@ a:hover{text-decoration:underline}
     · 未命中 ≠ 企业不存在，只等于「不在本名录内」。
   </div>
 </div>
+<div class="toast" id="toast"></div>
 
+<script src="app-vals.js"></script>
 <script src="data-expo-index.js"></script>
 <script>
 (function(){
   var SRC = "expo", DATA = null, ASSOC = null, BUYER = null;
   var $ = function(id){ return document.getElementById(id); };
+
+  // ============ 名录库 → 管线 / 尽调 的桥（2026-10-31 新增）============
+  /* 为什么需要这一层：75,180 家原本只能「看」，不能「带走」。
+     但下游两条链路对字段有硬要求，不能直接塞 ——
+       · dm 是**全链路主键**（②④⑤ 都按它索引），展会源只给 web(URL)，必须提成域名；
+         没有官网的用 expo: 前缀合成，明确表示「这不是域名」，不会被当成可解析主体。
+       · region 必须是**中文大区**：② 页筛选、⑤ 页 tzForRegion 的 8 条正则全是中文，
+         而且 region 会被直接插进 ④ 页开发信正文（"we're expanding into "+region）。
+         展会源给的是 ISO3 国家码 → 必须映射，绝不能把国名塞进 region。
+       · flag / cc 只吃 ISO2（app-vals.js 的 __falFlagOf 有 /^[A-Z]{2}$/ 校验）。
+     这三条任一错位，都会造出「加了但流程不认」的脏数据。 */
+
+  /* ISO3 → ISO2：只覆盖本名录实际出现的 132 个代码（数据里那 133 个含一个空串） */
+  var ISO3_2 = {CHN:"CN",DEU:"DE",ITA:"IT",IND:"IN",JPN:"JP",TUR:"TR",USA:"US",KOR:"KR",TWN:"TW",ARG:"AR",HKG:"HK",FRA:"FR",GBR:"GB",NLD:"NL",ESP:"ES",POL:"PL",ARE:"AE",CHE:"CH",BEL:"BE",AUT:"AT",PAK:"PK",DNK:"DK",PRT:"PT",SWE:"SE",CZE:"CZ",BRA:"BR",MYS:"MY",THA:"TH",IDN:"ID",CAN:"CA",SGP:"SG",VNM:"VN",GRC:"GR",EGY:"EG",MEX:"MX",SVN:"SI",LTU:"LT",FIN:"FI",BGR:"BG",SAU:"SA",HUN:"HU",AUS:"AU",ISR:"IL",UKR:"UA",ROU:"RO",IRL:"IE",SRB:"RS",HRV:"HR",NOR:"NO",LUX:"LU",BGD:"BD",SVK:"SK",LVA:"LV",EST:"EE",TUN:"TN",PHL:"PH",UZB:"UZ",PER:"PE",MAR:"MA",ZAF:"ZA",LKA:"LK",NZL:"NZ",CHL:"CL",NPL:"NP",ARM:"AM",MMR:"MM",CYP:"CY",COL:"CO",MLT:"MT",BIH:"BA",KGZ:"KG",QAT:"QA",ALB:"AL",SMR:"SM",JOR:"JO",KHM:"KH",KAZ:"KZ",OMN:"OM",NGA:"NG",GEO:"GE",MDA:"MD",RUS:"RU",MKD:"MK",LBN:"LB",XKX:"XK",DZA:"DZ",MAC:"MO",MCO:"MC",PAN:"PA",IRN:"IR",URY:"UY",AZE:"AZ",GHA:"GH",ISL:"IS",LIE:"LI",PSE:"PS",BHR:"BH",MNG:"MN",ECU:"EC",KWT:"KW",SEN:"SN",KEN:"KE",CIV:"CI",MYT:"YT",MOZ:"MZ",LAO:"LA",IRQ:"IQ",CCK:"CC",VEN:"VE",TKM:"TM",MTQ:"MQ",BEN:"BJ",CMR:"CM",AND:"AD",SUR:"SR",BWA:"BW",STP:"ST",BRN:"BN",MSR:"MS",VAT:"VA",IMN:"IM",SYR:"SY",SPM:"PM",GTM:"GT",JAM:"JM",SYC:"SC",CRI:"CR",PRI:"PR",DOM:"DO",CUB:"CU",UGA:"UG",KNA:"KN"};
+  /* ISO2 → 中文大区。8 个既有大区之外补了「南亚」「中亚」——
+     原词表只有 8 个，巴基斯坦(471家)/孟加拉/斯里兰卡/尼泊尔 与 中亚四国 无处安放，
+     硬塞进「中东」「东南亚」就是编造，故按实际地理补两个。 */
+  var I2R = {AD:"欧盟",AE:"中东",AL:"欧盟",AM:"欧盟",AR:"拉美",AT:"欧盟",AU:"大洋洲",AZ:"欧盟",BA:"欧盟",BD:"南亚",BE:"欧盟",BG:"欧盟",BH:"中东",BJ:"非洲",BN:"东南亚",BR:"拉美",BW:"非洲",CA:"北美",CC:"大洋洲",CH:"欧盟",CI:"非洲",CL:"拉美",CM:"非洲",CN:"东亚",CO:"拉美",CR:"拉美",CU:"拉美",CY:"欧盟",CZ:"欧盟",DE:"欧盟",DK:"欧盟",DO:"拉美",DZ:"非洲",EC:"拉美",EE:"欧盟",EG:"非洲",ES:"欧盟",FI:"欧盟",FR:"欧盟",GB:"欧盟",GE:"欧盟",GH:"非洲",GR:"欧盟",GT:"拉美",HK:"东亚",HR:"欧盟",HU:"欧盟",ID:"东南亚",IE:"欧盟",IL:"中东",IM:"欧盟",IN:"南亚",IQ:"中东",IR:"中东",IS:"欧盟",IT:"欧盟",JM:"拉美",JO:"中东",JP:"东亚",KE:"非洲",KG:"中亚",KH:"东南亚",KN:"拉美",KR:"东亚",KW:"中东",KZ:"中亚",LA:"东南亚",LB:"中东",LI:"欧盟",LK:"南亚",LT:"欧盟",LU:"欧盟",LV:"欧盟",MA:"非洲",MC:"欧盟",MD:"欧盟",MK:"欧盟",MM:"东南亚",MN:"东亚",MO:"东亚",MQ:"拉美",MS:"拉美",MT:"欧盟",MX:"北美",MY:"东南亚",MZ:"非洲",NG:"非洲",NL:"欧盟",NO:"欧盟",NP:"南亚",NZ:"大洋洲",OM:"中东",PA:"拉美",PE:"拉美",PH:"东南亚",PK:"南亚",PL:"欧盟",PM:"北美",PR:"拉美",PS:"中东",PT:"欧盟",QA:"中东",RO:"欧盟",RS:"欧盟",RU:"欧盟",SA:"中东",SC:"非洲",SE:"欧盟",SG:"东南亚",SI:"欧盟",SK:"欧盟",SM:"欧盟",SN:"非洲",SR:"拉美",ST:"非洲",SY:"中东",TH:"东南亚",TM:"中亚",TN:"非洲",TR:"中东",TW:"东亚",UA:"欧盟",UG:"非洲",US:"北美",UY:"拉美",UZ:"中亚",VA:"欧盟",VE:"拉美",VN:"东南亚",XK:"欧盟",YT:"非洲",ZA:"非洲"};
+
+  function iso2Of(c){ return ISO3_2[String(c||"").toUpperCase()] || ""; }
+  function regionOf(c){ return I2R[c] || ""; }
+  function flagOf(c){ return (window.__falFlagOf && c) ? (window.__falFlagOf(c) || "") : ""; }
+
+  /* 官网归一化：协会源有 256 条只写 "www.xxx.com" 没有协议，
+     直接当 href 会变成相对链接（点了 404）。统一补 https://。 */
+  function webUrl(w){
+    w = String(w || "").trim();
+    if (!w) return "";
+    if (!/^https?:\/\//i.test(w)) w = "https://" + w.replace(/^\/+/, "");
+    return w;
+  }
+  function domOf(w){
+    var u = webUrl(w);
+    if (!u) return "";
+    try { return (new URL(u)).hostname.toLowerCase().replace(/^www\./, ""); } catch(e){ return ""; }
+  }
+
+  /* ---------- 管线（与 ② 页同一个键，同一个记录形态）---------- */
+  var PIPE = "falcora_pipeline_v1";
+  function loadPipe(){ try{ return JSON.parse(localStorage.getItem(PIPE) || "{}") || {}; }catch(e){ return {}; } }
+  function inPipe(dm){ return !!dm && !!loadPipe()[dm]; }
+  function pipeAdd(o){
+    if (!o || !o.dm) return false;
+    var m = loadPipe();
+    m[o.dm] = { dm:o.dm, nm:o.nm || o.dm, region:o.region || "", ind:o.ind || "",
+                flag:o.flag || "", cc:o.cc || "", btype:o.btype || "",
+                need:"", kw:o.kw || "", chan:o.chan || "", contact:o.contact || "",
+                src:o.src || "名录库", at:Date.now() };
+    try{ localStorage.setItem(PIPE, JSON.stringify(m)); }catch(e){ return false; }
+    return true;
+  }
+
+  /* 统一取一条记录的下游字段（展会/协会两种源共用） */
+  function bridgeOf(o){
+    var dm = o.dom || ("expo:" + (o.nm || ""));   /* 无官网 → 合成主键，前缀自证非域名 */
+    var c2 = o.cc2 || "";
+    return { dm:dm, nm:o.nm || "", cc:c2, flag:flagOf(c2), region:regionOf(c2),
+             ind:o.ind || "", kw:o.kw || "", contact:o.contact || "",
+             ev:o.ev || "", bo:o.bo || "", evk:o.evk || "expo",
+             chan:o.chan || "", src:o.src || "" };
+  }
+
+  function ddHref(b){
+    return "03_客户尽调与风险核查.html?co=" + encodeURIComponent(b.dm)
+      + "&nm=" + encodeURIComponent(b.nm)
+      + "&rg=" + encodeURIComponent(b.region)
+      + "&ind=" + encodeURIComponent(b.ind)
+      + "&fl=" + encodeURIComponent(b.flag)
+      + "&ev=" + encodeURIComponent(b.ev)
+      + "&bo=" + encodeURIComponent(b.bo)
+      + "&evk=" + encodeURIComponent(b.evk);
+  }
+
+  /* 一行两个动作：加入管线 / 查这家。已加入的按钮变绿并显示「已在管线」，点它不再重复写。 */
+  function actCell(b){
+    var done = inPipe(b.dm);
+    return '<td class="acts">'
+      + '<button class="act' + (done ? ' done' : '') + '" data-pipe="' + esc(b.dm) + '"'
+      +   ' data-nm="' + esc(b.nm) + '" data-cc="' + esc(b.cc) + '" data-rg="' + esc(b.region) + '"'
+      +   ' data-ind="' + esc(b.ind) + '" data-kw="' + esc(b.kw) + '" data-ct="' + esc(b.contact) + '"'
+      +   ' data-chan="' + esc(b.chan) + '" data-src="' + esc(b.src) + '">'
+      +   (done ? '✓ 已在管线' : '＋ 加入管线') + '</button>'
+      + '<a class="act dd" href="' + esc(ddHref(b)) + '">查这家 ↗</a>'
+      + '</td>';
+  }
+
+  function toast(msg){
+    var t = $("toast");
+    if (!t) return;
+    t.textContent = msg; t.className = "toast on";
+    clearTimeout(t._h); t._h = setTimeout(function(){ t.className = "toast"; }, 2200);
+  }
+
+  /* 事件委托：120 行 × 2 个按钮不逐个绑，交给 #list 统一收 */
+  $("list").addEventListener("click", function(ev){
+    var b = ev.target.closest ? ev.target.closest("button[data-pipe]") : null;
+    if (!b || b.classList.contains("done")) return;
+    var ok = pipeAdd({ dm:b.dataset.pipe, nm:b.dataset.nm, region:b.dataset.rg, ind:b.dataset.ind,
+                       flag:flagOf(b.dataset.cc), cc:b.dataset.cc, kw:b.dataset.kw,
+                       contact:b.dataset.ct, chan:b.dataset.chan, src:b.dataset.src });
+    if (ok) {
+      b.classList.add("done"); b.textContent = "✓ 已在管线";
+      toast("已加入管线：" + b.dataset.nm + "（② 页「管线管理」可见）");
+    } else {
+      toast("写入失败：本机存储被浏览器限制（隐私模式？）");
+    }
+  });
 
   // ---------- 平台覆盖状态（诚实展示：接了哪些、没接哪些）----------
   (function(){
@@ -138,7 +260,8 @@ a:hover{text-decoration:underline}
     if (!P.length) return;
     var LABEL = { "verified": ["✅ 已接入", "#34D399"], "probed-failed": ["❌ 探过未通", "#FF6B6B"],
                   "not-batchable": ["⚠️ 结构不支持", "#F5B841"], "untested": ["⏳ 未实测", "#8AA3A8"] };
-    var h = '<b>展览集团覆盖进度（全球全行业需要 10+ 个集团，目前 1 个已通）</b><br>'
+    var nOk = P.filter(function(x){ return x.status === "verified"; }).length;
+    var h = '<b>展览集团覆盖进度（全球全行业需要 10+ 个集团，目前 ' + nOk + ' 个已通）</b><br>'
           + '<table style="margin-top:8px"><thead><tr><th style="width:30%">集团/平台</th>'
           + '<th style="width:12%">覆盖区</th><th style="width:12%">状态</th><th>说明</th></tr></thead><tbody>';
     P.forEach(function(p){
@@ -159,6 +282,15 @@ a:hover{text-decoration:underline}
     $("sCc").textContent = M.countries;
     $("sTel").textContent = M.withTel.toLocaleString();
   }
+
+  // ---------- 展会 id → 名称 / 行业族（管线与尽调要用行业族，行里只有展会索引）----------
+  /* ⚠️ FAL_EXPO_DICT.ev 里存的是**展会 id**（AUTOMECHANIKASHANGHAI），不是展示名。
+     早先「来源展会」列直接把 id 印出来，等于给使用者看内部键名；这里按 id 建表取展示名。 */
+  var EVBYID = (function(){
+    var o = {};
+    (window.FAL_EXPO_EVENTS || []).forEach(function(e){ o[e.id] = { nm: e.nm, fam: e.fam, src: e.src }; });
+    return o;
+  })();
 
   // ---------- 懒加载展会名录 ----------
   $("btnLoad").onclick = function(){
@@ -277,17 +409,29 @@ a:hover{text-decoration:underline}
     $("hint").textContent = "全库命中 " + totalHit.toLocaleString() + " 家 · 显示 " + out.length
       + " 条（跨 " + order.length + " 个展会打散）" + extra + " · 查询 " + ms + " ms · 全库 " + DATA.length.toLocaleString() + " 家";
     if (!out.length) { list.innerHTML = '<div class="empty">没有匹配。试试换个关键词，或清空筛选。</div>'; return; }
-    var h = '<table><thead><tr><th style="width:34%">公司</th><th style="width:14%">国家/城市</th>'
-          + '<th style="width:22%">企业电话</th><th style="width:22%">企业邮箱</th><th>来源展会</th></tr></thead><tbody>';
+    var h = '<table><thead><tr><th style="width:30%">公司</th><th style="width:12%">国家/城市</th>'
+          + '<th style="width:19%">企业电话</th><th style="width:19%">企业邮箱</th><th>来源展会</th>'
+          + '<th style="width:104px">动作</th></tr></thead><tbody>';
     out.forEach(function(r){
+      var evId = D.ev[r[6]] || "";
+      var evObj = EVBYID[evId] || {};
+      var evNm = evObj.nm || evId;          /* 展示名；查不到才退回 id */
+      var b = bridgeOf({
+        dom: domOf(r[5]), nm: r[0], cc2: iso2Of(D.cc[r[1]]),
+        ind: evObj.fam || "", kw: D.k[r[7]] || "",
+        contact: (r[3] || r[4]) ? "L2" : "L1",
+        ev: evNm, bo: r[8] || "", evk: "expo",
+        chan: "展会名录", src: "名录库·参展商"
+      });
       h += '<tr><td><span class="nm">' + esc(r[0]) + '</span>'
-         + (r[5] ? ' <a href="' + esc(r[5]) + '" target="_blank" rel="noopener" style="font-size:11px">官网↗</a>' : '')
+         + (r[5] ? ' <a href="' + esc(webUrl(r[5])) + '" target="_blank" rel="noopener" style="font-size:11px">官网↗</a>' : '')
          + (r[8] ? '<br><span class="tag">展位 ' + esc(r[8]) + '</span>' : '')
          + (D.k[r[7]] ? '<br><span class="tag">' + esc(D.k[r[7]]) + '</span>' : '')
          + '</td><td><span class="cc">' + esc(D.cc[r[1]]) + '</span><br><span class="mut">' + esc(r[2] || "—") + '</span></td>'
          + '<td>' + (r[3] ? esc(r[3]) : '<span class="mut">—</span>') + '</td>'
          + '<td>' + (r[4] ? '<a href="mailto:' + esc(r[4]) + '">' + esc(r[4]) + '</a>' : '<span class="mut">—</span>') + '</td>'
-         + '<td><span class="mut">' + esc(D.ev[r[6]]) + '</span></td></tr>';
+         + '<td><span class="mut">' + esc(evNm) + '</span></td>'
+         + actCell(b) + '</tr>';
     });
     list.innerHTML = h + '</tbody></table>';
   }
@@ -331,16 +475,27 @@ a:hover{text-decoration:underline}
     $("hint").textContent = "协会会员命中 " + out.length + " 条 · 查询 " + ms + " ms · 全库 " + ASSOC.length.toLocaleString()
       + " 家（德国 VDMA 3,565 + 台湾 THTMA 181）";
     if (!out.length) { list.innerHTML = '<div class="empty">没有匹配。</div>'; return; }
-    var h = '<table><thead><tr><th style="width:38%">公司</th><th style="width:14%">注册地</th>'
-          + '<th style="width:20%">电话</th><th style="width:18%">职能邮箱</th><th>来源</th></tr></thead><tbody>';
+    var h = '<table><thead><tr><th style="width:34%">公司</th><th style="width:13%">注册地</th>'
+          + '<th style="width:18%">电话</th><th style="width:16%">职能邮箱</th><th>来源</th>'
+          + '<th style="width:104px">动作</th></tr></thead><tbody>';
+    var ASSOC_EV = { vdma: "VDMA 德国机械设备制造业联合会 · 公开会员名录",
+                     thtma: "THTMA 台湾手工具工业同业公会 · 公开会员名录" };
     out.forEach(function(r){
+      /* r.c 已经是 ISO2（TW/DE/AT/CH/BE/US/PL），可直接给 flag / 大区用 */
+      var b = bridgeOf({
+        dom: domOf(r.w), nm: r.n, cc2: (r.c || "").toUpperCase(),
+        ind: "", kw: "", contact: (r.t || r.e) ? "L2" : "L1",
+        ev: ASSOC_EV[r.src] || "", bo: "", evk: "assoc",
+        chan: "协会名录", src: "名录库·协会会员"
+      });
       h += '<tr><td><span class="nm">' + esc(r.n) + '</span>'
-         + (r.w ? ' <a href="' + esc(r.w) + '" target="_blank" rel="noopener" style="font-size:11px">官网↗</a>' : '')
+         + (r.w ? ' <a href="' + esc(webUrl(r.w)) + '" target="_blank" rel="noopener" style="font-size:11px">官网↗</a>' : '')
          + (r.k ? '<br><span class="tag">' + esc(r.k) + '</span>' : '') + '</td>'
-         + '<td><span class="cc">' + esc(r.c || "—") + '</span><br><span class="mut">' + esc((r.a || "").slice(0, 34) || "—") + '</span></td>'
+         + '<td><span class="cc">' + esc(r.c || "—") + '</span><br><span class="mut">' + esc((r.a || "").slice(0, 30) || "—") + '</span></td>'
          + '<td>' + (r.t ? esc(r.t) : '<span class="mut">—</span>') + '</td>'
          + '<td>' + (r.e ? '<a href="mailto:' + esc(r.e) + '">' + esc(r.e) + '</a>' : '<span class="mut">—</span>') + '</td>'
-         + '<td>' + (r.s ? '<a href="' + esc(r.s) + '" target="_blank" rel="noopener" class="mut">来源↗</a>' : '<span class="mut">—</span>') + '</td></tr>';
+         + '<td>' + (r.s ? '<a href="' + esc(r.s) + '" target="_blank" rel="noopener" class="mut">来源↗</a>' : '<span class="mut">—</span>') + '</td>'
+         + actCell(b) + '</tr>';
     });
     list.innerHTML = h + '</tbody></table>';
   }

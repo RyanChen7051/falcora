@@ -89,6 +89,17 @@
   .verdict.v-green{border-color:rgba(52,211,153,.34);background:linear-gradient(100deg,rgba(52,211,153,.12),rgba(13,46,54,.6))}
   .verdict.v-yellow{border-color:rgba(245,184,65,.34);background:linear-gradient(100deg,rgba(245,184,65,.12),rgba(13,46,54,.6))}
   .verdict.v-red{border-color:rgba(255,107,107,.34);background:linear-gradient(100deg,rgba(255,107,107,.12),rgba(13,46,54,.6))}
+  /* 参展记录（L1 公开证据）横幅 —— 从「全球名录库」点「查这家」带进来。
+     它只陈述「该主体在某年某展会设过展位」这一条可复核事实，
+     不下任何风险结论，也不参与 overall 判定。 */
+  .evd{display:none;margin-top:12px;padding:13px 18px;border-radius:var(--radius);
+    border:1px solid rgba(94,234,212,.28);background:linear-gradient(100deg,rgba(94,234,212,.09),rgba(13,46,54,.55));
+    font-size:12.5px;line-height:1.75;color:var(--ink)}
+  .evd.on{display:block}
+  .evd .eh{font-weight:700;color:var(--cyan);margin-bottom:5px;font-size:12px;letter-spacing:.3px}
+  .evd .eb{font-weight:700;font-size:13.5px;color:#EAFBF7}
+  .evd .ef{color:var(--muted2);font-size:11.5px;margin-top:5px}
+  .evd .ef b{color:var(--muted)}
   .vbadge{width:66px;height:66px;border-radius:16px;display:grid;place-items:center;font-size:26px;flex:0 0 auto}
   .v-green .vbadge{background:rgba(52,211,153,.16);color:var(--good)}
   .v-yellow .vbadge{background:rgba(245,184,65,.16);color:var(--gold)}
@@ -238,6 +249,7 @@
       <div class="empty" id="ddEmpty" hidden>尚无尽调档案 · 点击「＋ 核查新主体」对任意交易对手做身份核验与名单筛查；本原型未接入真实数据源，结果仅作框架演示。</div>
       <div id="ddDetail">
       <div class="verdict" id="verdict"></div>
+      <div class="evd" id="evdBanner"></div>
 
       <div class="idcard">
         <div class="card-h"><div class="ic">🪪</div><h3>主体信息核验 · 企业身份</h3><span class="st" id="idtSt"></span></div>
@@ -356,10 +368,11 @@ const MKEY = "falcora_dd_manual_v1";
 function loadManual(){ try { return JSON.parse(localStorage.getItem(MKEY) || "{}") || {}; } catch (e) { return {}; } }
 function saveManual(o){ try { localStorage.setItem(MKEY, JSON.stringify(o)); } catch (e) {} }
 
-function naDossier(nm, dm, region, ind, regNo){
+function naDossier(nm, dm, region, ind, regNo, opt){
+  opt = opt || {};
   const naCheck = (k) => ({ st:"na", cov:"未覆盖", srcs:"—", f:["该数据源未接入 → 无法核实"] });
   const d = {
-    nm, dm, flag:"🏳", region: region || "待确认", ind: ind || "待确认",
+    nm, dm, flag: opt.flag || "🏳", region: region || "待确认", ind: ind || "待确认",
     overall:"red", checked: nowStr(),
     advice:"该主体<b>尚未建立详细核查档案</b>，多数数据源未覆盖。<b>核查不足 ≠ 无风险</b>。建议：① 索取注册与资质文件；② 补齐域名与注册号后重跑核查；③ 覆盖补齐前不要据以判断为「无风险」。",
     idt:{st:"na", cov:"0/6 项已核对", srcs:"—",
@@ -379,6 +392,9 @@ function naDossier(nm, dm, region, ind, regNo){
     rel:naCheck("关联方与股权穿透"), cert:naCheck("资质认证核查")
   };
   d.lit.k = "诉讼与司法记录";
+  /* 参展记录（L1 公开证据）：只有从「全球名录库」带进来时才存在。
+     存的是**可复核事实**（哪年哪个展会、展位号、来源平台），不是风险结论。 */
+  if (opt.evd) d.evd = opt.evd;
   return d;
 }
 
@@ -387,17 +403,30 @@ function nowStr(){
   return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
 }
 
-/* URL 参数：?co=域名&nm=名称&rg=区域&ind=行业  （② 页「加入管线 → 核查」跳转） */
+/* URL 参数：?co=域名&nm=名称&rg=区域&ind=行业  （② 页「加入管线 → 核查」跳转）
+   2026-10-31 新增（「全球名录库 → 查这家」）：
+     &ev=展会名 &bo=展位 &fl=国旗emoji
+     ev/bo 会落成 d.evd，作为「该主体真实经营」的一条**可复核证据**展示，
+     只陈述事实，不参与 overall 判定、不改任何核查卡的状态。 */
 const QP = new URLSearchParams(location.search);
 const qco = QP.get("co");
+const qev = QP.get("ev") || "";
+const qEvd = qev ? { ev: qev, bo: QP.get("bo") || "", k: QP.get("evk") || "expo",
+                     at: nowStr().slice(0, 10) } : null;
 const manual = loadManual();
 Object.keys(manual).forEach(k => { if (!DOSSIERS[k]) DOSSIERS[k] = manual[k]; });
 if (qco && !DOSSIERS[qco]) {
-  const qd = naDossier(QP.get("nm") || qco, qco, QP.get("rg") || "", QP.get("ind") || "", "");
+  const qd = naDossier(QP.get("nm") || qco, qco, QP.get("rg") || "", QP.get("ind") || "", "",
+                       { flag: QP.get("fl") || "", evd: qEvd });
   DOSSIERS[qco] = qd;
   /* 落盘（2026-10-15）：从 ② 带入的档案必须持久化 —— 否则刷新即丢，
      且 ② 页漏斗「已建尽调档案」与驾驶舱「尽调档案」KPI 都会漏计它。 */
   const qm = loadManual(); qm[qco] = qd; saveManual(qm);
+} else if (qco && qEvd && !DOSSIERS[qco].evd) {
+  /* 档案已存在（之前手动建过 / 之前从别的入口带过）→ 只补证据，不覆盖任何已有核查结果 */
+  DOSSIERS[qco].evd = qEvd;
+  const qm = loadManual();
+  if (qm[qco]) { qm[qco].evd = qEvd; saveManual(qm); }
 }
 
 /* 跨页统计上报（app-stats.js）：**仅**上报使用者手动建立/带入的尽调档案实数。
@@ -499,6 +528,26 @@ function render(dm){
       '</div>' +
     '</div>' +
     '<div class="vmeta">' + L("核查覆盖") + '<b>' + covered + '/7</b>' + L("核查时点") + ' <span>' + esc(c.checked) + '</span></div>';
+
+  /* 参展记录（L1 公开证据）—— 只在从「全球名录库」带入时才有 */
+  const evdB = document.getElementById("evdBanner");
+  if (evdB) {
+    if (c.evd && c.evd.ev) {
+      evdB.className = "evd on";
+      var isAssoc = c.evd.k === "assoc";
+      evdB.innerHTML =
+        '<div class="eh">📌 ' + L(isAssoc ? "协会会员记录 · L1 公开证据" : "参展记录 · L1 公开证据") + '</div>' +
+        '<div class="eb">' + esc(c.evd.ev) + (c.evd.bo ? ' · ' + L("展位") + ' ' + esc(c.evd.bo) : '') + '</div>' +
+        '<div class="ef">' + L(isAssoc ? "协会官网公开会员名录（可逐条复核）" : "展会官网参展商目录（公开可查）") +
+        (c.evd.at ? ' · ' + L("采集日") + ' ' + esc(c.evd.at) : '') +
+        '<br>' + L(isAssoc
+          ? "仅证明该主体是某行业协会的公开会员；不构成风险结论，也不能替代主体核验与名单筛查。"
+          : "仅证明该主体真实经营且对外招商；不构成风险结论，也不能替代主体核验与名单筛查。") + '</div>';
+    } else {
+      evdB.className = "evd";
+      evdB.innerHTML = "";
+    }
+  }
 
   /* 主体信息核验 */
   document.getElementById("idtSt").className = "st " + (ST[c.idt.st]||ST.na)[1];

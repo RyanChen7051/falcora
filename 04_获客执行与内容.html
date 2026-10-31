@@ -520,7 +520,38 @@ const V={
   "东亚":{en:"East Asia",de:"Ostasien",ar:"شرق آسيا",es:"Asia Oriental",zh:"东亚"},
   "大洋洲":{en:"Oceania",de:"Ozeanien",ar:"أوقيانوسيا",es:"Oceanía",zh:"大洋洲"},
   "采购主管":{en:"Procurement Supervisor",de:"Beschaffungsleiter",ar:"مشرف المشتريات",es:"Supervisor de Compras",zh:"采购主管"},
-  "采购负责人":{en:"Procurement Lead",de:"Leiter Beschaffung",ar:"مسؤول المشتريات",es:"Responsable de Compras",zh:"采购负责人"}
+  "采购负责人":{en:"Procurement Lead",de:"Leiter Beschaffung",ar:"مسؤول المشتريات",es:"Responsable de Compras",zh:"采购负责人"},
+
+  /* ---- 2026-10-31 v70：名录库 25 个行业族 + 新增的「南亚/中亚」大区 ----
+     不加这一段，从名录库加入管线的公司在英文/德文/西文/阿文草稿里会露出中文品类词，
+     出现「regarding 汽配/汽车后市场 supply」这种半截中文。 */
+  "汽配/汽车后市场":{en:"auto parts and aftermarket",de:"Autoteile und Aftermarket",ar:"قطع غيار السيارات وسوق ما بعد البيع",es:"autopartes y posventa",zh:"汽配/汽车后市场"},
+  "纺织/服装/家纺/纱线":{en:"textiles, apparel, home textiles and yarn",de:"Textilien, Bekleidung, Heimtextilien und Garne",ar:"المنسوجات والملابس والمفروشات المنزلية والغزل",es:"textiles, confección, textil hogar e hilados",zh:"纺织/服装/家纺/纱线"},
+  "家居/消费品/礼品":{en:"home goods, consumer goods and gifts",de:"Haushaltswaren, Konsumgüter und Geschenke",ar:"السلع المنزلية والاستهلاكية والهدايا",es:"artículos para el hogar, bienes de consumo y regalos",zh:"家居/消费品/礼品"},
+  "制造/模具/金属加工":{en:"manufacturing, tooling and metalworking",de:"Fertigung, Werkzeugbau und Metallverarbeitung",ar:"التصنيع والقوالب وتشغيل المعادن",es:"fabricación, utillaje y metalmecánica",zh:"制造/模具/金属加工"},
+  "照明/建筑/卫浴":{en:"lighting, building and sanitary",de:"Beleuchtung, Bau und Sanitär",ar:"الإضاءة والبناء والأدوات الصحية",es:"iluminación, construcción y sanitarios",zh:"照明/建筑/卫浴"},
+  "工业自动化/电子/物流":{en:"industrial automation, electronics and logistics",de:"Industrieautomation, Elektronik und Logistik",ar:"الأتمتة الصناعية والإلكترونيات والخدمات اللوجستية",es:"automatización industrial, electrónica y logística",zh:"工业自动化/电子/物流"},
+  "美容/个护":{en:"beauty and personal care",de:"Beauty und Körperpflege",ar:"التجميل والعناية الشخصية",es:"belleza y cuidado personal",zh:"美容/个护"},
+  "交通/两轮/航空/基建":{en:"transport, two-wheelers, aviation and infrastructure",de:"Transport, Zweiräder, Luftfahrt und Infrastruktur",ar:"النقل والدراجات والطيران والبنية التحتية",es:"transporte, motos, aviación e infraestructura",zh:"交通/两轮/航空/基建"},
+  "医疗/健康":{en:"medical and healthcare",de:"Medizin und Gesundheitswesen",ar:"الطب والرعاية الصحية",es:"medicina y salud",zh:"医疗/健康"},
+  "安防/消防":{en:"security and fire safety",de:"Sicherheit und Brandschutz",ar:"الأمن والسلامة من الحرائق",es:"seguridad y protección contra incendios",zh:"安防/消防"},
+  "娱乐/灯光音响/乐器":{en:"entertainment, lighting, audio and musical instruments",de:"Unterhaltung, Licht, Ton und Musikinstrumente",ar:"الترفيه والإضاءة والصوت والآلات الموسيقية",es:"entretenimiento, iluminación, audio e instrumentos musicales",zh:"娱乐/灯光音响/乐器"},
+  "印刷/广告/标识":{en:"printing, advertising and signage",de:"Druck, Werbung und Beschilderung",ar:"الطباعة والإعلان واللافتات",es:"impresión, publicidad y señalización",zh:"印刷/广告/标识"},
+  "食品/食品加工":{en:"food and food processing",de:"Lebensmittel und Lebensmittelverarbeitung",ar:"الأغذية وتجهيز الأغذية",es:"alimentos y procesamiento de alimentos",zh:"食品/食品加工"},
+  "宠物":{en:"pet products",de:"Heimtierbedarf",ar:"منتجات الحيوانات الأليفة",es:"productos para mascotas",zh:"宠物"},
+  "教育/母婴/儿童":{en:"education, baby and children's products",de:"Bildung, Baby- und Kinderprodukte",ar:"التعليم ومنتجات الأطفال",es:"educación y productos para bebés y niños",zh:"教育/母婴/儿童"},
+  "其他/未分类":{en:"other / unclassified",de:"Sonstiges / nicht klassifiziert",ar:"أخرى / غير مصنّف",es:"otros / sin clasificar",zh:"其他/未分类"},
+  "消费电子":{en:"consumer electronics",de:"Unterhaltungselektronik",ar:"الإلكترونيات الاستهلاكية",es:"electrónica de consumo",zh:"消费电子"},
+  "包装/印刷":{en:"packaging and printing",de:"Verpackung und Druck",ar:"التغليف والطباعة",es:"envases y impresión",zh:"包装/印刷"},
+  "户外/射击/狩猎":{en:"outdoor, shooting and hunting",de:"Outdoor, Schießen und Jagd",ar:"الأنشطة الخارجية والرماية والصيد",es:"aire libre, tiro y caza",zh:"户外/射击/狩猎"},
+  "零售/商业设备":{en:"retail and commercial equipment",de:"Einzelhandel und Geschäftsausstattung",ar:"التجزئة والمعدات التجارية",es:"comercio minorista y equipamiento comercial",zh:"零售/商业设备"},
+  "船舶/海事":{en:"marine and maritime",de:"Boote und Maritime",ar:"القوارب والقطاع البحري",es:"naútica y marítimo",zh:"船舶/海事"},
+  "矿业/环保/水处理":{en:"mining, environmental and water treatment",de:"Bergbau, Umwelt und Wasseraufbereitung",ar:"التعدين والبيئة ومعالجة المياه",es:"minería, medio ambiente y tratamiento de agua",zh:"矿业/环保/水处理"},
+  "餐饮/酒店":{en:"foodservice and hospitality",de:"Gastronomie und Hotellerie",ar:"الضيافة والفنادق",es:"hostelería y restauración",zh:"餐饮/酒店"},
+  "化工/制药/实验室":{en:"chemicals, pharma and laboratory",de:"Chemie, Pharma und Labor",ar:"الكيماويات والأدوية والمختبرات",es:"química, farmacia y laboratorio",zh:"化工/制药/实验室"},
+  "清洁/冷链/卫生":{en:"cleaning, cold chain and hygiene",de:"Reinigung, Kühlkette und Hygiene",ar:"التنظيف وسلسلة التبريد والنظافة",es:"limpieza, cadena de frío e higiene",zh:"清洁/冷链/卫生"},
+  "南亚":{en:"South Asia",de:"Südasien",ar:"جنوب آسيا",es:"Asia del Sur",zh:"南亚"},
+  "中亚":{en:"Central Asia",de:"Zentralasien",ar:"آسيا الوسطى",es:"Asia Central",zh:"中亚"},
 };
 const lv=(v,lang)=>(V[v]&&V[v][lang])||v;
 

@@ -558,7 +558,11 @@ const REGION_TZ=[
   {re:/拉美|Latin America/i, tz:"America/Sao_Paulo", window:"09:00–11:00"},
   {re:/非洲|Africa/i,        tz:"Africa/Johannesburg", window:"09:00–11:00"},
   {re:/东亚|East Asia/i,     tz:"Asia/Tokyo",      window:"09:00–11:00"},
-  {re:/大洋洲|Oceania/i,     tz:"Australia/Sydney", window:"09:00–11:00"}
+  {re:/大洋洲|Oceania/i,     tz:"Australia/Sydney", window:"09:00–11:00"},
+  /* 2026-10-31：原表只有 8 个大区，南亚/中亚无处安放 —— 名录库接入后
+     巴基斯坦一家就 471 家，硬塞进「中东」或「东南亚」都是编造，故按实际补两条。 */
+  {re:/南亚|South Asia/i,    tz:"Asia/Kolkata",    window:"10:00–12:00"},
+  {re:/中亚|Central Asia/i,  tz:"Asia/Tashkent",   window:"10:00–12:00"}
 ];
 function tzForRegion(rg){
   if(!rg) return null;
