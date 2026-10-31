@@ -77,7 +77,7 @@
     tr.appendChild(a);
   }
 
-  function inject() { injectBack(); injectHome(); injectAccount(); injectCalc(); }
+  function inject() { injectBack(); injectHome(); injectAccount(); injectCalc(); injectRoster(); }
 
   // ---------- 注入「账号与成员」（排在侧栏「当前分页」之后、用户卡之前） ----------
   // 各分页的侧栏导航是各自硬写的，故统一由本脚本补上第 8 栏，避免逐页改动。
@@ -108,7 +108,27 @@
     if (foot) sb.insertBefore(a, foot); else sb.appendChild(a);
   }
 
-  /* 三个注入函数都是幂等的（内部各自查重），可安全重复调用。 */
+  /* ---------- 注入「全球名录库」（2026-10-31 v69） ----------
+     为什么必须做这一步：`data-expo-index.js` / `data-expo-exhibitors.js` / `data-assoc-members.js`
+     合计 7.9MB 数据（75,180 家展会参展商 + 3,746 家协会会员）早就做好了，SW 也预缓存了，
+     但**9 屏里没有任何一个入口指向它** —— 用户从驾驶舱点不进去，只能手输 URL。
+     按「录入了但没人消费的断链，优先级高于加新功能」，本轮把入口补上。
+     · 放在侧栏最后（成本与报价测算之下），因为它不是流程的一环，是「原料库」。
+     · 各分页侧栏硬写，故统一由本脚本补，避免逐页改动 8 个 HTML。 */
+  function injectRoster() {
+    var sb = document.querySelector('.sidebar');
+    if (!sb) return;
+    if (sb.querySelector('a[href^="名录库_预览"]')) return;   // 幂等
+    var a = document.createElement('a');
+    a.className = 'nav-item nav-roster';
+    a.href = '名录库_预览.html';
+    a.title = '全球名录库：75,180 家展会参展商 + 3,746 家协会会员';
+    a.innerHTML = '<span class="idx">📚</span> <span>全球名录库</span>';
+    var foot = sb.querySelector('.side-foot');
+    if (foot) sb.insertBefore(a, foot); else sb.appendChild(a);
+  }
+
+  /* 四个注入函数都是幂等的（内部各自查重），可安全重复调用。 */
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', inject);
   else inject();
   /* 兜底重试：SW 首次安装 / 慢网络下，DOMContentLoaded 时 .top-right 可能尚未就绪，

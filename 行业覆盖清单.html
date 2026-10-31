@@ -10,6 +10,13 @@
 body{background:radial-gradient(1200px 600px at 15% -10%,#0F3A45 0%,var(--bg) 55%),var(--bg);
 color:var(--ink);font-family:var(--font);padding:30px 22px 70px;line-height:1.6}
 .wrap{max-width:1120px;margin:0 auto}
+.topnav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.topnav .tn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:10px;
+  border:1px solid var(--border);background:rgba(0,0,0,.22);color:#CFE3E6;
+  font-size:12.5px;font-weight:700;text-decoration:none;line-height:1;transition:.18s;white-space:nowrap}
+.topnav a.tn:hover{border-color:var(--cyan);background:rgba(94,234,212,.10);color:#fff;transform:translateY(-1px)}
+.topnav .tn.cur{border-color:rgba(94,234,212,.38);
+  background:linear-gradient(180deg,rgba(94,234,212,.18),rgba(14,154,142,.22));color:#EAFBF7;cursor:default}
 h1{font-size:23px;letter-spacing:.4px}
 h1 span{color:var(--cyan)}
 .sub{color:var(--muted);font-size:13px;margin-top:8px}
@@ -58,6 +65,11 @@ td{padding:8px 10px;border-bottom:1px solid rgba(126,154,160,.07);vertical-align
 .foot{margin-top:26px;font-size:12px;color:var(--muted);border-top:1px solid var(--border);padding-top:16px}
 @media(max-width:760px){.body{grid-template-columns:1fr}.col+.col{border-left:0;border-top:1px solid var(--border)}}
 </style></head><body><div class="wrap">
+<nav class="topnav" aria-label="页面导航">
+  <a class="tn" href="index.html">&#8962; 驾驶舱首页</a>
+  <a class="tn" href="名录库_预览.html">&#128218; 全球名录库</a>
+  <span class="tn cur">&#128193; 行业覆盖清单（当前页）</span>
+</nav>
 <h1>FALCORA · 行业覆盖清单 <span>（数据实算，2026-10-31）</span></h1>
 <div class="sub">你不用先说产品。这张表是「我现在到底有什么」，你自己对照你的产业在不在里面。<br>
 数字全部从数据文件算出，没有一个手写。</div>

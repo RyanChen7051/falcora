@@ -17,6 +17,13 @@
 body{background:radial-gradient(1200px 600px at 15% -10%,#0F3A45 0%,var(--bg) 55%),var(--bg);
   color:var(--ink);font-family:var(--font);min-height:100vh;padding:28px 22px 60px}
 .wrap{max-width:1180px;margin:0 auto}
+.topnav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.topnav .tn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:10px;
+  border:1px solid var(--border);background:rgba(0,0,0,.22);color:#CFE3E6;
+  font-size:12.5px;font-weight:700;text-decoration:none;line-height:1;transition:.18s;white-space:nowrap}
+.topnav a.tn:hover{border-color:var(--cyan);background:rgba(94,234,212,.10);color:#fff;transform:translateY(-1px)}
+.topnav .tn.cur{border-color:rgba(94,234,212,.38);
+  background:linear-gradient(180deg,rgba(94,234,212,.18),rgba(14,154,142,.22));color:#EAFBF7;cursor:default}
 h1{font-size:22px;font-weight:700;letter-spacing:.4px}
 h1 span{color:var(--cyan)}
 .sub{color:var(--muted);font-size:13px;margin-top:6px;line-height:1.7}
@@ -64,6 +71,11 @@ a:hover{text-decoration:underline}
 </head>
 <body>
 <div class="wrap">
+  <nav class="topnav" aria-label="页面导航">
+    <a class="tn" href="index.html">&#8962; 驾驶舱首页</a>
+    <a class="tn" href="行业覆盖清单.html">&#128193; 行业覆盖清单</a>
+    <span class="tn cur">&#128218; 全球名录库（当前页）</span>
+  </nav>
   <h1>FALCORA · 全球名录库 <span>预览</span></h1>
   <div class="sub">三个独立来源，同一套查询。<b style="color:var(--gold)">参展商 = 供货方</b>，与采购方名录永不合并——否则搜买家会搜出同行。</div>
 
