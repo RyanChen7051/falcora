@@ -892,8 +892,30 @@
      jsDelivr         4.8690
      → 差 0.04%~0.4%，属正常口径差，不是算错。页面必须写清来源与日期。
 
-   字典 +5 键 → **2693 键**，bad 0。 */
-const CACHE = 'falcora-v65';
+   字典 +5 键 → **2693 键**，bad 0。
+
+   · v66：**新增「全球名录库」—— 49,907 家展会参展商 + 3,746 家协会会员**（用户 2026-10-31：
+         「全产业、全球、工会商会协会名录、全球所有行业展会的参展厂商名录全都要」）。
+         · 数据来源：Messe Frankfurt 官方参展商搜索 API（公开端点，Header `Apikey`）。
+           91 个展会 / 124 国 / 中国 21,136 家居首。12 分 33 秒全量抓完（55 页 × 1000 条）。
+         · `data-expo-index.js`（40KB）：91 展会 + `FAL_EXPO_META` + `FAL_EXPO_PLATFORMS`（平台覆盖状态）
+           + `FAL_EXPO_FAM_SYN`（族级中英同义词，搜「家具」和 furniture 命中同一族）。
+         · `data-expo-exhibitors.js`（4.9MB）：字典压缩，行格式
+           `[名称,国家ix,城市,电话,邮箱,官网,展会ix,品类ix]`；`FAL_EXPO_Q()` 查询、`FAL_EXPO_LOOKUP()` 反查。
+           ⚠️ **故意不进 PRECACHE**（4.9MB 不该塞进安装包）→ 走 SW 的 stale-while-revalidate，
+           首次点开才下载，之后进 runtime cache。
+         · `名录库_预览.html`：懒加载 + 跨展会打散（每展会限采 60 条再轮转，否则 120 条全来自同一个展会）
+           + 中英族级同义词搜索。实测查询 1.5–4ms。
+         · `行业覆盖清单.html`：19 族 × 91 展会 × 品类词 × 家数，可搜索；底部列明 **16 个未覆盖行业**
+           （消费电子 / 医疗器械 / 教育装备 / 农业 / 整车 / 咨询 …），不藏。
+         · ⚠️ **合规：`exhibitor.contacts`（个人姓名 + 个人邮箱）在采集端整段不读取**，属 L3。
+           清洗丢弃手机号 3,688 条、人名邮箱 8,440 条、无效电话 1,222 条。终检手机号残留 0。
+           电话 59% / 邮箱 27% / 官网 73%（邮箱刻意压低：宁可少收，不可错收）。
+         · ⚠️ **参展商 = 供货方 ≠ 采购方**：永不并入 `data-real-companies.js`，
+           否则用户搜买家会搜出同行。用途只有「企业真实性证据」+「供应链情报」。
+         · 分类修正：`Child Edu & Care Japan` 原被裸词 `CARE` 吞进「医疗/健康」，实为教育母婴展 →
+           教育/母婴/儿童 328 家独立成族；未分类 327 → **73 家（0.15%）**。 */
+const CACHE = 'falcora-v66';
 const PRECACHE = [
   './',
   './app-design.css?v=3',
@@ -919,6 +941,9 @@ const PRECACHE = [
   './fx-rates.js',
   './data-real-companies.js',
   './data-l2-contacts.js',
+  './data-expo-index.js',
+  './名录库_预览.html',
+  './行业覆盖清单.html',
   './manifest.webmanifest',
   './assets/logo.png',
   './assets/icon-192.png',

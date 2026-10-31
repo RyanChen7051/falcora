@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FALCORA · 全球名录库（预览）</title>
+<style>
+:root{
+  --bg:#0B2632; --bg2:#0A2E38; --panel:rgba(13,46,54,.72); --panel2:rgba(16,58,68,.55);
+  --border:rgba(126,154,160,.16); --border2:rgba(94,234,212,.14);
+  --cyan:#5EEAD4; --teal:#0E9A8E; --gold:#F5B841; --ink:#E9F3F4;
+  --muted:#8AA3A8; --muted2:#6E878C; --good:#34D399; --warn:#F5B841; --danger:#FF6B6B;
+  --radius:14px;
+  --font:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(1200px 600px at 15% -10%,#0F3A45 0%,var(--bg) 55%),var(--bg);
+  color:var(--ink);font-family:var(--font);min-height:100vh;padding:28px 22px 60px}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:22px;font-weight:700;letter-spacing:.4px}
+h1 span{color:var(--cyan)}
+.sub{color:var(--muted);font-size:13px;margin-top:6px;line-height:1.7}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0 18px}
+.stat{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.stat b{display:block;font-size:24px;color:var(--cyan);font-weight:700;line-height:1.2}
+.stat i{display:block;font-size:11px;color:var(--muted);font-style:normal;margin-top:4px;letter-spacing:.3px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--panel);
+  border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px}
+input[type=text],select{background:rgba(6,28,34,.85);border:1px solid var(--border);color:var(--ink);
+  border-radius:9px;padding:9px 12px;font-size:13px;font-family:var(--font);outline:none}
+input[type=text]{flex:1;min-width:220px}
+input[type=text]:focus,select:focus{border-color:rgba(94,234,212,.45)}
+button{background:linear-gradient(180deg,rgba(94,234,212,.16),rgba(14,154,142,.12));
+  border:1px solid rgba(94,234,212,.3);color:var(--cyan);border-radius:9px;padding:9px 16px;
+  font-size:13px;font-family:var(--font);cursor:pointer;transition:.16s}
+button:hover{background:rgba(94,234,212,.2)}
+button.on{background:rgba(94,234,212,.26);border-color:rgba(94,234,212,.6);color:#fff}
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tabs button{font-size:12.5px;padding:8px 14px}
+.hint{color:var(--muted2);font-size:12px;margin:10px 0}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;color:var(--muted);font-weight:500;font-size:11px;letter-spacing:.4px;
+  padding:8px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#0C2C37;z-index:2}
+td{padding:9px 10px;border-bottom:1px solid rgba(126,154,160,.07);vertical-align:top}
+tr:hover td{background:rgba(94,234,212,.04)}
+.nm{font-weight:600;color:#EAF6F7}
+.cc{display:inline-block;font-size:10px;padding:1px 6px;border-radius:5px;
+  background:rgba(94,234,212,.12);color:var(--cyan);margin-left:6px;vertical-align:middle}
+.mut{color:var(--muted2)}
+a{color:var(--cyan);text-decoration:none}
+a:hover{text-decoration:underline}
+.tag{display:inline-block;font-size:10.5px;padding:1.5px 7px;border-radius:5px;
+  background:rgba(245,184,65,.12);color:var(--gold);margin:1px 3px 1px 0}
+.empty{text-align:center;color:var(--muted2);padding:40px 0;font-size:13px}
+.foot{margin-top:26px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius);
+  background:var(--panel2);font-size:12px;color:var(--muted);line-height:1.85}
+.foot b{color:var(--warn)}
+.loadbox{background:var(--panel);border:1px dashed rgba(94,234,212,.35);border-radius:var(--radius);
+  padding:26px;text-align:center;margin:16px 0}
+.loadbox p{color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.7}
+.pbar{height:4px;background:rgba(126,154,160,.16);border-radius:2px;overflow:hidden;margin-top:12px;display:none}
+.pbar i{display:block;height:100%;width:0;background:var(--cyan);transition:width .2s}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>FALCORA · 全球名录库 <span>预览</span></h1>
+  <div class="sub">三个独立来源，同一套查询。<b style="color:var(--gold)">参展商 = 供货方</b>，与采购方名录永不合并——否则搜买家会搜出同行。</div>
+
+  <div class="stats">
+    <div class="stat"><b id="sExpo">—</b><i>展会参展商（供货方）</i></div>
+    <div class="stat"><b id="sEv">—</b><i>覆盖展会</i></div>
+    <div class="stat"><b id="sCc">—</b><i>覆盖国家/地区</i></div>
+    <div class="stat"><b id="sTel">—</b><i>带企业电话</i></div>
+    <div class="stat"><b id="sAssoc">3,746</b><i>协会会员（另一来源）</i></div>
+  </div>
+
+  <div class="tabs">
+    <button class="on" data-src="expo">展会参展商</button>
+    <button data-src="assoc">协会会员</button>
+    <button data-src="buyer">采购方名录</button>
+  </div>
+
+  <div class="loadbox" id="loadbox">
+    <p>展会名录约 4.8 MB，按需加载（不在首屏）。<br>点一下才下载，避免拖慢打开速度。</p>
+    <button id="btnLoad">加载展会名录</button>
+    <div class="pbar" id="pbar"><i></i></div>
+  </div>
+
+  <div class="bar" id="filterbar" style="display:none">
+    <input type="text" id="q" placeholder="搜公司名 / 城市 / 品类（中英文皆可，如 furniture、家具、Shenzhen）">
+    <select id="fam"><option value="">全部行业</option></select>
+    <select id="cc"><option value="">全部国家</option></select>
+    <button id="btnClear">清空</button>
+  </div>
+
+  <div class="hint" id="hint"></div>
+  <div id="list"></div>
+
+  <div class="foot" id="plats"></div>
+
+  <div class="foot">
+    <b>数据边界（必读）</b><br>
+    · 展会参展商来自 <b>Messe Frankfurt 官方参展商搜索 API</b>（公开端点），每条可点开来源复核。共 49,907 家 / 91 个展会 / 124 个国家。<br>
+    · <b>个人联系方式（姓名、个人邮箱、手机号）已在采集端剔除</b>：`exhibitor.contacts` 整段不读取；手机号按冠号判据丢弃 3,688 条；人名邮箱丢弃 8,440 条。属 L3，只能使用者自备。<br>
+    · 参展商是<b>供货方</b>，用途是「企业真实性证据」+「供应链情报」，<b>不是客户名单</b>。<br>
+    · 未命中 ≠ 企业不存在，只等于「不在本名录内」。
+  </div>
+</div>
+
+<script src="data-expo-index.js"></script>
+<script>
+(function(){
+  var SRC = "expo", DATA = null, ASSOC = null, BUYER = null;
+  var $ = function(id){ return document.getElementById(id); };
+
+  // ---------- 平台覆盖状态（诚实展示：接了哪些、没接哪些）----------
+  (function(){
+    var P = window.FAL_EXPO_PLATFORMS || [];
+    if (!P.length) return;
+    var LABEL = { "verified": ["✅ 已接入", "#34D399"], "probed-failed": ["❌ 探过未通", "#FF6B6B"],
+                  "not-batchable": ["⚠️ 结构不支持", "#F5B841"], "untested": ["⏳ 未实测", "#8AA3A8"] };
+    var h = '<b>展览集团覆盖进度（全球全行业需要 10+ 个集团，目前 1 个已通）</b><br>'
+          + '<table style="margin-top:8px"><thead><tr><th style="width:30%">集团/平台</th>'
+          + '<th style="width:12%">覆盖区</th><th style="width:12%">状态</th><th>说明</th></tr></thead><tbody>';
+    P.forEach(function(p){
+      var st = LABEL[p.status] || ["?", "#8AA3A8"];
+      h += '<tr><td class="nm">' + esc(p.nm) + (p.nCo ? '<br><span class="mut">' + p.nCo.toLocaleString() + ' 家 / ' + p.nEv + ' 展会</span>' : '') + '</td>'
+         + '<td class="mut">' + esc(p.scope) + '</td>'
+         + '<td style="color:' + st[1] + ';font-size:11.5px">' + st[0] + '</td>'
+         + '<td class="mut" style="font-size:11.5px">' + esc(p.note) + '</td></tr>';
+    });
+    $("plats").innerHTML = h + '</tbody></table>';
+  })();
+
+  // ---------- 统计 ----------
+  var M = window.FAL_EXPO_META || {};
+  if (M.total) {
+    $("sExpo").textContent = M.total.toLocaleString();
+    $("sEv").textContent = M.events;
+    $("sCc").textContent = M.countries;
+    $("sTel").textContent = M.withTel.toLocaleString();
+  }
+
+  // ---------- 懒加载展会名录 ----------
+  $("btnLoad").onclick = function(){
+    var btn = this; btn.disabled = true; btn.textContent = "加载中…";
+    $("pbar").style.display = "block";
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "data-expo-exhibitors.js?_=" + Date.now());
+    xhr.onprogress = function(e){
+      if (e.lengthComputable) $("pbar").firstElementChild.style.width = (e.loaded/e.total*100) + "%";
+    };
+    xhr.onload = function(){
+      try {
+        // 用 Function 执行，避免污染全局作用域外的 const
+        (new Function(xhr.responseText))();
+        DATA = window.FAL_EXPO_ROWS;
+        $("pbar").firstElementChild.style.width = "100%";
+        $("loadbox").style.display = "none";
+        $("filterbar").style.display = "flex";
+        fillFilters();
+        render();
+      } catch(err) {
+        btn.disabled = false; btn.textContent = "加载失败，重试";
+        $("hint").textContent = "解析失败：" + err.message;
+      }
+    };
+    xhr.onerror = function(){ btn.disabled = false; btn.textContent = "网络错误，重试"; };
+    xhr.send();
+  };
+
+  // ---------- 筛选下拉 ----------
+  function fillFilters(){
+    var D = window.FAL_EXPO_DICT;
+    var famSet = {}, ccSet = {};
+    (window.FAL_EXPO_EVENTS || []).forEach(function(e){ famSet[e.fam] = (famSet[e.fam]||0) + e.n; });
+    var famArr = Object.keys(famSet).sort(function(a,b){ return famSet[b]-famSet[a]; });
+    famArr.forEach(function(f){
+      if (f === "其他/未分类") return;
+      var o = document.createElement("option");
+      o.value = f; o.textContent = f + "（" + famSet[f].toLocaleString() + "）";
+      $("fam").appendChild(o);
+    });
+    (M.topCountries || []).forEach(function(p){
+      var o = document.createElement("option"); o.value = p[0];
+      o.textContent = p[0] + "（" + p[1].toLocaleString() + "）";
+      $("cc").appendChild(o);
+    });
+  }
+
+  // ---------- 渲染 ----------
+  var LIMIT = 120;
+  function render(){
+    var list = $("list");
+    if (SRC === "expo") return renderExpo();
+    if (SRC === "assoc") return renderAssoc();
+    list.innerHTML = '<div class="empty">采购方名录（398 家，实测可达域名）在主产品 02 页「线索池」，不在本预览页。</div>';
+    $("hint").textContent = "";
+  }
+
+  function renderExpo(){
+    var list = $("list");
+    if (!DATA) { list.innerHTML = '<div class="empty">请先点上方「加载展会名录」</div>'; return; }
+    var D = window.FAL_EXPO_DICT;
+    var q = $("q").value.toLowerCase().trim();
+    var fam = $("fam").value, ccSel = $("cc").value;
+    var evOk = null;
+    if (fam) {
+      evOk = {};
+      (window.FAL_EXPO_EVENTS || []).forEach(function(e){ if (e.fam === fam) evOk[e.id] = 1; });
+    }
+    // 关键词命中「行业族同义词」→ 展开成该族全部展会（中英皆可）
+    var famHits = q ? (window.FAL_EXPO_FAMOF ? window.FAL_EXPO_FAMOF(q) : []) : [];
+    if (famHits.length) {
+      evOk = evOk || {};
+      (window.FAL_EXPO_EVENTS || []).forEach(function(e){
+        if (famHits.indexOf(e.fam) >= 0) evOk[e.id] = 1;
+      });
+    }
+    var ccIx = ccSel ? D.cc.indexOf(ccSel) : -1;
+    var pool = [], t0 = performance.now(), totalHit = 0;
+    var PER_EV = 60;                  // 每个展会最多采样 60 条，保证跨展会多样性
+    var evCount = {};
+    for (var i = 0; i < DATA.length; i++) {
+      var r = DATA[i];
+      if (ccIx >= 0 && r[1] !== ccIx) continue;
+      if (evOk && !evOk[D.ev[r[6]]]) continue;
+      if (q && !famHits.length) {
+        var hay = (r[0] + " " + r[2] + " " + D.k[r[7]]).toLowerCase();
+        if (hay.indexOf(q) < 0) continue;
+      }
+      totalHit++;
+      var ek = D.ev[r[6]];
+      if ((evCount[ek] || 0) < PER_EV) {
+        evCount[ek] = (evCount[ek] || 0) + 1;
+        pool.push(r);
+      }
+    }
+    // 跨展会轮转打散：否则结果会是同一个展会从头排到尾，让人误以为只有一个展会有数据
+    var byEv = {}, order = [];
+    pool.forEach(function(r){
+      var e = D.ev[r[6]];
+      if (!byEv[e]) { byEv[e] = []; order.push(e); }
+      byEv[e].push(r);
+    });
+    var out = [], k = 0;
+    while (out.length < LIMIT) {
+      var added = false;
+      for (var j = 0; j < order.length && out.length < LIMIT; j++) {
+        var arr = byEv[order[j]];
+        if (k < arr.length) { out.push(arr[k]); added = true; }
+      }
+      if (!added) break;
+      k++;
+    }
+    var ms = (performance.now() - t0).toFixed(1);
+    var extra = famHits.length ? "（按行业族「" + famHits.join("、") + "」匹配）" : "";
+    $("hint").textContent = "全库命中 " + totalHit.toLocaleString() + " 家 · 显示 " + out.length
+      + " 条（跨 " + order.length + " 个展会打散）" + extra + " · 查询 " + ms + " ms · 全库 " + DATA.length.toLocaleString() + " 家";
+    if (!out.length) { list.innerHTML = '<div class="empty">没有匹配。试试换个关键词，或清空筛选。</div>'; return; }
+    var h = '<table><thead><tr><th style="width:34%">公司</th><th style="width:14%">国家/城市</th>'
+          + '<th style="width:22%">企业电话</th><th style="width:22%">企业邮箱</th><th>来源展会</th></tr></thead><tbody>';
+    out.forEach(function(r){
+      h += '<tr><td><span class="nm">' + esc(r[0]) + '</span>'
+         + (r[5] ? ' <a href="' + esc(r[5]) + '" target="_blank" rel="noopener" style="font-size:11px">官网↗</a>' : '')
+         + (D.k[r[7]] ? '<br><span class="tag">' + esc(D.k[r[7]]) + '</span>' : '')
+         + '</td><td><span class="cc">' + esc(D.cc[r[1]]) + '</span><br><span class="mut">' + esc(r[2] || "—") + '</span></td>'
+         + '<td>' + (r[3] ? esc(r[3]) : '<span class="mut">—</span>') + '</td>'
+         + '<td>' + (r[4] ? '<a href="mailto:' + esc(r[4]) + '">' + esc(r[4]) + '</a>' : '<span class="mut">—</span>') + '</td>'
+         + '<td><span class="mut">' + esc(D.ev[r[6]]) + '</span></td></tr>';
+    });
+    list.innerHTML = h + '</tbody></table>';
+  }
+
+  // ---------- 协会会员（懒加载）----------
+  var ASSOC_META = null;
+  function loadAssoc(cb){
+    if (ASSOC) return cb();
+    var btn = document.createElement("button");
+    $("hint").textContent = "正在加载协会会员名录（957 KB）…";
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "data-assoc-members.js?_=" + Date.now());
+    xhr.onload = function(){
+      try {
+        (new Function(xhr.responseText))();
+        var o = window.FAL_ASSOC_MEMBERS;
+        ASSOC = o.items || []; ASSOC_META = o.meta || {};
+        $("sAssoc").textContent = (ASSOC_META.total || ASSOC.length).toLocaleString();
+        cb();
+      } catch(err) { $("hint").textContent = "协会名录解析失败：" + err.message; }
+    };
+    xhr.onerror = function(){ $("hint").textContent = "协会名录网络错误"; };
+    xhr.send();
+  }
+
+  function renderAssoc(){
+    var list = $("list");
+    if (!ASSOC) { list.innerHTML = '<div class="empty">加载中…</div>'; return loadAssoc(renderAssoc); }
+    var q = $("q").value.toLowerCase().trim();
+    var out = [], t0 = performance.now();
+    for (var i = 0; i < ASSOC.length; i++) {
+      var r = ASSOC[i];
+      if (q) {
+        var hay = (r.n + " " + (r.c || "") + " " + (r.k || "") + " " + (r.a || "")).toLowerCase();
+        if (hay.indexOf(q) < 0) continue;
+      }
+      out.push(r);
+      if (out.length >= LIMIT) break;
+    }
+    var ms = (performance.now() - t0).toFixed(1);
+    $("hint").textContent = "协会会员命中 " + out.length + " 条 · 查询 " + ms + " ms · 全库 " + ASSOC.length.toLocaleString()
+      + " 家（德国 VDMA 3,565 + 台湾 THTMA 181）";
+    if (!out.length) { list.innerHTML = '<div class="empty">没有匹配。</div>'; return; }
+    var h = '<table><thead><tr><th style="width:38%">公司</th><th style="width:14%">注册地</th>'
+          + '<th style="width:20%">电话</th><th style="width:18%">职能邮箱</th><th>来源</th></tr></thead><tbody>';
+    out.forEach(function(r){
+      h += '<tr><td><span class="nm">' + esc(r.n) + '</span>'
+         + (r.w ? ' <a href="' + esc(r.w) + '" target="_blank" rel="noopener" style="font-size:11px">官网↗</a>' : '')
+         + (r.k ? '<br><span class="tag">' + esc(r.k) + '</span>' : '') + '</td>'
+         + '<td><span class="cc">' + esc(r.c || "—") + '</span><br><span class="mut">' + esc((r.a || "").slice(0, 34) || "—") + '</span></td>'
+         + '<td>' + (r.t ? esc(r.t) : '<span class="mut">—</span>') + '</td>'
+         + '<td>' + (r.e ? '<a href="mailto:' + esc(r.e) + '">' + esc(r.e) + '</a>' : '<span class="mut">—</span>') + '</td>'
+         + '<td>' + (r.s ? '<a href="' + esc(r.s) + '" target="_blank" rel="noopener" class="mut">来源↗</a>' : '<span class="mut">—</span>') + '</td></tr>';
+    });
+    list.innerHTML = h + '</tbody></table>';
+  }
+
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  // ---------- 事件 ----------
+  document.querySelectorAll(".tabs button").forEach(function(b){
+    b.onclick = function(){
+      document.querySelectorAll(".tabs button").forEach(function(x){ x.classList.remove("on"); });
+      b.classList.add("on"); SRC = b.dataset.src;
+      // 协会源不需要先下载 4.8MB 展会库，直接显示搜索栏
+      if (SRC === "assoc") {
+        $("loadbox").style.display = "none";
+        $("filterbar").style.display = "flex";
+        $("fam").style.display = "none"; $("cc").style.display = "none";
+      } else if (SRC === "expo") {
+        $("fam").style.display = ""; $("cc").style.display = "";
+        if (!DATA) { $("loadbox").style.display = "block"; $("filterbar").style.display = "none"; }
+      } else {
+        $("fam").style.display = ""; $("cc").style.display = "";
+      }
+      render();
+    };
+  });
+  var timer;
+  $("q").oninput = function(){ clearTimeout(timer); timer = setTimeout(render, 120); };
+  $("fam").onchange = render;
+  $("cc").onchange = render;
+  $("btnClear").onclick = function(){ $("q").value = ""; $("fam").value = ""; $("cc").value = ""; render(); };
+  render();
+})();
+</script>
+</body>
+</html>
