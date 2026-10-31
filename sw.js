@@ -926,9 +926,44 @@
          · 另修**单向匹配**漏洞：`key.indexOf(v)` 只能「输入词是同义词的子串」，
            搜「轴承座」（比「轴承」长）就漏 → 改为双向（输入词切相邻 2 字，任一命中即算）。
          · 覆盖清单页的 `data-k` 同步并入同义词，实测 13 个具体产品词 **13/13 命中**。
+
+   · v68：**按「展览集团/技术平台」接，一次新增 3 个平台 + 5 个行业族**（用户 2026-10-31：
+         「新增 医疗类、运动类、生产制造业、户外射击类、厨房类、船舶类、航空类」，续「再新增一个消费电子类」）。
+         · 方法论突破：全球 B2B 展会跑在少数几家平台上，**不要按「展会」写适配器**。
+           本轮实测打通 3 家新平台，一套适配器吃一片：
+           ① **Messe Düsseldorf VIS**：`/vis-api/vis/v2/{lang}/exhibitors?domain=<带www.的完整域名>`
+              ⚠️ 卡了最久的一步：所有端点返 400 `No config set found. Please provide valid domain parameter.`
+              —— 不是路径不对，是**缺 domain 参数，且必须含 `www.`**（`domain=medica-tradefair.com` 仍 400，
+              `domain=www.medica-tradefair.com` 才 200）。一次返回全量 58MB，无需分页。
+           ② **MapYourShow**：`{approot}/ajax/remote-proxy.cfm?action=search&searchtype=exhibitorname
+              &searchsize=1000&start=N&show=exhibitor&lazyload=true`，`search` 传空串 = 全量。
+              国家可用 `action=getsearchoptions&function=getCountries` + `searchtype=country` 反查
+              （目录自己的筛选器，不是猜的）。⚠️ 详情页被 CloudFront 返 202 空响应，拿不到电话/邮箱。
+           ③ **goexposoftware**：服务端直出表格，一次拿全，详情页无联系方式。
+         · 数据：49,908（MF）+ 20,915（VIS）+ 3,131（CES）+ 2,578（SHOT）= **75,180 家 / 106 展会 / 132 国**
+           （同名同国去重；同一公司参展多站会合并成 `_evs`，是更强的真实性证据）。
+         · 新增 5 个行业族：**医疗/健康 5,402 · 消费电子 3,052 · 户外/射击/狩猎 2,578
+           · 包装/印刷 2,437 · 船舶/海事 907**（族数 19 → 25）。同义词表同步 +6 族。
+         · ⚠️ 同址双展陷阱（踩到过）：MEDICA/COMPAMED、wire/Tube 共用一个 VIS 实例，
+           `/exhibitors?domain=` 返回的是**并集**。若按抓取时的域标签分组，
+           COMPAMED 会显示 4,560 家（其实是 MEDICA 全集）。→ 必须用记录**自身**的 `events[0].key` 分组。
+         · ⚠️ 展会名张冠李戴 bug：一家公司参展多站时，去重后 `evn` 只剩最后一条的展会名，
+           导致 `rehacare2026` 显示成 "ISH 2027"、`boot2027` 显示成 "EUROBIKE 2026"。
+           → 在去重**之前**建 `EVNAME[eventId] = 展会名` 全量表。
+         · `FAL_EXPO_Q()` 补**行业族展开**：原来只按公司名/城市/品类匹配，搜「医疗」「船」「耳机」
+           这些行业词 0 命中（展会源没有中文品类词）。现在先 `FAL_EXPO_FAMOF(q)` 展开成族，
+           再映射成该族的展会索引集合。实测「医疗」「船」「瞄准镜」「包装」全部命中，8–21ms。
+         · 行格式加第 9 位 `[展位]`（空则省略）。CES/SHOT 靠展位号证明「它真的在那里设过摊」。
+         · ⚠️ 合规：VIS 侧个人邮箱按职能词白名单过滤、手机号按冠号判丢弃
+           （中国/德国明确判据，其他国家不判以免误杀座机）。
+           累计剔除手机/无效电话 **7,982 条**、人名邮箱 **12,700 条**。**不落盘任何个人联系方式。**
+         · ⚠️ 诚实标注：CES 与 SHOT Show **源本身不公开电话/邮箱**，这两族「有电话」为 0，
+           是源的限制不是没抓。已写进页面数据边界说明。
+         · 仍缺：**运动（ISPO）/ 航空（AERO）/ 厨房（Internorga）**——这三家的参展商目录都是
+           JS 渲染且无公开接口，探过未通，已在覆盖清单底部列明，不假装有。
          · 静态文件有改动 → 升 CACHE 版本。 */
 
-const CACHE = 'falcora-v67';
+const CACHE = 'falcora-v68';
 const PRECACHE = [
   './',
   './app-design.css?v=3',

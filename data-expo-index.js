@@ -2,8 +2,9 @@
    用途：回答「哪个行业有哪些展会 / 该展会名录能否查到企业 / 能查到多少家」。
 
    为什么单独建这一层（2026-10-31）：
-     全球 B2B 展会**跑在少数几家展览集团**上。Messe Frankfurt 一家就有 91 个展会、
-     49907 家参展商，且其参展商搜索 API 是公开的。
+     全球 B2B 展会**跑在少数几家展览集团/技术平台**上。已实测打通 4 家：
+       Messe Frankfurt（REST）· Messe Düsseldorf（VIS）· MapYourShow（remote-proxy）
+       · goexposoftware。合计 106 个展会 / 75180 家参展商。
      → 不要按「展会」写适配器，要按「展览集团/技术平台」写，一套吃一片。
 
    ⚠️ 定位铁律：参展商 = 供货方，**不是采购方**。
@@ -21,92 +22,92 @@
 
 window.FAL_EXPO_META = {
  "at": "2026-10-31",
- "total": 49907,
- "events": 91,
- "withTel": 29898,
- "withEmail": 13884,
- "withWeb": 36898,
- "countries": 124,
+ "total": 75180,
+ "events": 106,
+ "withTel": 46448,
+ "withEmail": 30224,
+ "withWeb": 55707,
+ "countries": 132,
  "topCountries": [
   [
    "CHN",
-   21136
+   25628
   ],
   [
    "DEU",
-   4836
-  ],
-  [
-   "JPN",
-   3005
-  ],
-  [
-   "IND",
-   3000
+   9459
   ],
   [
    "ITA",
-   1852
+   3836
   ],
   [
-   "ARG",
-   1442
+   "IND",
+   3652
+  ],
+  [
+   "JPN",
+   3283
   ],
   [
    "TUR",
-   1308
-  ],
-  [
-   "HKG",
-   1216
-  ],
-  [
-   "TWN",
-   1066
-  ],
-  [
-   "KOR",
-   956
-  ],
-  [
-   "GBR",
-   860
-  ],
-  [
-   "ARE",
-   734
-  ],
-  [
-   "FRA",
-   708
+   2388
   ],
   [
    "USA",
-   675
+   2351
   ],
   [
-   "ESP",
-   670
+   "KOR",
+   1869
+  ],
+  [
+   "TWN",
+   1729
+  ],
+  [
+   "ARG",
+   1457
+  ],
+  [
+   "HKG",
+   1447
+  ],
+  [
+   "FRA",
+   1423
+  ],
+  [
+   "GBR",
+   1398
   ],
   [
    "NLD",
-   600
+   1227
+  ],
+  [
+   "ESP",
+   1166
   ],
   [
    "POL",
-   562
+   872
   ],
   [
-   "PAK",
-   343
-  ],
-  [
-   "BEL",
-   321
+   "ARE",
+   782
   ],
   [
    "CHE",
-   266
+   582
+  ],
+  [
+   "BEL",
+   569
+  ],
+  [
+   "AUT",
+   529
   ]
  ],
  "famCount": [
@@ -119,8 +120,16 @@ window.FAL_EXPO_META = {
    7347
   ],
   [
+   "制造/模具/金属加工",
+   6784
+  ],
+  [
    "家居/消费品/礼品",
    6551
+  ],
+  [
+   "医疗/健康",
+   5402
   ],
   [
    "照明/建筑/卫浴",
@@ -131,32 +140,48 @@ window.FAL_EXPO_META = {
    3083
   ],
   [
+   "消费电子",
+   3052
+  ],
+  [
    "美容/个护",
    2803
+  ],
+  [
+   "安防/消防",
+   2770
+  ],
+  [
+   "户外/射击/狩猎",
+   2578
+  ],
+  [
+   "包装/印刷",
+   2437
   ],
   [
    "工业自动化/电子/物流",
    2290
   ],
   [
-   "制造/模具/金属加工",
-   1306
-  ],
-  [
    "交通/两轮/航空/基建",
-   1173
+   1930
   ],
   [
    "食品/食品加工",
-   1146
+   1849
+  ],
+  [
+   "零售/商业设备",
+   1777
   ],
   [
    "宠物",
    911
   ],
   [
-   "安防/消防",
-   588
+   "船舶/海事",
+   907
   ],
   [
    "矿业/环保/水处理",
@@ -187,8 +212,14 @@ window.FAL_EXPO_META = {
    73
   ]
  ],
- "source": "Messe Frankfurt 官方参展商搜索 API（api.messefrankfurt.com/exhibitor-service 2.1 public）",
- "compliance": "仅企业级字段；个人联系人（exhibitor.contacts）已在采集端整段丢弃，不落盘"
+ "source": "4 个展会平台的公开端点：Messe Frankfurt REST / Messe Düsseldorf VIS / MapYourShow remote-proxy / goexposoftware",
+ "platforms": {
+  "messefrankfurt": 49908,
+  "messeduesseldorf": 20915,
+  "mapyourshow": 3131,
+  "goexposoftware": 2578
+ },
+ "compliance": "仅企业级字段；个人联系人（MF 的 exhibitor.contacts）已在采集端整段丢弃；VIS 的个人邮箱按职能词白名单过滤；手机号按冠号判丢弃；不落盘任何个人联系方式"
 };
 
 window.FAL_EXPO_EVENTS = [
@@ -221,9 +252,9 @@ window.FAL_EXPO_EVENTS = [
 "nm": "Automechanika Frankfurt 2026",
 "fam": "汽配/汽车后市场",
 "n": 4040,
-"tel": 2519,
-"mail": 1658,
-"web": 3299,
+"tel": 2527,
+"mail": 1673,
+"web": 3302,
 "cc": [
 "CHN",
 "DEU",
@@ -241,12 +272,84 @@ window.FAL_EXPO_EVENTS = [
 "src": "https://automechanika.messefrankfurt.com"
 },
 {
+"id": "medica2026",
+"nm": "MEDICA 2026",
+"fam": "医疗/健康",
+"n": 3749,
+"tel": 3114,
+"mail": 3071,
+"web": 3662,
+"cc": [
+"CHN",
+"DEU",
+"ITA",
+"KOR",
+"USA",
+"TWN"
+],
+"k": [
+"Cosmetics for professional use",
+"Drive systems and components",
+"Associations, Institutions, Organisations",
+"Health-care appliances"
+],
+"src": "https://www.medica-tradefair.com"
+},
+{
+"id": "k2025",
+"nm": "K 2025",
+"fam": "制造/模具/金属加工",
+"n": 3185,
+"tel": 2814,
+"mail": 2714,
+"web": 3119,
+"cc": [
+"DEU",
+"CHN",
+"ITA",
+"TUR",
+"IND",
+"TWN"
+],
+"k": [
+"Textil Production Technology and Processes",
+"Drive systems and components",
+"Process technology for meat and alternative protei",
+"Materials"
+],
+"src": "https://ish.messefrankfurt.com"
+},
+{
+"id": "CES27",
+"nm": "CES 2027（拉斯维加斯消费电子展）",
+"fam": "消费电子",
+"n": 3128,
+"tel": 44,
+"mail": 42,
+"web": 68,
+"cc": [
+"USA",
+"CHN",
+"KOR",
+"TWN",
+"HKG",
+"JPN"
+],
+"k": [
+"Electrics & Electronics",
+"Drive systems and components",
+"Beauty equipment for professional use",
+"Technical lighting and accessories"
+],
+"src": "https://pcim.mesago.com"
+},
+{
 "id": "AMBIENTE",
 "nm": "Ambiente 2027",
 "fam": "家居/消费品/礼品",
 "n": 2947,
-"tel": 2191,
-"mail": 1024,
+"tel": 2192,
+"mail": 1027,
 "web": 2481,
 "cc": [
 "IND",
@@ -265,12 +368,72 @@ window.FAL_EXPO_EVENTS = [
 "src": "https://ambiente.messefrankfurt.com"
 },
 {
+"id": "interpack2026",
+"nm": "interpack 2026",
+"fam": "包装/印刷",
+"n": 2793,
+"tel": 2373,
+"mail": 2389,
+"web": 2758,
+"cc": [
+"DEU",
+"CHN",
+"ITA",
+"TUR",
+"IND",
+"NLD"
+],
+"k": [
+"Packaging technology",
+"Process technology for meat and alternative protei",
+"Drive systems and components",
+"Food safety and quality control"
+],
+"src": "https://iffa.com"
+},
+{
+"id": "SHOTSHOW",
+"nm": "SHOT Show 2027（美国射击狩猎户外展）",
+"fam": "户外/射击/狩猎",
+"n": 2578,
+"tel": 0,
+"mail": 0,
+"web": 0,
+"cc": [],
+"k": [],
+"src": "https://n1a.goexposoftware.com/events/ss27/goExpo/exhibitor/listExhibitorProfiles.php"
+},
+{
+"id": "aplusa2025",
+"nm": "A+A 2025",
+"fam": "安防/消防",
+"n": 2349,
+"tel": 2008,
+"mail": 1810,
+"web": 2267,
+"cc": [
+"CHN",
+"DEU",
+"ITA",
+"FRA",
+"GBR",
+"TWN"
+],
+"k": [
+"Woven Fabrics, Laid Webs, Braidings, Knitted Fabri",
+"Fibres and Yarns",
+"Performance Apparel Textiles",
+"Cleaning equipment, operational hygiene and safety"
+],
+"src": "https://www.aplusa-online.com"
+},
+{
 "id": "HEIMTEXTIL",
 "nm": "Heimtextil 2027",
 "fam": "纺织/服装/家纺/纱线",
 "n": 2267,
 "tel": 1472,
-"mail": 610,
+"mail": 611,
 "web": 1715,
 "cc": [
 "CHN",
@@ -289,13 +452,37 @@ window.FAL_EXPO_EVENTS = [
 "src": "https://heimtextil.messefrankfurt.com"
 },
 {
+"id": "euroshop2026",
+"nm": "EuroShop 2026",
+"fam": "零售/商业设备",
+"n": 1872,
+"tel": 1446,
+"mail": 1496,
+"web": 1707,
+"cc": [
+"DEU",
+"CHN",
+"ITA",
+"TUR",
+"NLD",
+"GBR"
+],
+"k": [
+"Technical lighting and accessories",
+"Decorative lighting and accessories",
+"Cook & Cut",
+"Process technology for meat and alternative protei"
+],
+"src": "https://www.aplusa-online.com"
+},
+{
 "id": "LIGHTBUILDING",
 "nm": "Light + Building 2026",
 "fam": "照明/建筑/卫浴",
 "n": 1850,
-"tel": 1420,
-"mail": 1010,
-"web": 1729,
+"tel": 1424,
+"mail": 1016,
+"web": 1731,
 "cc": [
 "CHN",
 "DEU",
@@ -337,12 +524,36 @@ window.FAL_EXPO_EVENTS = [
 "src": "https://light.messefrankfurt.com.cn"
 },
 {
+"id": "wire2026",
+"nm": "wire 2026",
+"fam": "制造/模具/金属加工",
+"n": 1503,
+"tel": 1276,
+"mail": 1237,
+"web": 1468,
+"cc": [
+"CHN",
+"DEU",
+"ITA",
+"TUR",
+"IND",
+"USA"
+],
+"k": [
+"Fibres and Yarns",
+"Parts & Components",
+"Packaging technology",
+"Textil Production Technology and Processes"
+],
+"src": "https://automechanika.messefrankfurt.com"
+},
+{
 "id": "BEAUTYWORLDMIDDLEEAST",
 "nm": "Beautyworld Dubai 2026",
 "fam": "美容/个护",
 "n": 1439,
 "tel": 1013,
-"mail": 290,
+"mail": 291,
 "web": 924,
 "cc": [
 "CHN",
@@ -389,9 +600,9 @@ window.FAL_EXPO_EVENTS = [
 "nm": "Techtextil 2026",
 "fam": "纺织/服装/家纺/纱线",
 "n": 1400,
-"tel": 1161,
-"mail": 721,
-"web": 1314,
+"tel": 1169,
+"mail": 762,
+"web": 1322,
 "cc": [
 "DEU",
 "CHN",
@@ -413,9 +624,9 @@ window.FAL_EXPO_EVENTS = [
 "nm": "ISH 2027",
 "fam": "照明/建筑/卫浴",
 "n": 1274,
-"tel": 993,
-"mail": 721,
-"web": 1123,
+"tel": 997,
+"mail": 731,
+"web": 1127,
 "cc": [
 "DEU",
 "ITA",
@@ -428,7 +639,7 @@ window.FAL_EXPO_EVENTS = [
 "Heat generation",
 "Bathroom equipment",
 "Pipes, pipe connectors, fittings",
-"Ventilation technology"
+"Bathroom fittings"
 ],
 "src": "https://ish.messefrankfurt.com"
 },
@@ -457,6 +668,30 @@ window.FAL_EXPO_EVENTS = [
 "src": "https://musikmesse-china.com"
 },
 {
+"id": "tube2026",
+"nm": "Tube 2026",
+"fam": "制造/模具/金属加工",
+"n": 1142,
+"tel": 962,
+"mail": 948,
+"web": 1123,
+"cc": [
+"CHN",
+"DEU",
+"ITA",
+"IND",
+"TUR",
+"KOR"
+],
+"k": [
+"AM systems",
+"Food safety and quality control",
+"Pipes, pipe connectors, fittings",
+"Parts & Components"
+],
+"src": "https://www.wire.de"
+},
+{
 "id": "TOYHOBBYCHINA",
 "nm": "Toy & Hobby China + Licensing China 2026",
 "fam": "家居/消费品/礼品",
@@ -483,9 +718,9 @@ window.FAL_EXPO_EVENTS = [
 "nm": "SPS - Smart Production Solutions 2026",
 "fam": "工业自动化/电子/物流",
 "n": 1090,
-"tel": 728,
-"mail": 756,
-"web": 1057,
+"tel": 731,
+"mail": 763,
+"web": 1061,
 "cc": [
 "DEU",
 "CHN",
@@ -507,9 +742,9 @@ window.FAL_EXPO_EVENTS = [
 "nm": "IFFA 2025",
 "fam": "食品/食品加工",
 "n": 1013,
-"tel": 831,
-"mail": 636,
-"web": 963,
+"tel": 835,
+"mail": 660,
+"web": 965,
 "cc": [
 "DEU",
 "ITA",
@@ -525,6 +760,54 @@ window.FAL_EXPO_EVENTS = [
 "Cleaning equipment, operational hygiene and safety"
 ],
 "src": "https://iffa.com"
+},
+{
+"id": "rehacare2026",
+"nm": "REHACARE 2026",
+"fam": "医疗/健康",
+"n": 1001,
+"tel": 831,
+"mail": 757,
+"web": 795,
+"cc": [
+"DEU",
+"CHN",
+"TWN",
+"NLD",
+"GBR",
+"DNK"
+],
+"k": [
+"Bathroom equipment",
+"Workshop equipment, shopfitting and service vehicl",
+"Associations, institutions, publishers, services",
+"Bicycles"
+],
+"src": "https://ish.messefrankfurt.com"
+},
+{
+"id": "boot2027",
+"nm": "boot 2027",
+"fam": "船舶/海事",
+"n": 922,
+"tel": 751,
+"mail": 794,
+"web": 877,
+"cc": [
+"DEU",
+"NLD",
+"ITA",
+"FRA",
+"CHN",
+"GBR"
+],
+"k": [
+"Other services",
+"Parts & Components",
+"Car Wash, Care & Detailing",
+"Woven Fabrics, Laid Webs, Braidings, Knitted Fabri"
+],
+"src": "https://eurobike.com"
 },
 {
 "id": "AUTOMAINTENANCEREPAIREXPO",
@@ -547,13 +830,37 @@ window.FAL_EXPO_EVENTS = [
 "src": "https://auto-maintenance.cn.messefrankfurt.com"
 },
 {
+"id": "caravan2026",
+"nm": "CARAVAN SALON 2026",
+"fam": "交通/两轮/航空/基建",
+"n": 821,
+"tel": 682,
+"mail": 720,
+"web": 790,
+"cc": [
+"DEU",
+"ITA",
+"NLD",
+"AUT",
+"CHN",
+"SVN"
+],
+"k": [
+"Accessories, Wheels & Customizing",
+"Smart Bedding",
+"Parts & Components",
+"Woven Fabrics, Laid Webs, Braidings, Knitted Fabri"
+],
+"src": "https://www.caravan-salon.com"
+},
+{
 "id": "ACMAAUTOMECHANIKANEWDELHI",
 "nm": "ACMA Automechanika New Delhi 2026",
 "fam": "汽配/汽车后市场",
 "n": 817,
-"tel": 640,
+"tel": 641,
 "mail": 167,
-"web": 533,
+"web": 534,
 "cc": [
 "IND",
 "CHN",
@@ -575,9 +882,9 @@ window.FAL_EXPO_EVENTS = [
 "nm": "EUROBIKE 2026",
 "fam": "交通/两轮/航空/基建",
 "n": 776,
-"tel": 479,
-"mail": 247,
-"web": 419,
+"tel": 482,
+"mail": 251,
+"web": 421,
 "cc": [
 "CHN",
 "DEU",
@@ -599,9 +906,9 @@ window.FAL_EXPO_EVENTS = [
 "nm": "Formnext 2026",
 "fam": "制造/模具/金属加工",
 "n": 767,
-"tel": 460,
-"mail": 508,
-"web": 747,
+"tel": 466,
+"mail": 515,
+"web": 748,
 "cc": [
 "DEU",
 "CHN",
@@ -617,6 +924,30 @@ window.FAL_EXPO_EVENTS = [
 "Services"
 ],
 "src": "https://formnext.mesago.com"
+},
+{
+"id": "compamed2026",
+"nm": "COMPAMED 2026",
+"fam": "医疗/健康",
+"n": 760,
+"tel": 634,
+"mail": 657,
+"web": 691,
+"cc": [
+"DEU",
+"USA",
+"CHN",
+"CHE",
+"ITA",
+"JPN"
+],
+"k": [
+"Drive systems and components",
+"Research, Development, Education, Consulting",
+"Textil Production Technology and Processes",
+"Parts & Components"
+],
+"src": "https://www.medica-tradefair.com"
 },
 {
 "id": "BEAUTYWORLDJAPANTOKYO",
@@ -647,8 +978,8 @@ window.FAL_EXPO_EVENTS = [
 "nm": "Intertextile Shanghai Apparel Fabrics - Autumn Edition 2026",
 "fam": "纺织/服装/家纺/纱线",
 "n": 727,
-"tel": 0,
-"mail": 0,
+"tel": 4,
+"mail": 5,
 "web": 399,
 "cc": [
 "CHN",
@@ -667,12 +998,33 @@ window.FAL_EXPO_EVENTS = [
 "src": "https://intertextile-shanghai-apparel-fabrics-autumn.hk.messefrankfurt.com"
 },
 {
+"id": "prowein2027",
+"nm": "ProWein 2027",
+"fam": "食品/食品加工",
+"n": 712,
+"tel": 636,
+"mail": 636,
+"web": 661,
+"cc": [
+"DEU",
+"ITA",
+"FRA",
+"ESP",
+"USA",
+"GBR"
+],
+"k": [
+"Table & Table Select"
+],
+"src": "https://nordstil.messefrankfurt.com"
+},
+{
 "id": "PCIMEUROPE",
 "nm": "PCIM 2026",
 "fam": "工业自动化/电子/物流",
 "n": 665,
-"tel": 473,
-"mail": 397,
+"tel": 476,
+"mail": 400,
 "web": 642,
 "cc": [
 "DEU",
@@ -696,7 +1048,7 @@ window.FAL_EXPO_EVENTS = [
 "fam": "汽配/汽车后市场",
 "n": 639,
 "tel": 465,
-"mail": 159,
+"mail": 160,
 "web": 509,
 "cc": [
 "CHN",
@@ -719,8 +1071,8 @@ window.FAL_EXPO_EVENTS = [
 "nm": "Christmasworld 2027",
 "fam": "家居/消费品/礼品",
 "n": 631,
-"tel": 482,
-"mail": 213,
+"tel": 483,
+"mail": 214,
 "web": 513,
 "cc": [
 "DEU",
@@ -787,8 +1139,8 @@ window.FAL_EXPO_EVENTS = [
 "nm": "Apparel Sourcing Paris Autumn 2026",
 "fam": "纺织/服装/家纺/纱线",
 "n": 550,
-"tel": 225,
-"mail": 33,
+"tel": 226,
+"mail": 34,
 "web": 258,
 "cc": [
 "CHN",
@@ -921,9 +1273,9 @@ window.FAL_EXPO_EVENTS = [
 "nm": "Intersec Global 2027",
 "fam": "安防/消防",
 "n": 452,
-"tel": 375,
-"mail": 165,
-"web": 396,
+"tel": 376,
+"mail": 168,
+"web": 397,
 "cc": [
 "ARE",
 "DEU",
@@ -969,8 +1321,8 @@ window.FAL_EXPO_EVENTS = [
 "nm": "Vietnam International Trade Fair for Apparel, Textiles & Tex",
 "fam": "纺织/服装/家纺/纱线",
 "n": 423,
-"tel": 0,
-"mail": 0,
+"tel": 1,
+"mail": 2,
 "web": 270,
 "cc": [
 "CHN",
@@ -994,7 +1346,7 @@ window.FAL_EXPO_EVENTS = [
 "fam": "宠物",
 "n": 392,
 "tel": 360,
-"mail": 116,
+"mail": 117,
 "web": 356,
 "cc": [
 "JPN",
@@ -1018,7 +1370,7 @@ window.FAL_EXPO_EVENTS = [
 "fam": "娱乐/灯光音响/乐器",
 "n": 338,
 "tel": 246,
-"mail": 222,
+"mail": 224,
 "web": 321,
 "cc": [
 "DEU",
@@ -1041,7 +1393,7 @@ window.FAL_EXPO_EVENTS = [
 "nm": "Formnext Asia Shenzhen 2026",
 "fam": "制造/模具/金属加工",
 "n": 320,
-"tel": 4,
+"tel": 5,
 "mail": 1,
 "web": 264,
 "cc": [
@@ -1108,8 +1460,8 @@ window.FAL_EXPO_EVENTS = [
 "nm": "Texcare International 2024",
 "fam": "纺织/服装/家纺/纱线",
 "n": 293,
-"tel": 232,
-"mail": 172,
+"tel": 234,
+"mail": 176,
 "web": 272,
 "cc": [
 "DEU",
@@ -1205,7 +1557,7 @@ window.FAL_EXPO_EVENTS = [
 "fam": "汽配/汽车后市场",
 "n": 239,
 "tel": 178,
-"mail": 35,
+"mail": 36,
 "web": 198,
 "cc": [
 "CHN",
@@ -1252,8 +1604,8 @@ window.FAL_EXPO_EVENTS = [
 "nm": "Creativeworld 2027",
 "fam": "家居/消费品/礼品",
 "n": 232,
-"tel": 162,
-"mail": 102,
+"tel": 164,
+"mail": 104,
 "web": 210,
 "cc": [
 "DEU",
@@ -1296,9 +1648,9 @@ window.FAL_EXPO_EVENTS = [
 "nm": "Techtextil India 2025",
 "fam": "纺织/服装/家纺/纱线",
 "n": 200,
-"tel": 64,
-"mail": 34,
-"web": 161,
+"tel": 66,
+"mail": 37,
+"web": 162,
 "cc": [
 "IND",
 "CHN",
@@ -1368,7 +1720,7 @@ window.FAL_EXPO_EVENTS = [
 "nm": "Thermotec 2026",
 "fam": "照明/建筑/卫浴",
 "n": 185,
-"tel": 181,
+"tel": 182,
 "mail": 51,
 "web": 184,
 "cc": [
@@ -1416,7 +1768,7 @@ window.FAL_EXPO_EVENTS = [
 "fam": "纺织/服装/家纺/纱线",
 "n": 177,
 "tel": 146,
-"mail": 109,
+"mail": 110,
 "web": 164,
 "cc": [
 "DEU",
@@ -1510,7 +1862,7 @@ window.FAL_EXPO_EVENTS = [
 "fam": "家居/消费品/礼品",
 "n": 151,
 "tel": 91,
-"mail": 28,
+"mail": 29,
 "web": 97,
 "cc": [
 "IND",
@@ -1598,8 +1950,8 @@ window.FAL_EXPO_EVENTS = [
 "nm": "Paperworld Middle East 2026",
 "fam": "家居/消费品/礼品",
 "n": 128,
-"tel": 94,
-"mail": 22,
+"tel": 95,
+"mail": 23,
 "web": 82,
 "cc": [
 "CHN",
@@ -1714,9 +2066,9 @@ window.FAL_EXPO_EVENTS = [
 "nm": "ACHEMA Middle East 2026",
 "fam": "化工/制药/实验室",
 "n": 113,
-"tel": 74,
-"mail": 30,
-"web": 66,
+"tel": 77,
+"mail": 33,
+"web": 69,
 "cc": [
 "DEU",
 "IND",
@@ -1776,6 +2128,30 @@ window.FAL_EXPO_EVENTS = [
 "Fabricating/ finishing & decorating machines & equ"
 ],
 "src": "https://mediaexpo-mumbai.com"
+},
+{
+"id": "components2026",
+"nm": "components 2026",
+"fam": "医疗/健康",
+"n": 106,
+"tel": 88,
+"mail": 91,
+"web": 104,
+"cc": [
+"DEU",
+"ITA",
+"CHN",
+"USA",
+"CHE",
+"TUR"
+],
+"k": [
+"Drive systems and components",
+"Logistics and storage systems",
+"Packaging technology",
+"Human-machine-interface"
+],
+"src": "https://sps.mesago.com"
 },
 {
 "id": "PRINTEXPOCHENNAI",
@@ -1933,7 +2309,7 @@ window.FAL_EXPO_EVENTS = [
 "nm": "Cleanzone 2024",
 "fam": "清洁/冷链/卫生",
 "n": 76,
-"tel": 59,
+"tel": 60,
 "mail": 50,
 "web": 69,
 "cc": [
@@ -2128,7 +2504,7 @@ window.FAL_EXPO_EVENTS = [
 "fam": "照明/建筑/卫浴",
 "n": 47,
 "tel": 40,
-"mail": 15,
+"mail": 16,
 "web": 38,
 "cc": [
 "ARE",
@@ -2276,6 +2652,12 @@ window.FAL_EXPO_EVENTS = [
    中国厂商搜的是「家具」「灯」「汽车」，不是「Table & Table Select」。
    所以做**族级同义词**：一个中文词命中一个族 → 展开成该族全部展会。 */
 window.FAL_EXPO_FAM_SYN = {
+  "医疗/健康": ["医疗","健康","医院","诊所","牙科","医疗器械","器械","耗材","诊断","影像","监护","康复","护理","制药","药品","口罩","防护服","消毒","检验","实验室","medical","medica","health","hospital","clinic","dental","device","diagnostic","imaging","monitor","rehabilitation","nursing","pharma","mask","protective","sterile","compamed","rehacare"],
+  "消费电子": ["消费电子","电子","3c","手机","手机配件","平板","耳机","音箱","智能家居","穿戴","手表","充电器","数据线","显示器","电视","相机","电脑","芯片","半导体","无人机","consumer electronics","electronics","gadget","smartphone","tablet","earphone","headphone","speaker","smart home","wearable","charger","cable","display","tv","camera","computer","chip","semiconductor","drone","ces"],
+  "户外/射击/狩猎": ["户外","射击","狩猎","枪","枪械","瞄准镜","光学","战术","弓箭","刀具","露营","望远镜","弹药","枪箱","打猎","户外装备","outdoor","shooting","hunting","firearm","rifle","pistol","scope","optics","tactical","archery","knife","camping","binocular","ammunition","holster","shot show"],
+  "船舶/海事": ["船舶","游艇","船","海事","帆船","船用","码头","航海","舷外机","船外机","船艇","水上运动","marine","maritime","boat","yacht","sailing","ship","shipyard","dock","nautical","outboard","boating","watersport","boot"],
+  "包装/印刷": ["包装","包装机械","包装材料","标签","纸盒","印刷","油墨","灌装","封口","packaging","package","label","carton","printing","print","ink","filling","sealing","interpack","drupa"],
+  "零售/商业设备": ["零售","货架","陈列","商用设备","收银","店铺","商业设备","retail","shelf","display","shopfitting","pos","store","euroshop"],
   "汽配/汽车后市场": ["汽车","汽配","零部件","汽车配件","汽保","钣金","轮胎","刹车","滤清器","火花塞","雨刷","车灯","后视镜","改装","底盘","变速箱","auto","automotive","automechanika","vehicle","car","repair","body","paint","wheel","tire","tyre","brake","filter","spark","wiper","headlight","mirror","tuning","parts","component","chassis","transmission"],
   "纺织/服装/家纺/纱线": ["纺织","服装","面料","家纺","布","纱","衣服","成衣","针织","梭织","牛仔","无纺布","蕾丝","刺绣","拉链","纽扣","毛巾","床品","窗帘","地毯","textile","fabric","apparel","garment","yarn","clothing","home textile","knit","woven","denim","nonwoven","lace","embroidery","zipper","button","towel","bedding","curtain","carpet"],
   "家居/消费品/礼品": ["家居","家具","消费品","礼品","文具","玩具","装饰","室内","沙发","床垫","橱柜","餐桌","餐具","厨具","收纳","香薰","蜡烛","圣诞","节庆","furniture","home","consumer","gift","stationery","toy","decor","interior","living","sofa","mattress","cabinet","table","kitchen","storage","candle","christmas","seasonal"],
@@ -2317,23 +2699,31 @@ window.FAL_EXPO_FAMOF = function (kw) {
 window.FAL_EXPO_PLATFORMS = [
   { id: "messefrankfurt", nm: "Messe Frankfurt（法兰克福展览集团）",
     scope: "德国/全球", api: "公开 REST（api.messefrankfurt.com · exhibitor-service 2.1 · Header: Apikey）",
-    status: "verified", nEv: 91, nCo: 49907,
-    note: "本文件数据全部来自此平台。87 个展会含汽配/纺织/消费品/照明/食品/美容/3D打印/自动化/安防/环保。" },
+    status: "verified", nEv: 91, nCo: 49908,
+    note: "含汽配/纺织/消费品/照明/食品/美容/3D打印/自动化/安防/环保。电话 59% / 邮箱 27% / 官网 73%。" },
+  { id: "messeduesseldorf", nm: "Messe Düsseldorf（杜塞尔多夫展览 · VIS 平台）",
+    scope: "德国/全球", api: "GET /vis-api/vis/v2/{lang}/exhibitors?domain={带www.的完整域名}",
+    status: "verified", nEv: 13, nCo: 20915,
+    note: "⚠️ 必须带 domain 参数且必须含 www.（缺了报 400 No config set found）。一次返回全量，无需分页。MEDICA 邮箱 97.5% / 电话 99.6% / 官网 96%。" },
+  { id: "mapyourshow", nm: "MapYourShow（美国展会系统，CES 等数百个展会用）",
+    scope: "美国/全球", api: "GET {approot}/ajax/remote-proxy.cfm?action=search&searchtype=exhibitorname&searchsize=1000",
+    status: "verified", nEv: 1, nCo: 3131,
+    note: "search 传空串 = 全量；国家可用 action=getsearchoptions&function=getCountries + searchtype=country 反查。详情页被 CloudFront 202 拦截 → 拿不到电话/邮箱。" },
+  { id: "goexposoftware", nm: "goexposoftware（SHOT Show 等）",
+    scope: "美国", api: "服务端直出表格 listExhibitorProfiles.php，一次拿全",
+    status: "verified", nEv: 1, nCo: 2578,
+    note: "详情页无电话/邮箱/地址，只收公司名+展位。" },
   { id: "deutschemesee", nm: "Deutsche Messe（汉诺威展览）",
     scope: "德国", api: "未找到参展商接口；/api/places/* 仅地址联想",
     status: "probed-failed", nEv: 0, nCo: 0,
     note: "Hannover Messe 参展商页为 JS 渲染，HTML 无数据；仅发现地图位置接口。需再挖 bundle。" },
-  { id: "mapyourshow", nm: "MapYourShow（美国展会系统，数百个展会用）",
-    scope: "美国/全球", api: "未找到；页面 JS 渲染，列表页 374KB 无实体数据",
-    status: "probed-failed", nEv: 0, nCo: 0,
-    note: "AHR Expo / PACK EXPO 均跑在此平台。<show>.mapyourshow.com/8_0/ 形态确认，API 端点待挖。" },
   { id: "taitra", nm: "TAITRA 外贸协会（COMPUTEX / Taipei Cycle / Food Taipei）",
     scope: "台湾", api: "无全量列表，仅关键词搜索页 /en/index/full-search.html?type=exhibitor",
     status: "not-batchable", nEv: 0, nCo: 0,
     note: "结构上不支持「列全量」，只能按关键词逐条搜。若要做，需先有目标公司名单反向查。" },
   { id: "untested", nm: "待探（未实测，不承诺）",
     scope: "全球", api: "—", status: "untested", nEv: 0, nCo: 0,
-    note: "RX(Reed) / Informa Markets / Comexposium / Hyve / HKTDC / Messe Düsseldorf / Koelnmesse / NürnbergMesse / Messe München / Fiera Milano。" }
+    note: "RX(Reed) / Informa Markets / Comexposium / Hyve / HKTDC / Koelnmesse / NürnbergMesse / Messe München（ISPO·electronica·bauma）/ Fiera Milano（HostMilano）/ Messe Friedrichshafen（AERO）。" }
 ];
 
 window.FAL_EXPO_FIND = function (kw, cc) {

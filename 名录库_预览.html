@@ -101,9 +101,15 @@ a:hover{text-decoration:underline}
 
   <div class="foot">
     <b>数据边界（必读）</b><br>
-    · 展会参展商来自 <b>Messe Frankfurt 官方参展商搜索 API</b>（公开端点），每条可点开来源复核。共 49,907 家 / 91 个展会 / 124 个国家。<br>
-    · <b>个人联系方式（姓名、个人邮箱、手机号）已在采集端剔除</b>：`exhibitor.contacts` 整段不读取；手机号按冠号判据丢弃 3,688 条；人名邮箱丢弃 8,440 条。属 L3，只能使用者自备。<br>
+    · 展会参展商来自 <b>4 个展会平台的公开端点</b>，每条带来源可逐条复核：<br>
+    &nbsp;&nbsp;· <b>Messe Frankfurt</b> 官方参展商搜索 API（49,908 家 / 91 展会，电话 59% / 邮箱 27% / 官网 73%）<br>
+    &nbsp;&nbsp;· <b>Messe Düsseldorf</b> VIS API（20,915 家 / 13 展会，电话 84% / 邮箱 80% / 官网 89%）<br>
+    &nbsp;&nbsp;· <b>MapYourShow</b> remote-proxy（CES 2027，3,128 家，源本身无电话/邮箱）<br>
+    &nbsp;&nbsp;· <b>goexposoftware</b>（SHOT Show 2027，2,578 家，源本身无电话/邮箱）<br>
+    · 合计 <b>75,180 家 / 106 个展会 / 132 个国家</b>（同名同国已去重，同一公司参展多站会合并）。<br>
+    · <b>个人联系方式（姓名、个人邮箱、手机号）已在采集端剔除</b>：`exhibitor.contacts` 整段不读取；手机号按号码冠号判据丢弃（中国/德国明确判据，其他国家不判以免误杀座机）；人名邮箱按职能词白名单过滤。累计剔除手机/无效电话 <b>7,982 条</b>、人名邮箱 <b>12,700 条</b>。属 L3，只能使用者自备。<br>
     · 参展商是<b>供货方</b>，用途是「企业真实性证据」+「供应链情报」，<b>不是客户名单</b>。<br>
+    · <b>CES / SHOT Show 两家源本身不公开电话与邮箱</b>，所以这两族「有电话」为 0 —— 这是源的限制，不是没抓。需要联系方式请走 L2 官网提取流程。<br>
     · 未命中 ≠ 企业不存在，只等于「不在本名录内」。
   </div>
 </div>
@@ -227,7 +233,7 @@ a:hover{text-decoration:underline}
       if (ccIx >= 0 && r[1] !== ccIx) continue;
       if (evOk && !evOk[D.ev[r[6]]]) continue;
       if (q && !famHits.length) {
-        var hay = (r[0] + " " + r[2] + " " + D.k[r[7]]).toLowerCase();
+        var hay = (r[0] + " " + r[2] + " " + D.k[r[7]] + " " + (r[8] || "")).toLowerCase();
         if (hay.indexOf(q) < 0) continue;
       }
       totalHit++;
@@ -264,6 +270,7 @@ a:hover{text-decoration:underline}
     out.forEach(function(r){
       h += '<tr><td><span class="nm">' + esc(r[0]) + '</span>'
          + (r[5] ? ' <a href="' + esc(r[5]) + '" target="_blank" rel="noopener" style="font-size:11px">官网↗</a>' : '')
+         + (r[8] ? '<br><span class="tag">展位 ' + esc(r[8]) + '</span>' : '')
          + (D.k[r[7]] ? '<br><span class="tag">' + esc(D.k[r[7]]) + '</span>' : '')
          + '</td><td><span class="cc">' + esc(D.cc[r[1]]) + '</span><br><span class="mut">' + esc(r[2] || "—") + '</span></td>'
          + '<td>' + (r[3] ? esc(r[3]) : '<span class="mut">—</span>') + '</td>'
