@@ -2276,24 +2276,24 @@ window.FAL_EXPO_EVENTS = [
    中国厂商搜的是「家具」「灯」「汽车」，不是「Table & Table Select」。
    所以做**族级同义词**：一个中文词命中一个族 → 展开成该族全部展会。 */
 window.FAL_EXPO_FAM_SYN = {
-  "汽配/汽车后市场": ["汽车","汽配","零部件","汽车配件","汽保","钣金","auto","automotive","automechanika","vehicle","car","repair","body","paint","wheel","parts"],
-  "纺织/服装/家纺": ["纺织","服装","面料","家纺","布","纱","衣服","成衣","textile","fabric","apparel","garment","yarn","clothing","home textile"],
-  "家居/消费品/礼品": ["家居","家具","消费品","礼品","文具","玩具","装饰","室内","furniture","home","consumer","gift","stationery","toy","decor","interior","living"],
-  "照明/建筑/卫浴": ["照明","灯","灯具","建筑","卫浴","建材","led","lighting","light","building","bathroom","sanitary","construction"],
-  "娱乐/灯光音响/乐器": ["娱乐","音响","乐器","舞台","灯光音响","music","audio","sound","instrument","stage","entertainment","prolight"],
-  "美容/个护": ["美容","化妆品","护肤","个护","香水","beauty","cosmetic","skincare","personal care","fragrance","perfume"],
-  "工业自动化/物流": ["自动化","工业","物流","传感器","传动","工控","automation","industrial","logistics","sensor","drive","process"],
-  "制造/模具/金属加工": ["制造","模具","金属","铸造","焊接","3d打印","增材","机械","mold","metal","foundry","welding","additive","formnext","manufacturing"],
-  "食品/食品加工": ["食品","肉类","烘焙","饮料","food","meat","bakery","beverage","processing"],
-  "交通/两轮/航空": ["自行车","摩托","航空","飞机","两轮","bike","bicycle","motorcycle","aviation","aerospace","eurobike"],
-  "宠物": ["宠物","pet","interpets"],
-  "安防/消防": ["安防","消防","安全","security","fire","safety","rescue"],
-  "矿业/环保/水处理": ["矿业","环保","水处理","回收","mining","environment","water","waste","recycl"],
-  "印刷/广告/标识": ["印刷","广告","标识","print","sign","advertising","graphic"],
-  "医疗/健康": ["医疗","健康","医院","medical","health","hospital","care"],
-  "餐饮/酒店": ["餐饮","酒店","餐厅","咖啡","hotel","restaurant","catering","coffee","foodservice"],
-  "化工/制药/实验室": ["化工","制药","实验室","chem","pharma","lab","biotech"],
-  "清洁/冷链/卫生": ["清洁","冷链","卫生","洗涤","clean","laundry","hygiene","cold chain"]
+  "汽配/汽车后市场": ["汽车","汽配","零部件","汽车配件","汽保","钣金","轮胎","刹车","滤清器","火花塞","雨刷","车灯","后视镜","改装","底盘","变速箱","auto","automotive","automechanika","vehicle","car","repair","body","paint","wheel","tire","tyre","brake","filter","spark","wiper","headlight","mirror","tuning","parts","component","chassis","transmission"],
+  "纺织/服装/家纺/纱线": ["纺织","服装","面料","家纺","布","纱","衣服","成衣","针织","梭织","牛仔","无纺布","蕾丝","刺绣","拉链","纽扣","毛巾","床品","窗帘","地毯","textile","fabric","apparel","garment","yarn","clothing","home textile","knit","woven","denim","nonwoven","lace","embroidery","zipper","button","towel","bedding","curtain","carpet"],
+  "家居/消费品/礼品": ["家居","家具","消费品","礼品","文具","玩具","装饰","室内","沙发","床垫","橱柜","餐桌","餐具","厨具","收纳","香薰","蜡烛","圣诞","节庆","furniture","home","consumer","gift","stationery","toy","decor","interior","living","sofa","mattress","cabinet","table","kitchen","storage","candle","christmas","seasonal"],
+  "照明/建筑/卫浴": ["照明","灯","灯具","建筑","卫浴","建材","灯泡","灯带","路灯","射灯","吊灯","水龙头","马桶","淋浴","瓷砖","门窗","电气","布线","lighting","light","building","bathroom","sanitary","construction","bulb","strip","street light","spot","chandelier","faucet","toilet","shower","tile","door","window","electrical","cable"],
+  "娱乐/灯光音响/乐器": ["娱乐","音响","乐器","舞台","灯光音响","吉他","钢琴","鼓","麦克风","音箱","功放","调音台","music","audio","sound","instrument","stage","entertainment","prolight","guitar","piano","drum","microphone","speaker","amplifier","mixer"],
+  "美容/个护": ["美容","化妆品","护肤","个护","香水","美甲","美发","沙龙","彩妆","面膜","beauty","cosmetic","skincare","personal care","fragrance","perfume","nail","hair","salon","makeup","mask"],
+  "工业自动化/电子/物流": ["自动化","工业","物流","传感器","传动","工控","电机","变频器","伺服","液压","气动","阀门","泵","压缩机","继电器","plc","连接器","电阻","电容","电源","仓储","输送","automation","industrial","logistics","sensor","drive","process","motor","inverter","servo","hydraulic","pneumatic","valve","pump","compressor","relay","connector","resistor","capacitor","power supply","warehouse","conveyor"],
+  "制造/模具/金属加工": ["制造","模具","金属","铸造","焊接","3d打印","增材","机械","轴承","齿轮","紧固件","螺丝","弹簧","铸件","锻件","冲压","机加工","钣金件","刀具","磨具","热处理","mold","metal","foundry","welding","additive","formnext","manufacturing","bearing","gear","fastener","screw","spring","casting","forging","stamping","machining","tool","abrasive","heat treatment"],
+  "食品/食品加工": ["食品","肉类","烘焙","饮料","调味","香料","罐头","冷冻食品","屠宰","灌装","food","meat","bakery","beverage","spice","canning","frozen","slaughter","filling","packaging"],
+  "交通/两轮/航空/基建": ["自行车","摩托","航空","飞机","两轮","电动车","滑板车","无人机","铁路","交通","基建","bike","bicycle","motorcycle","aviation","aerospace","eurobike","scooter","drone","rail","transport","infrastructure"],
+  "宠物": ["宠物","猫","狗","宠物粮","宠物用品","牵引绳","猫砂","pet","dog","cat","pet food","pet supply","leash","litter"],
+  "安防/消防": ["安防","消防","安全","监控","门禁","报警","灭火","防护","security","fire","safety","surveillance","access control","alarm","extinguisher","protection"],
+  "矿业/环保/水处理": ["矿业","环保","水处理","回收","采矿","污水","废气","固废","mining","environment","water","waste","recycl","quarry","sewage","emission"],
+  "印刷/广告/标识": ["印刷","广告","标识","喷绘","数码印刷","丝印","油墨","灯箱","print","sign","advertising","graphic","ink","digital print","screen print","light box"],
+  "教育/母婴/儿童": ["教育","母婴","儿童","幼儿园","托育","婴儿","学生","校服","教具","education","child","baby","kids","school","kindergarten","nursery","infant","student","teaching aid"],
+  "餐饮/酒店": ["餐饮","酒店","餐厅","咖啡","厨房设备","餐具","酒吧","hotel","restaurant","catering","coffee","foodservice","kitchen equipment","tableware","bar"],
+  "化工/制药/实验室": ["化工","制药","实验室","试剂","分析仪器","生物","chem","pharma","lab","reagent","analytical","biotech"],
+  "清洁/冷链/卫生": ["清洁","冷链","卫生","洗涤","消毒","无尘室","clean","laundry","hygiene","cold chain","disinfect","cleanroom"]
 };
 
 /* 关键词 → 命中的行业族数组（中英皆可）。空数组 = 不是行业词，按公司名/品类直搜。 */
