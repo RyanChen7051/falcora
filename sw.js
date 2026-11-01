@@ -1007,7 +1007,7 @@
            回归 `shot_nav69.js` 11/0、`shot_cov68.js` 全通过、`shot_fam27.js` 398 家不变。
          · 静态文件有改动 → 升 CACHE 版本。 */
 
-const CACHE = 'falcora-v70';
+const CACHE = 'falcora-v71';
 const PRECACHE = [
   './',
   './app-design.css?v=3',
