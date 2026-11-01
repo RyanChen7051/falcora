@@ -98,12 +98,13 @@ a:hover{text-decoration:underline}
     <div class="stat"><b id="sCc">—</b><i>覆盖国家/地区</i></div>
     <div class="stat"><b id="sTel">—</b><i>带企业电话</i></div>
     <div class="stat"><b id="sAssoc">3,746</b><i>协会会员（另一来源）</i></div>
+    <div class="stat"><b id="sGov">—</b><i>政府采购单位（TED 招标）</i></div>
   </div>
 
   <div class="tabs">
     <button class="on" data-src="expo">展会参展商</button>
     <button data-src="assoc">协会会员</button>
-    <button data-src="buyer">采购方名录</button>
+    <button data-src="buyer">政府采购单位</button>
   </div>
 
   <div class="loadbox" id="loadbox">
@@ -136,6 +137,18 @@ a:hover{text-decoration:underline}
     · 参展商是<b>供货方</b>，用途是「企业真实性证据」+「供应链情报」，<b>不是客户名单</b>。<br>
     · <b>CES / SHOT Show 两家源本身不公开电话与邮箱</b>，所以这两族「有电话」为 0 —— 这是源的限制，不是没抓。需要联系方式请走 L2 官网提取流程。<br>
     · 未命中 ≠ 企业不存在，只等于「不在本名录内」。
+  </div>
+
+  <div class="foot">
+    <b>政府采购单位（第三来源）数据边界</b><br>
+    · 来源：<b>TED 欧盟招标开放接口</b>（api.ted.europa.eu/v3/notices/search，无需 key），
+      取 <b>buyer-name / buyer-internet-address / buyer-email / organisation-tel-buyer</b> 四个字段，<b>全部取自招标公告正文</b>。<br>
+    · 规模：<b>1,763 家</b>采购单位（政府 / 军警 / 国防采购机构），覆盖 3,913 条公告；国家前五 PL 381 / DE 187 / RO 146 / FR 144 / ES 96。<br>
+    · ⚠️ <b>官网链接未做可达性实测</b>（表格里标「未实测」）——点开可能打不开，这是数据源限制，不是已核实。<br>
+    · ⚠️ <b>不含个人联系方式</b>：公告里的 buyer-contact-point 常为个人姓名（如 Catalin IONESCU），已整段丢弃；
+      邮箱按「多段全字母 = 个人」剔除 <b>303 条</b>个人邮箱，只保留机构/职能邮箱（属 L2）。<br>
+    · ⚠️ TED 全文检索为<b>模糊匹配</b>，含少量非采购类机构（市政 / 教育，约 38 家），每条可点「招标数」列的公告链接核实。<br>
+    · 这是<b>采购方</b>（买方），与上面 75,180 家参展商（供货方）<b>永不合并</b>；也不进 02 页采购方池，除非你手动「加入管线」。
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -345,8 +358,7 @@ a:hover{text-decoration:underline}
     var list = $("list");
     if (SRC === "expo") return renderExpo();
     if (SRC === "assoc") return renderAssoc();
-    list.innerHTML = '<div class="empty">采购方名录（398 家，实测可达域名）在主产品 02 页「线索池」，不在本预览页。</div>';
-    $("hint").textContent = "";
+    return renderGov();
   }
 
   function renderExpo(){
@@ -504,6 +516,84 @@ a:hover{text-decoration:underline}
     list.innerHTML = h + '</tbody></table>';
   }
 
+  // ---------- 政府采购单位（TED 欧盟招标 · 懒加载）----------
+  /* 与展会/协会的根本区别：这批是**采购方**（政府/军警），不是供货方。
+     数据来自 TED 开放接口的招标公告正文，每条带公告号可复核。
+     ⚠️ 官网链接**未做可达性实测**（reachTested:false），表格里必须显示「未实测」，
+        不能让用户以为点开一定通 —— 这是本产品最容易失信的地方。 */
+  var GOV = null, GOV_META = null;
+  function loadGov(cb){
+    if (GOV) return cb();
+    $("hint").textContent = "正在加载政府采购单位名录（374 KB）…";
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "data-gov-buyers.js?_=" + Date.now());
+    xhr.onload = function(){
+      try {
+        (new Function(xhr.responseText))();
+        var o = window.FAL_GOV_BUYERS;
+        if (!o) throw new Error("FAL_GOV_BUYERS 未定义");
+        GOV = o.items || []; GOV_META = o.meta || {};
+        $("sGov").textContent = (GOV_META.total || GOV.length).toLocaleString();
+        cb();
+      } catch(err) { $("hint").textContent = "政府采购名录解析失败：" + err.message; }
+    };
+    xhr.onerror = function(){ $("hint").textContent = "政府采购名录网络错误"; };
+    xhr.send();
+  }
+
+  function renderGov(){
+    var list = $("list");
+    if (!GOV) { list.innerHTML = '<div class="empty">加载中…</div>'; return loadGov(renderGov); }
+    var q = $("q").value.toLowerCase().trim();
+    var out = [], t0 = performance.now(), totalHit = 0;
+    for (var i = 0; i < GOV.length; i++) {
+      var r = GOV[i];
+      if (q) {
+        var hay = (r.n + " " + (r.k || "") + " " + (r.ti || "") + " " + (r.c || "")).toLowerCase();
+        if (hay.indexOf(q) < 0) continue;
+      }
+      totalHit++;
+      if (out.length < LIMIT) out.push(r);
+    }
+    var ms = (performance.now() - t0).toFixed(1);
+    var M = GOV_META || {};
+    $("hint").textContent = "政府采购单位 命中 " + totalHit.toLocaleString() + " 家 · 显示 " + out.length
+      + " 条 · 查询 " + ms + " ms · 全库 " + GOV.length.toLocaleString()
+      + " 家（官网 " + (M.withWeb || 0).toLocaleString() + " / 机构邮箱 " + (M.withMail || 0).toLocaleString()
+      + " / 电话 " + (M.withTel || 0).toLocaleString() + "）· 来源 TED 欧盟招标公告";
+    if (!out.length) { list.innerHTML = '<div class="empty">没有匹配。试试 shooting / hunting / firearms / optical，或输入国家码如 DE、PL。</div>'; return; }
+    var h = '<table><thead><tr><th style="width:31%">采购单位</th><th style="width:9%">国家</th>'
+          + '<th style="width:19%">官网</th><th style="width:18%">机构邮箱</th><th style="width:12%">电话</th>'
+          + '<th style="width:7%">招标</th><th style="width:104px">动作</th></tr></thead><tbody>';
+    out.forEach(function(r){
+      var b = bridgeOf({
+        dom: r.d || ("gov:" + r.n), nm: r.n, cc2: (r.c || "").toUpperCase(),
+        ind: "政府采购", kw: r.k || "", contact: ((r.m && r.m.length) || (r.t && r.t.length)) ? "L2" : "L1",
+        ev: "TED 招标", bo: "", evk: "gov",
+        chan: "政府采购名录", src: "名录库·政府采购"
+      });
+      var webCell = r.w
+        ? '<a href="' + esc(webUrl(r.w)) + '" target="_blank" rel="noopener">' + esc(r.d || r.w) + ' ↗</a>'
+          + '<br><span class="tag" title="未做可达性实测，点开可能打不开">未实测</span>'
+        : '<span class="mut">无官网</span>';
+      var mailCell = (r.m && r.m.length)
+        ? '<a href="mailto:' + esc(r.m[0]) + '">' + esc(r.m[0]) + '</a>'
+          + (r.m.length > 1 ? '<br><span class="mut">+' + (r.m.length - 1) + ' 个</span>' : '')
+        : '<span class="mut">—</span>';
+      h += '<tr><td><span class="nm">' + esc(r.n) + '</span>'
+         + (r.k ? '<br><span class="tag">' + esc(r.k) + '</span>' : '')
+         + (r.ti ? '<br><span class="mut" style="font-size:11px">' + esc(r.ti.slice(0, 60)) + '</span>' : '')
+         + '</td>'
+         + '<td><span class="cc">' + esc(r.c || "—") + '</span></td>'
+         + '<td>' + webCell + '</td>'
+         + '<td>' + mailCell + '</td>'
+         + '<td>' + ((r.t && r.t.length) ? esc(r.t[0]) : '<span class="mut">—</span>') + '</td>'
+         + '<td>' + (r.s ? '<a href="' + esc(r.s) + '" target="_blank" rel="noopener" class="mut">' + (r.nt || 1) + '↗</a>' : '<span class="mut">' + (r.nt || 0) + '</span>') + '</td>'
+         + actCell(b) + '</tr>';
+    });
+    list.innerHTML = h + '</tbody></table>';
+  }
+
   function esc(s){
     return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
       return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
@@ -515,8 +605,8 @@ a:hover{text-decoration:underline}
     b.onclick = function(){
       document.querySelectorAll(".tabs button").forEach(function(x){ x.classList.remove("on"); });
       b.classList.add("on"); SRC = b.dataset.src;
-      // 协会源不需要先下载 4.8MB 展会库，直接显示搜索栏
-      if (SRC === "assoc") {
+      // 协会源 / 政府采购源都不需要先下载 4.8MB 展会库，直接显示搜索栏
+      if (SRC === "assoc" || SRC === "buyer") {
         $("loadbox").style.display = "none";
         $("filterbar").style.display = "flex";
         $("fam").style.display = "none"; $("cc").style.display = "none";
