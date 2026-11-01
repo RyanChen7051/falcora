@@ -472,16 +472,20 @@ a:hover{text-decoration:underline}
       if (out.length >= LIMIT) break;
     }
     var ms = (performance.now() - t0).toFixed(1);
+    var srcTxt = Object.keys(ASSOC_META.bySource || {}).map(function(k){
+      return k.toUpperCase() + " " + (ASSOC_META.bySource[k] || 0).toLocaleString();
+    }).join(" + ");
     $("hint").textContent = "协会会员命中 " + out.length + " 条 · 查询 " + ms + " ms · 全库 " + ASSOC.length.toLocaleString()
-      + " 家（德国 VDMA 3,565 + 台湾 THTMA 181）";
+      + " 家（" + (srcTxt || "—") + "）";
     if (!out.length) { list.innerHTML = '<div class="empty">没有匹配。</div>'; return; }
     var h = '<table><thead><tr><th style="width:34%">公司</th><th style="width:13%">注册地</th>'
           + '<th style="width:18%">电话</th><th style="width:16%">职能邮箱</th><th>来源</th>'
           + '<th style="width:104px">动作</th></tr></thead><tbody>';
     var ASSOC_EV = { vdma: "VDMA 德国机械设备制造业联合会 · 公开会员名录",
-                     thtma: "THTMA 台湾手工具工业同业公会 · 公开会员名录" };
+                     thtma: "THTMA 台湾手工具工业同业公会 · 公开会员名录",
+                     cnita: "CNITA 中国产业用纺织品行业协会 · 公开会员名录" };
     out.forEach(function(r){
-      /* r.c 已经是 ISO2（TW/DE/AT/CH/BE/US/PL），可直接给 flag / 大区用 */
+      /* r.c 已经是 ISO2（TW/DE/AT/CH/BE/US/PL/CN），可直接给 flag / 大区用 */
       var b = bridgeOf({
         dom: domOf(r.w), nm: r.n, cc2: (r.c || "").toUpperCase(),
         ind: "", kw: "", contact: (r.t || r.e) ? "L2" : "L1",
