@@ -1005,9 +1005,27 @@
          · 字典 +10 键 → **2707 键**（0 重复 / 0 长度异常）。
          · 冒烟 `shot_bridge70.js` **21/0**、`shot_bridge70b.js` **13/0**（下游 ②④⑤ 真的认），
            回归 `shot_nav69.js` 11/0、`shot_cov68.js` 全通过、`shot_fam27.js` 398 家不变。
-         · 静态文件有改动 → 升 CACHE 版本。 */
+         · 静态文件有改动 → 升 CACHE 版本。
 
-const CACHE = 'falcora-v72';
+   v73（2026-11-02）：名录库新增「政府采购单位」第三来源（TED 欧盟招标 1,763 家）。
+         · 新增 `data-gov-buyers.js`（390,242 B，`window.FAL_GOV_BUYERS`）：
+           meta{total:1763, reachTested:false, withWeb:1506, withMail:204, withTel:449,
+           allThree:151, withKw:848, byCc, noiseNote}；items{n,c,w,d,m[],t[],k,nt,s,ti}。
+           来源 TED 开放接口 `api.ted.europa.eu/v3/notices/search`（无需 key），取
+           buyer-name / buyer-internet-address / buyer-email / organisation-tel-buyer。
+         · `名录库_预览.html` 第三个标签「采购方名录」占位 → 真实现「政府采购单位」：
+           懒加载（XHR 374 KB）+ 统计卡 `#sGov` + `renderGov()` 表格
+           （单位/国家/官网/机构邮箱/电话/招标数/动作）+ 页脚数据边界说明。
+         · ⚠️ **官网链接未做可达性实测**（`reachTested:false`）→ 每行强制显示「未实测」标签，
+           绝不让用户以为点开一定通。
+         · ⚠️ 不含个人联系方式：`buyer-contact-point`（常为个人姓名）整段丢弃；邮箱按
+           「多段全字母 = 个人」剔除 303 条，只留机构/职能邮箱。
+         · ⚠️ TED 全文检索为模糊匹配，含约 38 家市政/教育机构（噪声已标注，未删）。
+         · 这是**采购方**，与 75,180 家参展商（供货方）永不合并；不进 02 页 `FAL_REAL` 池。
+         · 冒烟 `smoke_gov_local.js` 11/0、`smoke_gov_online.js`（对 gh.io 真实地址）11/0。
+         · `名录库_预览.html` 在 PRECACHE 内 → 升 CACHE 版本，确保老访客拿到新页。 */
+
+const CACHE = 'falcora-v73';
 const PRECACHE = [
   './',
   './app-design.css?v=3',
