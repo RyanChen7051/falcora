@@ -34,8 +34,18 @@
     lang: "falcora_lang",
     notify: "falcora_notify_v1",
     prefs: "falcora_prefs_v1",
-    read: "falcora_notif_read_v1"
+    read: "falcora_notif_read_v1",
+    /* 2026-11-02 v76：下面两个键原来**不在导出清单里** ——
+       l2 = 使用者逐条核验过的 L2 联系方式（带 src + 检索日期，是最花人工的资产）
+       seq = 触达序列与执行进度
+       换设备时漏掉它们，等于把使用者核验最久的那部分直接丢了。 */
+    l2: "falcora_l2_v1",
+    seq: "falcora_seq_v1"
   };
+
+  /* 备份文件格式版本：v1 = 旧的无头格式（短键名 → 原始字符串）；v2 = 带 __falcora 头 */
+  var BACKUP_TAG = "on-device-backup";
+  var BACKUP_V = 2;
 
   var PAGE_STRATEGY = "01_战略_企业战略档案.html";
   var PAGE_LEADS = "02_全球线索获取.html";
@@ -95,6 +105,13 @@
   function Tn(zh, name) {
     return T(zh).replace("{name}", name == null ? "" : String(name));
   }
+  /* 多占位符版本（{n} / {m} 同时出现时用）。⚠️ 不能用 String.replace 传字符串模式，
+     那只会替换第一处；split/join 才能全替换。 */
+  function Tf(zh, map) {
+    var s = T(zh);
+    Object.keys(map || {}).forEach(function (k) { s = s.split("{" + k + "}").join(String(map[k])); });
+    return s;
+  }
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
@@ -111,6 +128,125 @@
     try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {}
   }
   function raw(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+  /* ---------- 备份合并（2026-11-02 v76） ----------
+     为什么需要「合并」而不是「直接覆盖」：
+       桌面导出、手机导入时，手机那边往往已经录了几条。直接覆盖 = 把手机上的新录入抹掉。
+     铁律 28「价值只能提升不能下降」的落地规则：
+       · 对象（{k:v}）→ 按 key 取并集，**本机已有的值不覆盖**（本机是使用者正在用的状态）
+       · 数组        → 按元素去重取并集
+       · 标量 / 纯字符串（语言、签名档开关）→ 本机有就保留本机
+     并且**合并后的信息量必须 ≥ 本机**，否则拒绝写入（宁可失败，也不让数据变少）。 */
+  function isPlainObj(x) {
+    return x && typeof x === "object" && !Array.isArray(x);
+  }
+  function elemKey(x) {
+    if (isPlainObj(x)) {
+      /* 用「域名 / id / 名称」这类稳定标识去重；都没有就退化成整串比较 */
+      return String(x.dm || x.id || x.n || x.nm || x.name || x.person || JSON.stringify(x));
+    }
+    return JSON.stringify(x);
+  }
+  function mergeVal(curRaw, incRaw) {
+    if (curRaw == null || curRaw === "") return { raw: incRaw, added: 1, kept: 0 };
+    if (incRaw == null) return { raw: curRaw, added: 0, kept: 0 };
+    var cur, inc;
+    try { cur = JSON.parse(curRaw); inc = JSON.parse(incRaw); } catch (e) {
+      return { raw: curRaw, added: 0, kept: 0 };            /* 非 JSON（语言等）→ 本机优先 */
+    }
+    if (isPlainObj(cur) && isPlainObj(inc)) {
+      var out = {}, added = 0;
+      Object.keys(cur).forEach(function (k) { out[k] = cur[k]; });
+      Object.keys(inc).forEach(function (k) {
+        if (!(k in out)) { out[k] = inc[k]; added++; }
+      });
+      return { raw: JSON.stringify(out), added: added, kept: Object.keys(cur).length };
+    }
+    if (Array.isArray(cur) && Array.isArray(inc)) {
+      var seen = {}, arr = [], add2 = 0;
+      cur.forEach(function (x) { var k = elemKey(x); if (!seen[k]) { seen[k] = 1; arr.push(x); } });
+      inc.forEach(function (x) { var k = elemKey(x); if (!seen[k]) { seen[k] = 1; arr.push(x); add2++; } });
+      return { raw: JSON.stringify(arr), added: add2, kept: cur.length };
+    }
+    return { raw: curRaw, added: 0, kept: 1 };              /* 类型不同 → 本机优先 */
+  }
+  function sizeOfRaw(r) {
+    if (r == null) return 0;
+    try {
+      var v = JSON.parse(r);
+      if (Array.isArray(v)) return v.length;
+      if (isPlainObj(v)) return Object.keys(v).length;
+    } catch (e) {}
+    return 1;
+  }
+
+  /* 旧版备份（v1）用的是短键名，这里映射回真实 localStorage 键，保证老文件也能导入 */
+  var LEGACY_MAP = { profile: "profile", profileOld: "profileOld", cards: "cards", contacts: "contacts",
+    sender: "sender", drafts: "drafts", sig: "sig", pipeline: "pipeline", lang: "lang",
+    notify: "notify", prefs: "prefs", read: "read", l2: "l2", seq: "seq" };
+
+  /* ---------- 备份归一化（v2 带 __falcora 头 / v1 扁平短键名都认） ----------
+     抽成独立函数是为了能被冒烟直接调用（文件选择框无法程序化设值）。 */
+  function normalizeBackup(data) {
+    var out = {};
+    if (!data || typeof data !== "object" || Array.isArray(data)) return out;
+    if (data.__falcora === BACKUP_TAG && data.keys && typeof data.keys === "object") {
+      Object.keys(data.keys).forEach(function (k) {
+        if (typeof data.keys[k] === "string") out[k] = data.keys[k];
+      });
+      return out;
+    }
+    Object.keys(data).forEach(function (k) {
+      var real = LEGACY_MAP[k];
+      if (real && typeof data[k] === "string") out[KEY[real]] = data[k];
+    });
+    return out;
+  }
+
+  /* 算合并计划（不写盘）。返回 {ok, code, plan, totalAdd, totalKept} */
+  function backupPlan(text) {
+    var data;
+    try { data = JSON.parse(String(text || "")); } catch (e) { return { ok: false, code: "corrupt" }; }
+    var srcKeys = normalizeBackup(data);
+    if (!Object.keys(srcKeys).length) return { ok: false, code: "notbackup" };
+    var plan = [], totalAdd = 0, totalKept = 0, bad = false;
+    Object.keys(srcKeys).forEach(function (lk) {
+      if (lk === OWNER_KEY) return;                 /* 授权凭证不从备份恢复 */
+      var cur = raw(lk);
+      var m = mergeVal(cur, srcKeys[lk]);
+      /* 安全闸：合并后信息量不许少于本机（铁律 28「价值只能提升不能下降」） */
+      if (sizeOfRaw(m.raw) < sizeOfRaw(cur)) { bad = true; return; }
+      plan.push({ k: lk, raw: m.raw, added: m.added, kept: m.kept });
+      totalAdd += m.added; totalKept += m.kept;
+    });
+    if (bad) return { ok: false, code: "downgrade" };
+    return { ok: true, plan: plan, totalAdd: totalAdd, totalKept: totalKept };
+  }
+
+  /* 真正写盘。opt.confirm=true 时弹确认框；返回 {ok, applied, msg} */
+  function applyBackup(text, opt) {
+    var r = backupPlan(text);
+    if (!r.ok) {
+      var m = r.code === "corrupt" ? T("备份文件已损坏，无法解析。")
+        : r.code === "notbackup" ? T("这个文件不是 FALCORA 的本机备份。")
+        : T("导入未写入：合并后数据量反而下降，已中止。");
+      return { ok: false, applied: false, msg: m };
+    }
+    if (opt && opt.confirm) {
+      var q = Tf("将导入 {n} 项新增内容，本机已有的 {m} 项保留不动。继续？",
+        { n: r.totalAdd, m: r.totalKept });
+      if (!window.confirm(q)) return { ok: true, applied: false, msg: "" };
+    }
+    r.plan.forEach(function (p) { try { localStorage.setItem(p.k, p.raw); } catch (e) {} });
+    return {
+      ok: true, applied: true,
+      msg: Tf("导入完成：新增 {n} 项。页面即将刷新。", { n: r.totalAdd })
+        + "\n" + T("换设备后需重新激活创始人授权：设置 → 套餐与用量 → 创始人授权。")
+    };
+  }
+  /* 冒烟钩子：<input type=file> 无法程序化设值，把纯逻辑挂出来让脚本直接调。
+     只挂纯函数与 applyBackup，不额外暴露任何写入后门。 */
+  try { window.__falBackup = { plan: backupPlan, apply: applyBackup, normalize: normalizeBackup, merge: mergeVal }; } catch (e) {}
 
   /* ---------- 创始人授权（v55）：应用内激活 ----------
      为什么不能只靠 ?owner=1：macOS「加入程序坞 / 安装为应用」是**独立存储容器**，
@@ -745,7 +881,9 @@
       [KEY.profile, "战略档案"],
       [KEY.cards, "展会名片"],
       [KEY.contacts, "补录联系方式"],
+      [KEY.l2, "L2 核验记录"],
       [KEY.drafts, "开发信草稿"],
+      [KEY.seq, "触达序列"],
       [KEY.sig, "签名档自定义"],
       [KEY.pipeline, "管线状态"]
     ];
@@ -759,8 +897,11 @@
         + '</div>';
     });
     h += '<div class="fg-note" style="margin-top:11px">全部数据只存在你这台设备的浏览器里，不会上传。清空后无法恢复。</div>';
+    h += '<div class="fg-note" style="margin-top:8px">桌面与手机是两份独立的存储，不会自动同步。换设备请先在一端「导出为 JSON」，再到另一端「从 JSON 恢复」——恢复是合并，不会覆盖你在新设备上已录的内容。</div>';
     h += '<div class="fg-acts"><button class="fg-btn" id="falExport">导出为 JSON</button>'
+      + '<button class="fg-btn" id="falImport">从 JSON 恢复</button>'
       + '<button class="fg-btn dg" id="falWipe">清空全部本机数据</button></div>';
+    h += '<input type="file" id="falImportFile" accept=".json,application/json" style="display:none">';
     h += '</div></div>';
 
     h += '<div class="fg-sec"><div class="fg-t">关于</div><div class="fg-card">';
@@ -836,23 +977,62 @@
 
     var ex = gearBody.querySelector("#falExport");
     if (ex) ex.addEventListener("click", function () {
-      var dump = {};
+      /* v2 格式：带 __falcora 头 + 真实 localStorage 键名。
+         旧格式只有短键名、没有版本号，导入端无法判断是哪一版 —— 换设备时最容易踩这个坑。
+         ⚠️ 故意**不导出** falcora_owner_v1：授权凭证不该跟着备份文件走，
+            换设备要重新在「套餐与用量 → 创始人授权」里激活。 */
+      var keys = {}, counts = {};
       Object.keys(KEY).forEach(function (k) {
+        if (k === "profileOld") return;
         var v = raw(KEY[k]);
-        if (v != null) dump[k] = v;
+        if (v == null || v === "") return;
+        keys[KEY[k]] = v;
+        counts[KEY[k]] = sizeOfRaw(v);
       });
+      var dump = {
+        __falcora: BACKUP_TAG,
+        v: BACKUP_V,
+        at: new Date().toISOString(),
+        origin: location.origin + location.pathname.replace(/[^/]*$/, ""),
+        counts: counts,
+        keys: keys
+      };
       var blob = new Blob([JSON.stringify(dump, null, 2)], { type: "application/json" });
       var a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = "FALCORA_on_device_backup.json";
+      a.download = "FALCORA_backup_" + new Date().toISOString().slice(0, 10) + ".json";
       a.click();
       setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
     });
 
+    /* ---------- 从 JSON 恢复（v76） ----------
+       桌面导出 → 传到手机（隔空投送 / 微信文件 / iCloud）→ 手机打开设置点这里。
+       合并而非覆盖：手机上新录的不会被桌面旧备份抹掉。逻辑在 applyBackup()。 */
+    var im = gearBody.querySelector("#falImport");
+    var imf = gearBody.querySelector("#falImportFile");
+    if (im && imf) {
+      im.addEventListener("click", function () { imf.value = ""; imf.click(); });
+      imf.addEventListener("change", function () {
+        var f = imf.files && imf.files[0];
+        if (!f) return;
+        var fr = new FileReader();
+        fr.onload = function () {
+          var r = applyBackup(String(fr.result || ""), { confirm: true });
+          if (!r.ok) { window.alert(r.msg); return; }
+          if (!r.applied) return;                       /* 使用者点了取消 */
+          window.alert(r.msg);
+          setTimeout(function () { location.reload(); }, 600);
+        };
+        fr.readAsText(f);
+      });
+    }
+
     var wp = gearBody.querySelector("#falWipe");
     if (wp) wp.addEventListener("click", function () {
       if (!window.confirm(T("确定清空全部本机数据？包括战略档案、名片、补录联系方式与草稿，此操作不可恢复。"))) return;
-      ["profile", "profileOld", "cards", "contacts", "sender", "drafts", "sig", "pipeline", "notify", "prefs", "read"].forEach(function (k) {
+      /* 清空范围必须与上面「本机数据」列表一致 —— 否则会出现「列表显示有 L2 核验记录，清空后却还在」 */
+      ["profile", "profileOld", "cards", "contacts", "sender", "drafts", "sig", "pipeline",
+        "l2", "seq", "notify", "prefs", "read"].forEach(function (k) {
         try { localStorage.removeItem(KEY[k]); } catch (e) {}
       });
       paintGear();
