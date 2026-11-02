@@ -2403,14 +2403,22 @@ function l2FetchedBlock(f){
     return '<span class="locb noi18n" title="'+esc(cn||loc)+'">'+esc((fl?fl+" ":"")+loc)+'</span>';
   }
   let hasLoc = false;
+  /* 2026-11-02：L2 的职能邮箱有两种出处，强度不同，必须在链接文案上分开：
+       · via 为空  = 官网原页抓的，点开就能看到同一个值（「来源」）
+       · via=expo  = 展会参展商公开名录里的企业级邮箱，点开是名录地址，
+                     要在名录内再搜企业名才看得到（「名录」）
+     混用一个「来源」会让「点来源即可在官网核对」变成假承诺。 */
+  let hasExpo = false;
   function row(label, arr){
     if(arr && arr.length){
       return '<div class="l2f-row"><span class="k">'+T(label)+'</span><div class="vs">'
         + arr.map(function(x){
             if(x.loc) hasLoc = true;
+            if(x.via === "expo") hasExpo = true;
             return '<div class="vv"><b class="noi18n">'+esc(x.v)+'</b>'
               + locChip(x.loc)
-              + (x.src ? '<a class="vsrc" href="'+esc(x.src)+'" target="_blank" rel="noopener noreferrer">'+T("来源")+' ↗</a>' : '')
+              + (x.src ? '<a class="vsrc" href="'+esc(x.src)+'" target="_blank" rel="noopener noreferrer">'
+                  + T(x.via === "expo" ? "名录" : "来源")+' ↗</a>' : '')
               + '</div>';
           }).join("")
         + '</div></div>';
@@ -2419,12 +2427,15 @@ function l2FetchedBlock(f){
   }
   const rows = row("企业电话", f.phones) + row("职能邮箱", f.emails) + row("总部地址", f.addr);
   const nt = l2NoteTxt(f.note, (f.pages||[]).length);
-  return '<div class="l2f"><div class="l2f-hd"><b>'+T("平台检索 · 官网公开信息")+'</b>'
+  return '<div class="l2f"><div class="l2f-hd"><b>'+T(hasExpo ? "平台检索 · 公开信息" : "平台检索 · 官网公开信息")+'</b>'
     + '<span class="at">'+Tv("检索于 {d}",{d:String(f.at||"—")})+'</span></div>'
     + rows
     + (hasLoc ? '<div class="l2f-foot">'+T("带国旗标记的值来自该企业的区域站点（不是总部），点「来源」可核对原页面。")+'</div>' : '')
+    + (hasExpo ? '<div class="l2f-foot">'+T("带「名录」标记的邮箱来自展会参展商的公开名录（不是官网原页）；点开是名录地址，需在名录内再搜企业名复核。")+'</div>' : '')
     + (nt ? '<div class="l2f-foot">'+nt+'</div>' : '')
-    + '<div class="l2f-foot">'+T("只收企业职能联系方式（总机 / 角色邮箱 / 公开地址）；姓名式邮箱与个人直线不收录 —— 那是 L3，平台不抓取、不推断。点「来源」即可在官网核对同一条值。")+'</div>'
+    + '<div class="l2f-foot">'+T(hasExpo
+        ? "只收企业职能联系方式（总机 / 角色邮箱 / 公开地址）；姓名式邮箱与个人直线不收录 —— 那是 L3，平台不抓取、不推断。点「来源」可在官网核对同一条值，点「名录」需在名录内再搜企业名。"
+        : "只收企业职能联系方式（总机 / 角色邮箱 / 公开地址）；姓名式邮箱与个人直线不收录 —— 那是 L3，平台不抓取、不推断。点「来源」即可在官网核对同一条值。")+'</div>'
     + '</div>';
 }
 /* L3 行的两种形态 —— 空值不再是「灰掉的空白」，而是「待您录入」的行动召唤：

@@ -1048,9 +1048,38 @@
            ⚠️ 该替换**字符数相同**，用「本地 wc -c vs 线上 size_download」查不出来，必须 md5 比对。
          · 冒烟：本地 gov **11/11**、assoc **7/0**、L2 **15/0**；
            线上 gov **11/11**、assoc **7/0**、展会页 **75,180 家 / 4.3ms / 零 JS 异常**。
-         · 静态文件有改动 → 升 CACHE 版本，确保老访客拿到新页面。 */
+         · 静态文件有改动 → 升 CACHE 版本，确保老访客拿到新页面。
 
-const CACHE = 'falcora-v74';
+   v75（2026-11-02）：L2 邮箱覆盖率 17.6% → 31.2%（70 → **124** 家 / 398）。
+         · 两个渠道分开算，不要混成一个「覆盖率」：
+           ① 官网深挖（`--noemail` 定向攻坚 307 家）：82 → **103** 家。
+              关键修复：`fetch_l2.js` 的深挖触发条件从「三字段全空」改为「**没有邮箱就深挖**」
+              （旧条件让「有电话没邮箱」的 300 多家永远不再深挖）；新增 `--noemail` 过滤；
+              同品牌跨 TLD 接受（fagerhult.be ↔ fagerhult.com）；合并改**按字段取并集**，
+              避免「这次没抓到」把「上次抓到」顶掉。
+           ② 展会参展商名录回填：103 → **124** 家。新增 `scripts/expo_email_candidates.js`，
+              从 data-expo-exhibitors.js（75,180 家）按域名对齐取企业级职能邮箱。
+              命中的全是官网反爬读不出联系页的大厂（Bosch / Festo / TRUMPF / Dräger /
+              Phoenix Contact / WAGO / KAESER / Krones / Evonik / Dow / PTC…）。
+              闸门与官网抓取完全一致：角色白名单 + 邮箱域必须=企业域/子域/同品牌
+              （因此 `info@at.lrmed.com` 冒充 lohmann-rauscher.com 这类被拒）。
+         · ⚠️ **出处强度不同，UI 必须区分**：官网抓的 src 点开就看到同一个值；
+           名录回填的 src 点开是名录地址，要再搜一次企业名。所以这类记录带 `via:"expo"`，
+           链接文案改为「名录」，区块标题改「平台检索 · 公开信息」，并加一行说明。
+           不区分就等于把「点来源即可核对」变成假承诺。新增 4 个字典键。
+         · 修 `scripts/l2_fetch.py` **挂死根因**：`urlopen(timeout=)` 管不到 DNS `getaddrinfo`，
+           线程永久阻塞 → `ThreadPoolExecutor.__exit__` 死等 → 子进程永不退出 →
+           Node 侧 `execFile` 超时杀不掉。改为硬墙钟 50s + 逐 future 超时 + `os._exit(0)`。
+         · 新增 `scripts/finalize_l2_partial.js`：长跑被中断时从 `l2-partial.json` 收尾。
+           本机定时清理会在长跑途中 SIGTERM，正式文件只在跑完才写 —— 没有这个脚本，
+           每中断一次就白跑几十家。收尾前逐条校验「存量已有的每一个值都还在」，否则拒写。
+         · 实测天花板：316 家缺邮箱的等距抽样诊断显示 **62.5% 结构性够不着**
+           （站点确无邮箱 25% + 反爬读不到 37.5%），31.2% 已接近可打满的位置。
+           没有放开的边界：`info.<姓>@` 两段式（与 `info.meditec@` 结构无法区分）、
+           集团域邮箱、Cloudflare data-cfemail 解码（是站主的反爬选择）。
+         · 静态文件有改动 → 升 CACHE 版本。 */
+
+const CACHE = 'falcora-v75';
 const PRECACHE = [
   './',
   './app-design.css?v=3',
