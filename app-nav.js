@@ -110,7 +110,7 @@
 
   /* ---------- 注入「全球名录库」（2026-10-31 v69） ----------
      为什么必须做这一步：`data-expo-index.js` / `data-expo-exhibitors.js` / `data-assoc-members.js`
-     合计 7.9MB 数据（75,180 家展会参展商 + 3,746 家协会会员）早就做好了，SW 也预缓存了，
+     合计 7.9MB 数据（75,180 家展会参展商 + 3,775 家协会会员）早就做好了，SW 也预缓存了，
      但**9 屏里没有任何一个入口指向它** —— 用户从驾驶舱点不进去，只能手输 URL。
      按「录入了但没人消费的断链，优先级高于加新功能」，本轮把入口补上。
      · 放在侧栏最后（成本与报价测算之下），因为它不是流程的一环，是「原料库」。
@@ -122,7 +122,7 @@
     var a = document.createElement('a');
     a.className = 'nav-item nav-roster';
     a.href = '名录库_预览.html';
-    a.title = '全球名录库：75,180 家展会参展商 + 3,746 家协会会员';
+    a.title = '全球名录库：75,180 家展会参展商 + 3,775 家协会会员';
     a.innerHTML = '<span class="idx">📚</span> <span>全球名录库</span>';
     var foot = sb.querySelector('.side-foot');
     if (foot) sb.insertBefore(a, foot); else sb.appendChild(a);

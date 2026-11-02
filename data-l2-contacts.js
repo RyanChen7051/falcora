@@ -17,32 +17,16 @@
       （如 expeditors 的 +2000206/+0460052/+0400045/+04900491 系从「€+2.000.206」这类金额里误拼，
       以及 555-555-5555、(000) 000-0000、+1234567890000 等占位符），合并 7 家同号重复写法。
       校验规则：真实国际冠号表 + 冠号后至少 6 位 + 5 连相同数字/完整升降序列剔除。 */
-/* ===== 补抓记录 2026-10-21 =====
-   · 本轮 补抓 274 家，其中 81 家取到职能联系方式
-   · 通道：managed python3.13 为主 + curl 回退（铁律 19：Fastly 类 WAF 对 curl/node 返 406）
-   · 每条仍带 src / at，点开即可在官网复核；取不到的一律记 note，不猜不编。 */
 /* ===== 号码规范化 2026-10-21 =====
    · 修 59 条「国际格式夹着国内干线 0」的号码（+49 (0) 202 4045 → +492024045）；
      +39 / +378 例外不动（意大利国内号码本身以 0 开头）。
    · 同记录内按纯数字去重，删 16 条重复写法；删 1 条「重复块开头」的假号。
    · 只改格式，数字一个不动；每条仍带 src，点开可在官网核对。 */
+/* ===== 补抓记录 2026-11-02 =====
+   · 本轮 补抓 193 家，其中 24 家取到职能联系方式
+   · 通道：managed python3.13 为主 + curl 回退（铁律 19：Fastly 类 WAF 对 curl/node 返 406）
+   · 每条仍带 src / at，点开即可在官网复核；取不到的一律记 note，不猜不编。 */
 window.FAL_L2 = {
-/* ===== 补记 2026-10-21（v61）=====
-   9 家官网反爬 / 网络拦截，补「只有 note、没有值」的记录。
-   目的：让弹窗显示「检索过但失败的原因」，同时使记录数 389 → 398 与名录分母对齐。
-   ⚠️ 不含任何号码 / 邮箱 / 地址 —— 没取到就是没取到。
-   逐条实测原因（2026-10-21，curl -m 12 -L，Chrome UA）：
-     · leupold.com —— SSL 握手失败（curl exit 35）
-     · sightron.com —— SSL 握手失败（curl exit 35）
-     · ior.ro —— SSL 握手失败（curl exit 35）
-     · bulgin.co.uk —— SSL 握手失败（curl exit 35）
-     · molex.com —— HTTP/2 协议错误（curl exit 92）
-     · stanleyblackanddecker.com —— HTTP/2 协议错误（curl exit 92）
-     · draeger.com —— HTTP/2 协议错误（curl exit 92）
-     · dhl.com —— HTTP/2 协议错误（curl exit 92）
-     · phocos.com —— 官网返回 403（拒绝非浏览器请求）
-   exit 35 = SSL 握手失败；exit 92 = HTTP/2 协议错误。域名真实、失败在本机网络出口侧，
-   故界面只说「反爬或网络拦截、需人工核验」，不猜测任何联系方式。 */
  "leupold.com": {
   "dm": "leupold.com",
   "at": "2026-10-21",
@@ -857,7 +841,7 @@ window.FAL_L2 = {
  },
  "511tactical.com": {
   "dm": "511tactical.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -1291,7 +1275,7 @@ window.FAL_L2 = {
  },
  "esstac.com": {
   "dm": "esstac.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -1348,25 +1332,16 @@ window.FAL_L2 = {
  },
  "velocitysystems.net": {
   "dm": "velocitysystems.net",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
-  "pages": [
-   "http://velocitysystems.net/contact",
-   "http://velocitysystems.net/contact-us",
-   "http://velocitysystems.net/contactus",
-   "http://velocitysystems.net/contacts",
-   "http://velocitysystems.net/contact-us/",
-   "http://velocitysystems.net/en/contact",
-   "http://velocitysystems.net/en/contact-us",
-   "http://velocitysystems.net/"
-  ],
-  "note": "已读取官网 8 个页面，未检索到公开职能联系方式"
+  "pages": [],
+  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
  },
  "logitech.com": {
   "dm": "logitech.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -1469,7 +1444,7 @@ window.FAL_L2 = {
  },
  "philips.com": {
   "dm": "philips.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -1582,7 +1557,7 @@ window.FAL_L2 = {
  },
  "schurter.com": {
   "dm": "schurter.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -1620,7 +1595,7 @@ window.FAL_L2 = {
  },
  "skf.com": {
   "dm": "skf.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -1740,7 +1715,7 @@ window.FAL_L2 = {
  },
  "habasit.com": {
   "dm": "habasit.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -1813,7 +1788,7 @@ window.FAL_L2 = {
  },
  "atlascopco.com": {
   "dm": "atlascopco.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -1824,7 +1799,7 @@ window.FAL_L2 = {
  },
  "makita.com": {
   "dm": "makita.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -1863,14 +1838,15 @@ window.FAL_L2 = {
  },
  "wirtgen.de": {
   "dm": "wirtgen.de",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
   "pages": [
+   "https://www.wirtgen-group.com/wirtgen/kontakt.php",
    "https://www.wirtgen-group.com/wirtgen/"
   ],
-  "note": "已读取官网 1 个页面，未检索到公开职能联系方式"
+  "note": "已读取官网 2 个页面，未检索到公开职能联系方式"
  },
  "tracopower.com": {
   "dm": "tracopower.com",
@@ -2075,7 +2051,7 @@ window.FAL_L2 = {
  },
  "irwin.com": {
   "dm": "irwin.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -2187,7 +2163,7 @@ window.FAL_L2 = {
  },
  "wacker.com": {
   "dm": "wacker.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -2409,7 +2385,7 @@ window.FAL_L2 = {
  },
  "kuraray.com": {
   "dm": "kuraray.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -2429,7 +2405,7 @@ window.FAL_L2 = {
  },
  "siemens-healthineers.com": {
   "dm": "siemens-healthineers.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -2677,16 +2653,16 @@ window.FAL_L2 = {
  },
  "bessey.com": {
   "dm": "bessey.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
   "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "note": "未检索到公开准确信息"
  },
  "hartmann.info": {
   "dm": "hartmann.info",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -2701,7 +2677,7 @@ window.FAL_L2 = {
    "https://www.hartmann.info/",
    "https://www.hartmann.info/en/products/brands/dermaplast/dermaplast-active-ready-with-support",
    "https://www.hartmann.info/en/products/brands/sterillium/contact",
-   "https://www.hartmann.info/en/products/brands/veroval/contact"
+   "https://www.hartmann.info/en/products/wound-management/contact-layers"
   ],
   "note": "已读取官网 11 个页面，未检索到公开职能联系方式"
  },
@@ -2830,7 +2806,7 @@ window.FAL_L2 = {
  },
  "lohmann-rauscher.com": {
   "dm": "lohmann-rauscher.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -2910,7 +2886,7 @@ window.FAL_L2 = {
  },
  "victronenergy.com": {
   "dm": "victronenergy.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -2931,7 +2907,7 @@ window.FAL_L2 = {
  },
  "ibc-solar.com": {
   "dm": "ibc-solar.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -2996,7 +2972,7 @@ window.FAL_L2 = {
  },
  "krannich.com": {
   "dm": "krannich.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -3005,7 +2981,7 @@ window.FAL_L2 = {
  },
  "zf.com": {
   "dm": "zf.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -3126,7 +3102,7 @@ window.FAL_L2 = {
  },
  "magna.com": {
   "dm": "magna.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -3135,11 +3111,11 @@ window.FAL_L2 = {
    "https://www.magna.com/company/company-information/magna-groups",
    "https://www.magna.com/company/company-information/facts-history",
    "https://www.magna.com/company/company-information/customers",
-   "https://www.magna.com/company/company-information/industry-events",
    "https://www.magna.com/company/company-information/leadership-and-governance",
-   "https://www.magna.com/",
    "https://www.magna.com/company/company-information/global-reach",
-   "https://www.magna.com/company/investors"
+   "https://www.magna.com/",
+   "https://www.magna.com/company/investors",
+   "https://www.magna.com/newsroom/financial-news"
   ],
   "note": "已读取官网 9 个页面，未检索到公开职能联系方式"
  },
@@ -3306,7 +3282,7 @@ window.FAL_L2 = {
  },
  "brembo.com": {
   "dm": "brembo.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -3322,7 +3298,7 @@ window.FAL_L2 = {
  },
  "c-and-a.com": {
   "dm": "c-and-a.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -3366,7 +3342,7 @@ window.FAL_L2 = {
  },
  "pvh.com": {
   "dm": "pvh.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -3519,7 +3495,7 @@ window.FAL_L2 = {
  },
  "fastretailing.com": {
   "dm": "fastretailing.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -3537,7 +3513,7 @@ window.FAL_L2 = {
  },
  "zalando.com": {
   "dm": "zalando.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -3758,7 +3734,7 @@ window.FAL_L2 = {
  },
  "otto.de": {
   "dm": "otto.de",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -3768,14 +3744,14 @@ window.FAL_L2 = {
    "https://www.otto.de/service/datenschutz/",
    "https://www.otto.de/service/impressum/",
    "https://www.otto.de/service/ottoversprechen/",
-   "https://www.otto.de/chat/assets/nucleus.cassandra.AuthenticationTokenService.module.YLd6r-51.js",
+   "https://www.otto.de/chat/assets/nucleus.cassandra.AuthenticationTokenService.module.BlJZ3dgT.js",
    "https://www.otto.de/"
   ],
   "note": "已读取官网 7 个页面，未检索到公开职能联系方式"
  },
  "sidel.com": {
   "dm": "sidel.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -3790,13 +3766,13 @@ window.FAL_L2 = {
    "https://www.sidel.com/en",
    "https://www.sidel.com/en/services/maintenance",
    "https://www.sidel.com/en/services/spare-parts",
-   "https://www.sidel.com/en/services/line-assessments"
+   "https://www.sidel.com/en/services/performance-based-services-sidel"
   ],
   "note": "已读取官网 11 个页面，未检索到公开职能联系方式"
  },
  "grohe.com": {
   "dm": "grohe.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -4352,7 +4328,7 @@ window.FAL_L2 = {
  },
  "tuv.com": {
   "dm": "tuv.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -4395,7 +4371,7 @@ window.FAL_L2 = {
  },
  "bureauveritas.com": {
   "dm": "bureauveritas.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -4467,7 +4443,7 @@ window.FAL_L2 = {
  },
  "ul.com": {
   "dm": "ul.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -4482,7 +4458,7 @@ window.FAL_L2 = {
    "https://www.ul.com/",
    "https://www.ul.com/zh-hans/services/clean-and-sustainable-mobility",
    "https://www.ul.com/zh-hant/services/clean-and-sustainable-mobility",
-   "https://www.ul.com/de/services/clean-and-sustainable-mobility"
+   "https://www.ul.com/ja/services/clean-and-sustainable-mobility"
   ],
   "note": "已读取官网 11 个页面，未检索到公开职能联系方式"
  },
@@ -4526,7 +4502,7 @@ window.FAL_L2 = {
  },
  "expeditors.com": {
   "dm": "expeditors.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -4570,7 +4546,7 @@ window.FAL_L2 = {
  },
  "dbschenker.com": {
   "dm": "dbschenker.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -4652,7 +4628,7 @@ window.FAL_L2 = {
  },
  "kuehne-nagel.com": {
   "dm": "kuehne-nagel.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -4673,7 +4649,7 @@ window.FAL_L2 = {
  },
  "courts.com.sg": {
   "dm": "courts.com.sg",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -4769,7 +4745,7 @@ window.FAL_L2 = {
  },
  "harveynorman.com.au": {
   "dm": "harveynorman.com.au",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -4804,7 +4780,7 @@ window.FAL_L2 = {
  },
  "reece.com.au": {
   "dm": "reece.com.au",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -4822,7 +4798,7 @@ window.FAL_L2 = {
  },
  "dekra.com": {
   "dm": "dekra.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -4884,30 +4860,68 @@ window.FAL_L2 = {
  },
  "eotechinc.com": {
   "dm": "eotechinc.com",
-  "at": "2026-10-21",
-  "phones": [],
+  "at": "2026-11-02",
+  "phones": [
+   {
+    "v": "7343568030",
+    "src": "https://www.eotechinc.com/pages/help-center",
+    "kind": "tel"
+   },
+   {
+    "v": "+4974526059150",
+    "src": "https://www.eotechinc.com/pages/help-center-warranty-information",
+    "kind": "text"
+   }
+  ],
   "emails": [],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://www.eotechinc.com/pages/help-center-counterfeit-detection",
+   "https://www.eotechinc.com/pages/about-eotech",
+   "https://www.eotechinc.com/pages/help-center",
+   "https://www.eotechinc.com/pages/help-center-product-registration",
+   "https://www.eotechinc.com/pages/help-center-warranty-information",
+   "https://www.eotechinc.com/pages/company-dealer-program",
+   "https://www.eotechinc.com/pages/help-center-product-manuals",
+   "https://www.eotechinc.com/"
+  ],
+  "note": ""
  },
  "bushnell.com": {
   "dm": "bushnell.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://www.bushnell.com/"
+  ],
+  "note": "已读取官网 1 个页面，未检索到公开职能联系方式"
  },
  "mavenbuilt.com": {
   "dm": "mavenbuilt.com",
-  "at": "2026-10-21",
-  "phones": [],
-  "emails": [],
+  "at": "2026-11-02",
+  "phones": [
+   {
+    "v": "800.307.1109",
+    "src": "https://mavenbuilt.com/pages/about-us",
+    "kind": "text"
+   }
+  ],
+  "emails": [
+   {
+    "v": "customerservice@mavenbuilt.com",
+    "src": "https://mavenbuilt.com/pages/contact-us"
+   }
+  ],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://mavenbuilt.com/pages/about-us",
+   "https://mavenbuilt.com/pages/contact-us",
+   "https://mavenbuilt.com/pages/contact-us/",
+   "https://mavenbuilt.com/"
+  ],
+  "note": ""
  },
  "tractoptics.com": {
   "dm": "tractoptics.com",
@@ -4935,7 +4949,7 @@ window.FAL_L2 = {
  },
  "aimpoint.com": {
   "dm": "aimpoint.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -4953,7 +4967,7 @@ window.FAL_L2 = {
  },
  "sigsauer.com": {
   "dm": "sigsauer.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -4962,7 +4976,7 @@ window.FAL_L2 = {
  },
  "hawkeoptics.com": {
   "dm": "hawkeoptics.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -4971,79 +4985,188 @@ window.FAL_L2 = {
  },
  "noblex.de": {
   "dm": "noblex.de",
-  "at": "2026-10-21",
-  "phones": [],
+  "at": "2026-11-02",
+  "phones": [
+   {
+    "v": "+4936866889022",
+    "src": "https://noblex-e-optics.com/",
+    "kind": "tel"
+   }
+  ],
   "emails": [],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://noblex-e-optics.com/"
+  ],
+  "note": ""
  },
  "arkenoptics.com": {
   "dm": "arkenoptics.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
-  "emails": [],
+  "emails": [
+   {
+    "v": "info@arkenoptics.com",
+    "src": "https://arkenoptics.com/pages/about-arken"
+   }
+  ],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://arkenoptics.com/pages/about-arken",
+   "https://arkenoptics.com/cdn/shop/t/35/assets/component-custom-service-block.css?v=177873360551507631191788939288",
+   "https://arkenoptics.com/pages/term-of-service",
+   "https://arkenoptics.com/"
+  ],
+  "note": ""
  },
  "tangenttheta.com": {
   "dm": "tangenttheta.com",
-  "at": "2026-10-21",
-  "phones": [],
+  "at": "2026-11-02",
+  "phones": [
+   {
+    "v": "9024546384",
+    "src": "https://armament.com/pages/about-tangent-theta/contact",
+    "kind": "tel"
+   }
+  ],
   "emails": [],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://armament.com/pages/about-tangent-theta/contact",
+   "https://armament.com/pages/about-tangent-theta/contact-us",
+   "https://armament.com/pages/about-tangent-theta/contactus",
+   "https://armament.com/pages/about-tangent-theta/contacts",
+   "https://armament.com/pages/about-tangent-theta/contact-us/",
+   "https://armament.com/pages/about-tangent-theta/kontakt",
+   "https://armament.com/pages/about-tangent-theta/kontakt/",
+   "https://armament.com/pages/about-tangent-theta"
+  ],
+  "note": ""
  },
  "safariland.com": {
   "dm": "safariland.com",
-  "at": "2026-10-21",
-  "phones": [],
-  "emails": [],
+  "at": "2026-11-02",
+  "phones": [
+   {
+    "v": "8003471200",
+    "src": "https://safariland.com/pages/service-bulletins",
+    "kind": "tel"
+   },
+   {
+    "v": "+441925840048",
+    "src": "https://safariland.com/pages/service-bulletins",
+    "kind": "tel"
+   },
+   {
+    "v": "+370837706611",
+    "src": "https://safariland.com/pages/service-bulletins",
+    "kind": "tel"
+   },
+   {
+    "v": "18003471200",
+    "src": "https://safariland.com/pages/contact-us",
+    "kind": "tel"
+   }
+  ],
+  "emails": [
+   {
+    "v": "sales-uk@safariland.com",
+    "src": "https://safariland.com/pages/contact-us"
+   }
+  ],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://safariland.com/pages/service-bulletins",
+   "https://safariland.com/pages/about-us",
+   "https://safariland.com/pages/contact-us",
+   "https://safariland.com/policies/terms-of-service",
+   "https://safariland.com/pages/contact-us#gbaid1266089",
+   "https://safariland.com/pages/contact-us#gbaid829566",
+   "https://safariland.com/"
+  ],
+  "note": ""
  },
  "blackhawk.com": {
   "dm": "blackhawk.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://www.blackhawk.com/pages/about-us",
+   "https://www.blackhawk.com/"
+  ],
+  "note": "已读取官网 2 个页面，未检索到公开职能联系方式"
  },
  "highspeedgear.com": {
   "dm": "highspeedgear.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
-  "emails": [],
+  "emails": [
+   {
+    "v": "sales@highspeedgear.com",
+    "src": "https://www.highspeedgear.com/pages/about-us"
+   }
+  ],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://www.highspeedgear.com/pages/about-us",
+   "https://www.highspeedgear.com/pages/oem-services",
+   "https://www.highspeedgear.com/pages/contact",
+   "https://www.highspeedgear.com/"
+  ],
+  "note": ""
  },
  "maxpedition.com": {
   "dm": "maxpedition.com",
-  "at": "2026-10-21",
-  "phones": [],
-  "emails": [],
+  "at": "2026-11-02",
+  "phones": [
+   {
+    "v": "+13107680098",
+    "src": "https://www.maxpedition.com/pages/customer-service",
+    "kind": "text"
+   },
+   {
+    "v": "(310) 768-0098",
+    "src": "https://www.maxpedition.com/pages/press-coverage-about-maxpedition",
+    "kind": "text"
+   }
+  ],
+  "emails": [
+   {
+    "v": "info@maxpedition.com",
+    "src": "https://www.maxpedition.com/pages/customer-service"
+   }
+  ],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://www.maxpedition.com/pages/customer-service",
+   "https://www.maxpedition.com/pages/press-coverage-about-maxpedition",
+   "https://www.maxpedition.com/"
+  ],
+  "note": ""
  },
  "vertx.com": {
   "dm": "vertx.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
-  "emails": [],
+  "emails": [
+   {
+    "v": "support@vertx.com",
+    "src": "https://vertx.com/pages/about-us"
+   }
+  ],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://vertx.com/pages/about-us",
+   "https://vertx.com/pages/contact-us",
+   "https://vertx.com/"
+  ],
+  "note": ""
  },
  "pentagon-tactical.com": {
   "dm": "pentagon-tactical.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5052,52 +5175,152 @@ window.FAL_L2 = {
  },
  "wileyx.com": {
   "dm": "wileyx.com",
-  "at": "2026-10-21",
-  "phones": [],
-  "emails": [],
-  "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "at": "2026-11-02",
+  "phones": [
+   {
+    "v": "9452601011",
+    "src": "https://www.wileyx.com/pages/about-us",
+    "kind": "tel"
+   },
+   {
+    "v": "800-776-7842",
+    "src": "https://www.wileyx.com/pages/contact",
+    "kind": "text"
+   },
+   {
+    "v": "+19452601011",
+    "src": "https://www.wileyx.com/",
+    "kind": "tel"
+   }
+  ],
+  "emails": [
+   {
+    "v": "support@wileyx.com",
+    "src": "https://www.wileyx.com/pages/about-us"
+   },
+   {
+    "v": "hr@wileyx.com",
+    "src": "https://www.wileyx.com/pages/about-us"
+   }
+  ],
+  "addr": [
+   {
+    "v": "15755 Preston Road, 75033, Frisco, Texas, US",
+    "src": "https://www.wileyx.com/pages/about-us",
+    "kind": "jsonld"
+   }
+  ],
+  "pages": [
+   "https://www.wileyx.com/pages/about-us",
+   "https://www.wileyx.com/blogs/articles/honor-support-give-back",
+   "https://www.wileyx.com/pages/contact",
+   "https://www.wileyx.com/policies/terms-of-service",
+   "https://www.wileyx.com/"
+  ],
+  "note": ""
  },
  "condoroutdoor.com": {
   "dm": "condoroutdoor.com",
-  "at": "2026-10-21",
-  "phones": [],
-  "emails": [],
-  "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "at": "2026-11-02",
+  "phones": [
+   {
+    "v": "+8005522554",
+    "src": "https://condoroutdoor.com/",
+    "kind": "jsonld"
+   }
+  ],
+  "emails": [
+   {
+    "v": "support@condoroutdoor.com",
+    "src": "https://condoroutdoor.com/pages/contact-us"
+   },
+   {
+    "v": "info@condoroutdoor.com",
+    "src": "https://condoroutdoor.com/pages/contact-us"
+   },
+   {
+    "v": "media@condoroutdoor.com",
+    "src": "https://condoroutdoor.com/pages/contact-us"
+   }
+  ],
+  "addr": [
+   {
+    "v": "5268 Rivergrade Rd, 91706, Irwindale, California, US",
+    "src": "https://condoroutdoor.com/",
+    "kind": "jsonld"
+   }
+  ],
+  "pages": [
+   "https://condoroutdoor.com/pages/contact-us",
+   "https://condoroutdoor.com/pages/about-us",
+   "https://condoroutdoor.com/pages/terms-of-service",
+   "https://condoroutdoor.com/"
+  ],
+  "note": ""
  },
  "sordin.se": {
   "dm": "sordin.se",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://sordin.com/"
+  ],
+  "note": "已读取官网 1 个页面，未检索到公开职能联系方式"
  },
  "eberlestock.com": {
   "dm": "eberlestock.com",
-  "at": "2026-10-21",
-  "phones": [],
-  "emails": [],
+  "at": "2026-11-02",
+  "phones": [
+   {
+    "v": "+12084245081",
+    "src": "https://eberlestock.com/pages/contact-us",
+    "kind": "tel"
+   }
+  ],
+  "emails": [
+   {
+    "v": "customerservice@eberlestock.com",
+    "src": "https://eberlestock.com/pages/contact-us"
+   }
+  ],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://eberlestock.com/pages/contact-us",
+   "https://eberlestock.com/pages/professional-services",
+   "https://eberlestock.com/policies/terms-of-service",
+   "https://eberlestock.com/"
+  ],
+  "note": ""
  },
  "kifaru.net": {
   "dm": "kifaru.net",
-  "at": "2026-10-21",
-  "phones": [],
-  "emails": [],
+  "at": "2026-11-02",
+  "phones": [
+   {
+    "v": "3073707981",
+    "src": "https://kifaru.net/pages/customer-support",
+    "kind": "tel"
+   }
+  ],
+  "emails": [
+   {
+    "v": "hello@kifaru.net",
+    "src": "https://kifaru.net/pages/customer-support"
+   }
+  ],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://kifaru.net/pages/customer-support",
+   "https://kifaru.net/policies/terms-of-service",
+   "https://kifaru.net/"
+  ],
+  "note": ""
  },
  "phoenixcontact.com": {
   "dm": "phoenixcontact.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5106,7 +5329,7 @@ window.FAL_L2 = {
  },
  "te.com": {
   "dm": "te.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5115,7 +5338,7 @@ window.FAL_L2 = {
  },
  "amphenol.com": {
   "dm": "amphenol.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5124,7 +5347,7 @@ window.FAL_L2 = {
  },
  "smcworld.com": {
   "dm": "smcworld.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5133,7 +5356,7 @@ window.FAL_L2 = {
  },
  "parker.com": {
   "dm": "parker.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5142,7 +5365,7 @@ window.FAL_L2 = {
  },
  "trumpf.com": {
   "dm": "trumpf.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5151,7 +5374,7 @@ window.FAL_L2 = {
  },
  "haascnc.com": {
   "dm": "haascnc.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5160,12 +5383,24 @@ window.FAL_L2 = {
  },
  "krones.com": {
   "dm": "krones.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://www.krones.com/en/locations-worldwide",
+   "https://www.krones.com/en/contact",
+   "https://www.krones.com/en/company/about-us/company-history",
+   "https://www.krones.com/en/company/press/krones-magazine/event/gulfood-manufacturing",
+   "https://www.krones.com/en/products/lifecycle-service",
+   "https://www.krones.com/en/products/digital-services/digital-solutions",
+   "https://www.krones.com/en/company/press/krones-magazine",
+   "https://www.krones.com/en/",
+   "https://www.krones.com/en/locations-worldwide/africa",
+   "https://www.krones.com/en/locations-worldwide/asia",
+   "https://www.krones.com/en/locations-worldwide/europe"
+  ],
+  "note": "已读取官网 11 个页面，未检索到公开职能联系方式"
  },
  "gates.com": {
   "dm": "gates.com",
@@ -5207,7 +5442,7 @@ window.FAL_L2 = {
  },
  "knipex.com": {
   "dm": "knipex.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5216,7 +5451,7 @@ window.FAL_L2 = {
  },
  "bahco.com": {
   "dm": "bahco.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5225,7 +5460,7 @@ window.FAL_L2 = {
  },
  "solvay.com": {
   "dm": "solvay.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5234,7 +5469,7 @@ window.FAL_L2 = {
  },
  "celanese.com": {
   "dm": "celanese.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5243,7 +5478,7 @@ window.FAL_L2 = {
  },
  "dow.com": {
   "dm": "dow.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5252,7 +5487,7 @@ window.FAL_L2 = {
  },
  "bd.com": {
   "dm": "bd.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5261,7 +5496,7 @@ window.FAL_L2 = {
  },
  "convatec.com": {
   "dm": "convatec.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5270,7 +5505,7 @@ window.FAL_L2 = {
  },
  "solaredge.com": {
   "dm": "solaredge.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5279,7 +5514,7 @@ window.FAL_L2 = {
  },
  "forvia.com": {
   "dm": "forvia.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5288,7 +5523,7 @@ window.FAL_L2 = {
  },
  "denso.com": {
   "dm": "denso.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5297,7 +5532,7 @@ window.FAL_L2 = {
  },
  "hm.com": {
   "dm": "hm.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5306,16 +5541,21 @@ window.FAL_L2 = {
  },
  "decathlon.com": {
   "dm": "decathlon.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://www.decathlon.com/policies/terms-of-service",
+   "https://www.decathlon.com/pages/contact-us",
+   "https://www.decathlon.com/pages/about-decathlon",
+   "https://www.decathlon.com/"
+  ],
+  "note": "已读取官网 4 个页面，未检索到公开职能联系方式"
  },
  "mango.com": {
   "dm": "mango.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5324,7 +5564,7 @@ window.FAL_L2 = {
  },
  "primark.com": {
   "dm": "primark.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5333,7 +5573,7 @@ window.FAL_L2 = {
  },
  "sealedair.com": {
   "dm": "sealedair.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5342,7 +5582,7 @@ window.FAL_L2 = {
  },
  "tetrapak.com": {
   "dm": "tetrapak.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5351,7 +5591,7 @@ window.FAL_L2 = {
  },
  "saint-gobain.com": {
   "dm": "saint-gobain.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5412,7 +5652,7 @@ window.FAL_L2 = {
  },
  "knauf.com": {
   "dm": "knauf.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5421,7 +5661,7 @@ window.FAL_L2 = {
  },
  "geberit.com": {
   "dm": "geberit.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5430,7 +5670,7 @@ window.FAL_L2 = {
  },
  "hansgrohe.com": {
   "dm": "hansgrohe.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5439,7 +5679,7 @@ window.FAL_L2 = {
  },
  "duravit.com": {
   "dm": "duravit.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5448,7 +5688,7 @@ window.FAL_L2 = {
  },
  "unilever.com": {
   "dm": "unilever.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5457,7 +5697,7 @@ window.FAL_L2 = {
  },
  "colgatepalmolive.com": {
   "dm": "colgatepalmolive.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5466,7 +5706,7 @@ window.FAL_L2 = {
  },
  "kimberly-clark.com": {
   "dm": "kimberly-clark.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5475,7 +5715,7 @@ window.FAL_L2 = {
  },
  "scjohnson.com": {
   "dm": "scjohnson.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5484,7 +5724,7 @@ window.FAL_L2 = {
  },
  "williams-sonoma.com": {
   "dm": "williams-sonoma.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5493,7 +5733,7 @@ window.FAL_L2 = {
  },
  "autodesk.com": {
   "dm": "autodesk.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5502,7 +5742,7 @@ window.FAL_L2 = {
  },
  "ifs.com": {
   "dm": "ifs.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5511,7 +5751,7 @@ window.FAL_L2 = {
  },
  "sap.com": {
   "dm": "sap.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5553,16 +5793,24 @@ window.FAL_L2 = {
  },
  "sage.com": {
   "dm": "sage.com",
-  "at": "2026-10-21",
-  "phones": [],
+  "at": "2026-11-02",
+  "phones": [
+   {
+    "v": "+852800900343",
+    "src": "https://www.sage.com/en-hk/company/sage-foundation/",
+    "kind": "tel"
+   }
+  ],
   "emails": [],
   "addr": [],
-  "pages": [],
-  "note": "未检索到公开准确信息"
+  "pages": [
+   "https://www.sage.com/en-hk/company/sage-foundation/"
+  ],
+  "note": ""
  },
  "tuvsud.com": {
   "dm": "tuvsud.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5571,7 +5819,7 @@ window.FAL_L2 = {
  },
  "action.com": {
   "dm": "action.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5616,7 +5864,7 @@ window.FAL_L2 = {
  },
  "landmarkgroup.com": {
   "dm": "landmarkgroup.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5625,12 +5873,12 @@ window.FAL_L2 = {
  },
  "elektra.com.mx": {
   "dm": "elektra.com.mx",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
   "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "note": "未检索到公开准确信息"
  },
  "freshworks.com": {
   "dm": "freshworks.com",
@@ -5700,7 +5948,7 @@ window.FAL_L2 = {
  },
  "bunnings.com.au": {
   "dm": "bunnings.com.au",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5709,7 +5957,7 @@ window.FAL_L2 = {
  },
  "wayfair.com": {
   "dm": "wayfair.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5718,7 +5966,7 @@ window.FAL_L2 = {
  },
  "ashleyfurniture.com": {
   "dm": "ashleyfurniture.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5753,7 +6001,7 @@ window.FAL_L2 = {
  },
  "hermanmiller.com": {
   "dm": "hermanmiller.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5771,7 +6019,7 @@ window.FAL_L2 = {
  },
  "natuzzi.com": {
   "dm": "natuzzi.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5780,7 +6028,7 @@ window.FAL_L2 = {
  },
  "xxxlutz.com": {
   "dm": "xxxlutz.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5789,7 +6037,7 @@ window.FAL_L2 = {
  },
  "conforama.fr": {
   "dm": "conforama.fr",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5798,7 +6046,7 @@ window.FAL_L2 = {
  },
  "home24.de": {
   "dm": "home24.de",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5807,7 +6055,7 @@ window.FAL_L2 = {
  },
  "dfs.co.uk": {
   "dm": "dfs.co.uk",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5816,7 +6064,7 @@ window.FAL_L2 = {
  },
  "vitra.com": {
   "dm": "vitra.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -5947,16 +6195,32 @@ window.FAL_L2 = {
  },
  "progresslighting.com": {
   "dm": "progresslighting.com",
-  "at": "2026-10-21",
-  "phones": [],
+  "at": "2026-11-02",
+  "phones": [
+   {
+    "v": "+18004470573",
+    "src": "https://progresslighting.com/pages/about",
+    "kind": "tel"
+   },
+   {
+    "v": "+18664185542",
+    "src": "https://progresslighting.com/pages/about",
+    "kind": "tel"
+   }
+  ],
   "emails": [],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://progresslighting.com/cdn/shop/t/463/assets/preload-helper.a4192956.chunk.min.js",
+   "https://progresslighting.com/pages/about",
+   "https://progresslighting.com/pages/contact",
+   "https://progresslighting.com/"
+  ],
+  "note": ""
  },
  "artemide.com": {
   "dm": "artemide.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6016,7 +6280,7 @@ window.FAL_L2 = {
  },
  "acuitybrands.com": {
   "dm": "acuitybrands.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6089,7 +6353,7 @@ window.FAL_L2 = {
  },
  "lego.com": {
   "dm": "lego.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6140,7 +6404,7 @@ window.FAL_L2 = {
  },
  "hasbro.com": {
   "dm": "hasbro.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6208,16 +6472,36 @@ window.FAL_L2 = {
  },
  "munchkin.com": {
   "dm": "munchkin.com",
-  "at": "2026-10-21",
-  "phones": [],
+  "at": "2026-11-02",
+  "phones": [
+   {
+    "v": "+18003442229",
+    "src": "https://www.munchkin.com/contact",
+    "kind": "text"
+   },
+   {
+    "v": "+18053442229",
+    "src": "https://www.munchkin.com/contact",
+    "kind": "text"
+   },
+   {
+    "v": "+18339496673",
+    "src": "https://www.munchkin.com/contact",
+    "kind": "text"
+   }
+  ],
   "emails": [],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://www.munchkin.com/about",
+   "https://www.munchkin.com/contact",
+   "https://www.munchkin.com/"
+  ],
+  "note": ""
  },
  "ravensburger.com": {
   "dm": "ravensburger.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6229,7 +6513,7 @@ window.FAL_L2 = {
  },
  "thetoyshop.com": {
   "dm": "thetoyshop.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6263,34 +6547,75 @@ window.FAL_L2 = {
  },
  "ergobaby.com": {
   "dm": "ergobaby.com",
-  "at": "2026-10-21",
-  "phones": [],
-  "emails": [],
+  "at": "2026-11-02",
+  "phones": [
+   {
+    "v": "18884164888",
+    "src": "https://ergobaby.com/en-us/pages/customer-care",
+    "kind": "tel"
+   },
+   {
+    "v": "(888) 416-4888",
+    "src": "https://ergobaby.com/en-us/pages/terms-of-service",
+    "kind": "text"
+   },
+   {
+    "v": "1-800-778-7879",
+    "src": "https://ergobaby.com/en-us/pages/terms-of-service",
+    "kind": "text"
+   }
+  ],
+  "emails": [
+   {
+    "v": "support@ergobaby.com",
+    "src": "https://ergobaby.com/en-us/pages/terms-of-service"
+   }
+  ],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://ergobaby.com/en-us/pages/customer-care",
+   "https://ergobaby.com/en-us/pages/terms-of-service",
+   "https://ergobaby.com/en-us/pages/imprint-legal-notice",
+   "https://ergobaby.com/en-us"
+  ],
+  "note": ""
  },
  "schleich-s.com": {
   "dm": "schleich-s.com",
-  "at": "2026-10-21",
-  "phones": [],
+  "at": "2026-11-02",
+  "phones": [
+   {
+    "v": "+441279870000",
+    "src": "https://gb.schleich-s.com/pages/language-not-found/contact",
+    "kind": "tel"
+   }
+  ],
   "emails": [],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://gb.schleich-s.com/pages/language-not-found/contact",
+   "https://gb.schleich-s.com/pages/language-not-found/contact-us",
+   "https://gb.schleich-s.com/pages/language-not-found/contactus",
+   "https://gb.schleich-s.com/pages/language-not-found/contacts",
+   "https://gb.schleich-s.com/pages/language-not-found/contact-us/",
+   "https://gb.schleich-s.com/pages/language-not-found/kontakt",
+   "https://gb.schleich-s.com/pages/language-not-found/kontakt/",
+   "https://gb.schleich-s.com/pages/language-not-found"
+  ],
+  "note": ""
  },
  "clarks.com": {
   "dm": "clarks.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
   "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "note": "未检索到公开准确信息"
  },
  "playmobil.com": {
   "dm": "playmobil.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6340,7 +6665,7 @@ window.FAL_L2 = {
  },
  "crocs.com": {
   "dm": "crocs.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6349,7 +6674,7 @@ window.FAL_L2 = {
  },
  "timberland.com": {
   "dm": "timberland.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6358,7 +6683,7 @@ window.FAL_L2 = {
  },
  "deichmann.com": {
   "dm": "deichmann.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6367,7 +6692,7 @@ window.FAL_L2 = {
  },
  "schuh.co.uk": {
   "dm": "schuh.co.uk",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6376,7 +6701,7 @@ window.FAL_L2 = {
  },
  "tomy.com": {
   "dm": "tomy.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6420,7 +6745,7 @@ window.FAL_L2 = {
  },
  "tumi.com": {
   "dm": "tumi.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6429,7 +6754,7 @@ window.FAL_L2 = {
  },
  "kipling.com": {
   "dm": "kipling.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6438,30 +6763,36 @@ window.FAL_L2 = {
  },
  "skechers.com": {
   "dm": "skechers.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
   "pages": [
+   "https://www.ph.skechers.com/en/contact",
    "https://www.ph.skechers.com/"
-  ],
-  "note": "已读取官网 1 个页面，未检索到公开职能联系方式"
- },
- "drmartens.com": {
-  "dm": "drmartens.com",
-  "at": "2026-10-21",
-  "phones": [],
-  "emails": [],
-  "addr": [],
-  "pages": [
-   "https://help.drmartens.com/s/write-to-us?language=en_GB",
-   "https://www.drmartens.com/"
   ],
   "note": "已读取官网 2 个页面，未检索到公开职能联系方式"
  },
+ "drmartens.com": {
+  "dm": "drmartens.com",
+  "at": "2026-11-02",
+  "phones": [],
+  "emails": [],
+  "addr": [],
+  "pages": [
+   "https://www.drmartens.com/?redirect=%2Fcontact",
+   "https://www.drmartens.com/?redirect=%2Fcontact-us",
+   "https://www.drmartens.com/?redirect=%2Fcontactus",
+   "https://www.drmartens.com/?redirect=%2Fcontacts",
+   "https://help.drmartens.com/s/write-to-us?language=en_GB",
+   "https://www.drmartens.com/?redirect=%2Fen%2Fcontact-us",
+   "https://www.drmartens.com/"
+  ],
+  "note": "已读取官网 7 个页面，未检索到公开职能联系方式"
+ },
  "intersport.com": {
   "dm": "intersport.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6470,7 +6801,7 @@ window.FAL_L2 = {
  },
  "dickssportinggoods.com": {
   "dm": "dickssportinggoods.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6479,7 +6810,7 @@ window.FAL_L2 = {
  },
  "jdsports.com": {
   "dm": "jdsports.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6488,8 +6819,19 @@ window.FAL_L2 = {
  },
  "rieker.com": {
   "dm": "rieker.com",
-  "at": "2026-10-21",
-  "phones": [],
+  "at": "2026-11-02",
+  "phones": [
+   {
+    "v": "+497218200082",
+    "src": "https://world.rieker.com/en/imprint",
+    "kind": "text"
+   },
+   {
+    "v": "+497218200083",
+    "src": "https://world.rieker.com/en/imprint",
+    "kind": "text"
+   }
+  ],
   "emails": [],
   "addr": [],
   "pages": [
@@ -6498,7 +6840,7 @@ window.FAL_L2 = {
    "https://world.rieker.com/en/imprint",
    "https://world.rieker.com/en"
   ],
-  "note": "已读取官网 4 个页面，未检索到公开职能联系方式"
+  "note": ""
  },
  "ecco.com": {
   "dm": "ecco.com",
@@ -6597,7 +6939,7 @@ window.FAL_L2 = {
  },
  "samsonite.com": {
   "dm": "samsonite.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6610,7 +6952,7 @@ window.FAL_L2 = {
  },
  "nestle.com": {
   "dm": "nestle.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6619,16 +6961,24 @@ window.FAL_L2 = {
  },
  "gymshark.com": {
   "dm": "gymshark.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
-  "emails": [],
+  "emails": [
+   {
+    "v": "support@gymshark.com",
+    "src": "https://support.gymshark.com/en/articles/11186132-contact-us"
+   }
+  ],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://support.gymshark.com/en/articles/11186132-contact-us",
+   "https://us.checkout.gymshark.com/"
+  ],
+  "note": ""
  },
  "newbalance.com": {
   "dm": "newbalance.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6641,7 +6991,7 @@ window.FAL_L2 = {
  },
  "amersports.com": {
   "dm": "amersports.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6732,7 +7082,7 @@ window.FAL_L2 = {
  },
  "usfoods.com": {
   "dm": "usfoods.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6741,7 +7091,7 @@ window.FAL_L2 = {
  },
  "lactalis.com": {
   "dm": "lactalis.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6752,7 +7102,7 @@ window.FAL_L2 = {
  },
  "kraftheinzcompany.com": {
   "dm": "kraftheinzcompany.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6773,7 +7123,7 @@ window.FAL_L2 = {
  },
  "cargill.com": {
   "dm": "cargill.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6782,7 +7132,7 @@ window.FAL_L2 = {
  },
  "tyson.com": {
   "dm": "tyson.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6796,7 +7146,7 @@ window.FAL_L2 = {
  },
  "metroag.de": {
   "dm": "metroag.de",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6941,7 +7291,7 @@ window.FAL_L2 = {
  },
  "kubota.com": {
   "dm": "kubota.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -6956,7 +7306,7 @@ window.FAL_L2 = {
  },
  "agcocorp.com": {
   "dm": "agcocorp.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7042,7 +7392,7 @@ window.FAL_L2 = {
  },
  "yanmar.com": {
   "dm": "yanmar.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7051,19 +7401,19 @@ window.FAL_L2 = {
  },
  "deere.com": {
   "dm": "deere.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
   "pages": [
-   "https://www.deere.com/en-us/forms/general-equipment-survey",
+   "https://www.deere.com/en-us/forms/cotton-demo-survey",
    "https://www.deere.com/en-us/"
   ],
   "note": "已读取官网 2 个页面，未检索到公开职能联系方式"
  },
  "petco.com": {
   "dm": "petco.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7072,7 +7422,7 @@ window.FAL_L2 = {
  },
  "chewy.com": {
   "dm": "chewy.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7156,7 +7506,7 @@ window.FAL_L2 = {
  },
  "jollyes.co.uk": {
   "dm": "jollyes.co.uk",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7165,7 +7515,7 @@ window.FAL_L2 = {
  },
  "kvernelandgroup.com": {
   "dm": "kvernelandgroup.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7176,12 +7526,45 @@ window.FAL_L2 = {
  },
  "ferplast.com": {
   "dm": "ferplast.com",
-  "at": "2026-10-21",
-  "phones": [],
+  "at": "2026-11-02",
+  "phones": [
+   {
+    "v": "+390445429111",
+    "src": "https://www.ferplast.com/pages/contact-us",
+    "kind": "jsonld"
+   },
+   {
+    "v": "+39445429111",
+    "src": "https://www.ferplast.com/pages/our-locations",
+    "kind": "text"
+   },
+   {
+    "v": "+39445429115",
+    "src": "https://www.ferplast.com/pages/our-locations",
+    "kind": "text"
+   },
+   {
+    "v": "+421357902600",
+    "src": "https://www.ferplast.com/pages/our-locations",
+    "kind": "text"
+   }
+  ],
   "emails": [],
-  "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "addr": [
+   {
+    "v": "Via I° Maggio 5, 36070, Castelgomberto, Vicenza, Italy",
+    "src": "https://www.ferplast.com/pages/contact-us",
+    "kind": "jsonld"
+   }
+  ],
+  "pages": [
+   "https://www.ferplast.com/pages/contact-us",
+   "https://www.ferplast.com/pages/our-locations",
+   "https://www.ferplast.com/pages/faq-support",
+   "https://www.ferplast.com/pages/information-about-back-in-stock-notification",
+   "https://www.ferplast.com/"
+  ],
+  "note": ""
  },
  "kongcompany.com": {
   "dm": "kongcompany.com",
@@ -7214,7 +7597,7 @@ window.FAL_L2 = {
  },
  "purina.com": {
   "dm": "purina.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7223,7 +7606,7 @@ window.FAL_L2 = {
  },
  "petsuppliesplus.com": {
   "dm": "petsuppliesplus.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7232,7 +7615,7 @@ window.FAL_L2 = {
  },
  "mars.com": {
   "dm": "mars.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7292,7 +7675,7 @@ window.FAL_L2 = {
  },
  "swarovski.com": {
   "dm": "swarovski.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7301,7 +7684,7 @@ window.FAL_L2 = {
  },
  "tiffany.com": {
   "dm": "tiffany.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7353,19 +7736,20 @@ window.FAL_L2 = {
  },
  "petsathome.com": {
   "dm": "petsathome.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
   "pages": [
    "https://www.petsathome.com/product/listing/fish/pond?filters=product_benefits-Immunity+Support",
    "https://www.petsathome.com/support",
+   "https://www.petsathome.com/pet-advice/Helping-pets-feel-safe-during-firework-season",
    "https://www.petsathome.com/",
    "https://www.petsathome.com/support/collection-and-delivery",
    "https://www.petsathome.com/support/refund-and-returns",
    "https://www.petsathome.com/support/subscriptions-and-repeat-orders"
   ],
-  "note": "已读取官网 6 个页面，未检索到公开职能联系方式"
+  "note": "已读取官网 7 个页面，未检索到公开职能联系方式"
  },
  "signetjewelers.com": {
   "dm": "signetjewelers.com",
@@ -7451,7 +7835,7 @@ window.FAL_L2 = {
  },
  "ernestjones.co.uk": {
   "dm": "ernestjones.co.uk",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7460,7 +7844,7 @@ window.FAL_L2 = {
  },
  "hsamuel.co.uk": {
   "dm": "hsamuel.co.uk",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7469,7 +7853,7 @@ window.FAL_L2 = {
  },
  "christ.de": {
   "dm": "christ.de",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7478,7 +7862,7 @@ window.FAL_L2 = {
  },
  "bulgari.com": {
   "dm": "bulgari.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7487,7 +7871,7 @@ window.FAL_L2 = {
  },
  "fossil.com": {
   "dm": "fossil.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7557,12 +7941,26 @@ window.FAL_L2 = {
  },
  "danielwellington.com": {
   "dm": "danielwellington.com",
-  "at": "2026-10-21",
-  "phones": [],
+  "at": "2026-11-02",
+  "phones": [
+   {
+    "v": "+46105517130",
+    "src": "https://www.danielwellington.com/de-ch/policies/terms-of-service",
+    "kind": "text"
+   }
+  ],
   "emails": [],
   "addr": [],
-  "pages": [],
-  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
+  "pages": [
+   "https://www.danielwellington.com/policies/terms-of-service",
+   "https://www.danielwellington.com/pages/contact-us",
+   "https://www.danielwellington.com/pages/about-reviews",
+   "https://www.danielwellington.com/",
+   "https://www.danielwellington.com/en-th/policies/terms-of-service",
+   "https://www.danielwellington.com/zh-th/policies/terms-of-service",
+   "https://www.danielwellington.com/de-ch/policies/terms-of-service"
+  ],
+  "note": ""
  },
  "bluenile.com": {
   "dm": "bluenile.com",
@@ -7611,7 +8009,7 @@ window.FAL_L2 = {
  },
  "viking.de": {
   "dm": "viking.de",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7620,7 +8018,7 @@ window.FAL_L2 = {
  },
  "lyreco.com": {
   "dm": "lyreco.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7629,7 +8027,7 @@ window.FAL_L2 = {
  },
  "officedepot.com": {
   "dm": "officedepot.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7721,7 +8119,7 @@ window.FAL_L2 = {
  },
  "bicworld.com": {
   "dm": "bicworld.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7764,7 +8162,7 @@ window.FAL_L2 = {
  },
  "esselte.com": {
   "dm": "esselte.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7851,7 +8249,7 @@ window.FAL_L2 = {
  },
  "fellowes.com": {
   "dm": "fellowes.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7867,7 +8265,7 @@ window.FAL_L2 = {
  },
  "whirlpool.com": {
   "dm": "whirlpool.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7876,7 +8274,7 @@ window.FAL_L2 = {
  },
  "arcelik.com": {
   "dm": "arcelik.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7914,7 +8312,7 @@ window.FAL_L2 = {
  },
  "panasonic.com": {
   "dm": "panasonic.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -7923,12 +8321,12 @@ window.FAL_L2 = {
  },
  "gorenje.com": {
   "dm": "gorenje.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
   "pages": [],
-  "note": "未检索到公开准确信息"
+  "note": "官网反爬或网络拦截，未能自动读取，需人工打开官网联系页核验"
  },
  "miele.com": {
   "dm": "miele.com",
@@ -8129,7 +8527,7 @@ window.FAL_L2 = {
  },
  "adt.com": {
   "dm": "adt.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -8138,14 +8536,26 @@ window.FAL_L2 = {
  },
  "haier-europe.com": {
   "dm": "haier-europe.com",
-  "at": "2026-10-21",
-  "phones": [],
+  "at": "2026-11-02",
+  "phones": [
+   {
+    "v": "+390392086",
+    "src": "https://www.haier-europe.com/it_IT/",
+    "kind": "text"
+   },
+   {
+    "v": "+390392086237",
+    "src": "https://www.haier-europe.com/it_IT/",
+    "kind": "text"
+   }
+  ],
   "emails": [],
   "addr": [],
   "pages": [
+   "https://www.haier-europe.com/it_IT/",
    "https://www.haier-europe.com/locale.html"
   ],
-  "note": "已读取官网 1 个页面，未检索到公开职能联系方式"
+  "note": ""
  },
  "axis.com": {
   "dm": "axis.com",
@@ -8244,7 +8654,7 @@ window.FAL_L2 = {
  },
  "allegion.com": {
   "dm": "allegion.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -8334,7 +8744,7 @@ window.FAL_L2 = {
  },
  "boschsecurity.com": {
   "dm": "boschsecurity.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -8352,7 +8762,7 @@ window.FAL_L2 = {
  },
  "thetorocompany.com": {
   "dm": "thetorocompany.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -8365,7 +8775,7 @@ window.FAL_L2 = {
  },
  "hidglobal.com": {
   "dm": "hidglobal.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -8403,7 +8813,7 @@ window.FAL_L2 = {
  },
  "genetec.com": {
   "dm": "genetec.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -8580,7 +8990,7 @@ window.FAL_L2 = {
  },
  "paulmann.com": {
   "dm": "paulmann.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -8615,7 +9025,7 @@ window.FAL_L2 = {
  },
  "mattel.com": {
   "dm": "mattel.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -8627,7 +9037,7 @@ window.FAL_L2 = {
  },
  "hardi-international.com": {
   "dm": "hardi-international.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -8736,7 +9146,7 @@ window.FAL_L2 = {
  },
  "technogym.com": {
   "dm": "technogym.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
@@ -8815,20 +9225,32 @@ window.FAL_L2 = {
  },
  "fressnapf.de": {
   "dm": "fressnapf.de",
-  "at": "2026-10-21",
-  "phones": [],
+  "at": "2026-11-02",
+  "phones": [
+   {
+    "v": "+4921514115760",
+    "src": "https://www.fressnapf.de/",
+    "kind": "jsonld"
+   }
+  ],
   "emails": [],
-  "addr": [],
+  "addr": [
+   {
+    "v": "Westpreußenstr. 32 - 38, 47809, Krefeld, DE-NW, DE",
+    "src": "https://www.fressnapf.de/",
+    "kind": "jsonld"
+   }
+  ],
   "pages": [
-   "https://www.fressnapf.de/servicewelt",
-   "https://www.fressnapf.de/servicewelt/dr-fressnapf",
-   "https://www.fressnapf.de/servicewelt/apodiscounter-suche",
-   "https://www.fressnapf.de/servicewelt/tierversicherungen",
-   "https://www.fressnapf.de/servicewelt/salon",
-   "https://www.fressnapf.de/servicewelt/maerkte",
+   "https://www.fressnapf.de/servicewelt/",
+   "https://www.fressnapf.de/servicewelt/dr-fressnapf/",
+   "https://www.fressnapf.de/servicewelt/apodiscounter-suche/",
+   "https://www.fressnapf.de/servicewelt/tierversicherungen/",
+   "https://www.fressnapf.de/servicewelt/salon/",
+   "https://www.fressnapf.de/servicewelt/maerkte/",
    "https://www.fressnapf.de/"
   ],
-  "note": "已读取官网 7 个页面，未检索到公开职能联系方式"
+  "note": ""
  },
  "staples.com": {
   "dm": "staples.com",
@@ -8856,24 +9278,21 @@ window.FAL_L2 = {
  },
  "lg.com": {
   "dm": "lg.com",
-  "at": "2026-10-21",
+  "at": "2026-11-02",
   "phones": [],
   "emails": [],
   "addr": [],
   "pages": [
    "https://www.lg.com/_ncms/asia/packages/support-shared.e77e52d8b72c22280389.js",
    "https://www.lg.com/_ncms/asia/packages/ltr.53b99552df571c1c6a66.support-shared.css",
-   "https://www.lg.com/ph/support/lg-thinq",
-   "https://www.lg.com/ph/support",
-   "https://www.lg.com/ph/support/warranty-terms",
-   "https://www.lg.com/ph/support/product-support/product-registration",
-   "https://www.lg.com/ph/support/product-support/manuals-software",
-   "https://www.lg.com/ph/",
-   "https://www.lg.com/ph/support/product-support/troubleshoot/",
-   "https://www.lg.com/ph/support/product-support/repair-request/",
-   "https://www.lg.com/ph/support/order-support/track-my-order/"
+   "https://www.lg.com/ph/support/lg-thinq/",
+   "https://www.lg.com/ph/support/",
+   "https://www.lg.com/ph/support/warranty-terms/",
+   "https://www.lg.com/ph/support/product-support/product-registration/",
+   "https://www.lg.com/ph/support/product-support/manuals-software/",
+   "https://www.lg.com/ph/"
   ],
-  "note": "已读取官网 11 个页面，未检索到公开职能联系方式"
+  "note": "已读取官网 8 个页面，未检索到公开职能联系方式"
  },
  "samsung.com": {
   "dm": "samsung.com",
@@ -8908,16 +9327,16 @@ window.FAL_L2 = {
  }
 };
 window.FAL_L2_META = {
- "total": 389,
- "at": "2026-10-21",
- "concurrency": 6,
- "withPhone": 180,
- "withEmail": 70,
- "withAddr": 56,
- "none": 193,
+ "total": 398,
+ "at": "2026-11-02",
+ "concurrency": 4,
+ "withPhone": 200,
+ "withEmail": 82,
+ "withAddr": 60,
+ "none": 178,
  "thisRun": {
-  "ran": 274,
-  "gained": 81,
+  "ran": 193,
+  "gained": 24,
   "mode": "gap"
  },
  "method": "官方域名首页 → 发现 Contact/Kontakt/Impressum/About/Locations 页 → 原样提取 mailto: / tel: / JSON-LD / <address>；每条记录来源页面 URL；抓不到即记「未检索到公开准确信息」"

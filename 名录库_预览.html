@@ -97,7 +97,7 @@ a:hover{text-decoration:underline}
     <div class="stat"><b id="sEv">—</b><i>覆盖展会</i></div>
     <div class="stat"><b id="sCc">—</b><i>覆盖国家/地区</i></div>
     <div class="stat"><b id="sTel">—</b><i>带企业电话</i></div>
-    <div class="stat"><b id="sAssoc">3,746</b><i>协会会员（另一来源）</i></div>
+    <div class="stat"><b id="sAssoc">3,775</b><i>协会会员（另一来源）</i></div>
     <div class="stat"><b id="sGov">—</b><i>政府采购单位（TED 招标）</i></div>
   </div>
 
@@ -449,7 +449,7 @@ a:hover{text-decoration:underline}
   }
 
   // ---------- 协会会员（懒加载）----------
-  var ASSOC_META = null;
+  var ASSOC_META = null, ASSOC_COV = {};
   function loadAssoc(cb){
     if (ASSOC) return cb();
     var btn = document.createElement("button");
@@ -461,6 +461,13 @@ a:hover{text-decoration:underline}
         (new Function(xhr.responseText))();
         var o = window.FAL_ASSOC_MEMBERS;
         ASSOC = o.items || []; ASSOC_META = o.meta || {};
+        /* 覆盖数现算，不写死 —— 每次补全后自动跟着变 */
+        ASSOC_COV = {
+          mail: ASSOC.filter(function(x){ return (x.e || "").trim(); }).length,
+          tel:  ASSOC.filter(function(x){ return (x.t || "").trim(); }).length,
+          web:  ASSOC.filter(function(x){ return (x.w || "").trim(); }).length,
+          src:  ASSOC.filter(function(x){ return (x.es || "").trim(); }).length
+        };
         $("sAssoc").textContent = (ASSOC_META.total || ASSOC.length).toLocaleString();
         cb();
       } catch(err) { $("hint").textContent = "协会名录解析失败：" + err.message; }
@@ -477,7 +484,7 @@ a:hover{text-decoration:underline}
     for (var i = 0; i < ASSOC.length; i++) {
       var r = ASSOC[i];
       if (q) {
-        var hay = (r.n + " " + (r.c || "") + " " + (r.k || "") + " " + (r.a || "")).toLowerCase();
+        var hay = (r.n + " " + (r.c || "") + " " + (r.k || "") + " " + (r.a || "") + " " + (r.rl || "") + " " + (r.e || "")).toLowerCase();
         if (hay.indexOf(q) < 0) continue;
       }
       out.push(r);
@@ -488,7 +495,10 @@ a:hover{text-decoration:underline}
       return k.toUpperCase() + " " + (ASSOC_META.bySource[k] || 0).toLocaleString();
     }).join(" + ");
     $("hint").textContent = "协会会员命中 " + out.length + " 条 · 查询 " + ms + " ms · 全库 " + ASSOC.length.toLocaleString()
-      + " 家（" + (srcTxt || "—") + "）";
+      + " 家（" + (srcTxt || "—") + " / 官网 " + (ASSOC_COV.web || 0).toLocaleString()
+      + " / 职能邮箱 " + (ASSOC_COV.mail || 0).toLocaleString()
+      + " / 电话 " + (ASSOC_COV.tel || 0).toLocaleString()
+      + " / 邮箱带出处 " + (ASSOC_COV.src || 0).toLocaleString() + "）";
     if (!out.length) { list.innerHTML = '<div class="empty">没有匹配。</div>'; return; }
     var h = '<table><thead><tr><th style="width:34%">公司</th><th style="width:13%">注册地</th>'
           + '<th style="width:18%">电话</th><th style="width:16%">职能邮箱</th><th>来源</th>'
@@ -509,7 +519,11 @@ a:hover{text-decoration:underline}
          + (r.k ? '<br><span class="tag">' + esc(r.k) + '</span>' : '') + '</td>'
          + '<td><span class="cc">' + esc(r.c || "—") + '</span><br><span class="mut">' + esc((r.a || "").slice(0, 30) || "—") + '</span></td>'
          + '<td>' + (r.t ? esc(r.t) : '<span class="mut">—</span>') + '</td>'
-         + '<td>' + (r.e ? '<a href="mailto:' + esc(r.e) + '">' + esc(r.e) + '</a>' : '<span class="mut">—</span>') + '</td>'
+         + '<td>' + (r.e
+              ? '<a href="mailto:' + esc(r.e) + '">' + esc(r.e) + '</a>'
+                + (r.rl ? '<br><span class="mut" style="font-size:10.5px">' + esc(r.rl) + '</span>' : '')
+                + (r.es ? ' <a href="' + esc(r.es) + '" target="_blank" rel="noopener" class="mut" style="font-size:10.5px" title="该邮箱的出处页面">出处↗</a>' : '')
+              : '<span class="mut">—</span>') + '</td>'
          + '<td>' + (r.s ? '<a href="' + esc(r.s) + '" target="_blank" rel="noopener" class="mut">来源↗</a>' : '<span class="mut">—</span>') + '</td>'
          + actCell(b) + '</tr>';
     });
@@ -549,7 +563,7 @@ a:hover{text-decoration:underline}
     for (var i = 0; i < GOV.length; i++) {
       var r = GOV[i];
       if (q) {
-        var hay = (r.n + " " + (r.k || "") + " " + (r.ti || "") + " " + (r.c || "")).toLowerCase();
+        var hay = (r.n + " " + (r.k || "") + " " + (r.ti || "") + " " + (r.c || "") + " " + (r.dp || "")).toLowerCase();
         if (hay.indexOf(q) < 0) continue;
       }
       totalHit++;
@@ -560,7 +574,8 @@ a:hover{text-decoration:underline}
     $("hint").textContent = "政府采购单位 命中 " + totalHit.toLocaleString() + " 家 · 显示 " + out.length
       + " 条 · 查询 " + ms + " ms · 全库 " + GOV.length.toLocaleString()
       + " 家（官网 " + (M.withWeb || 0).toLocaleString() + " / 机构邮箱 " + (M.withMail || 0).toLocaleString()
-      + " / 电话 " + (M.withTel || 0).toLocaleString() + "）· 来源 TED 欧盟招标公告";
+      + " / 电话 " + (M.withTel || 0).toLocaleString()
+      + " / 对接部门 " + (M.withDept || 0).toLocaleString() + "）· 来源 TED 欧盟招标公告";
     if (!out.length) { list.innerHTML = '<div class="empty">没有匹配。试试 shooting / hunting / firearms / optical，或输入国家码如 DE、PL。</div>'; return; }
     var h = '<table><thead><tr><th style="width:31%">采购单位</th><th style="width:9%">国家</th>'
           + '<th style="width:19%">官网</th><th style="width:18%">机构邮箱</th><th style="width:12%">电话</th>'
@@ -583,6 +598,9 @@ a:hover{text-decoration:underline}
       h += '<tr><td><span class="nm">' + esc(r.n) + '</span>'
          + (r.k ? '<br><span class="tag">' + esc(r.k) + '</span>' : '')
          + (r.ti ? '<br><span class="mut" style="font-size:11px">' + esc(r.ti.slice(0, 60)) + '</span>' : '')
+         + (r.dp ? '<br><span class="tag" style="background:#EEF0FA;color:#4B3FA8"'
+                 + (r.dps ? ' title="出处：' + esc(r.dps) + '"' : '')
+                 + '>对接：' + esc(r.dp) + '</span>' : '')
          + '</td>'
          + '<td><span class="cc">' + esc(r.c || "—") + '</span></td>'
          + '<td>' + webCell + '</td>'
