@@ -1023,9 +1023,34 @@
          · ⚠️ TED 全文检索为模糊匹配，含约 38 家市政/教育机构（噪声已标注，未删）。
          · 这是**采购方**，与 75,180 家参展商（供货方）永不合并；不进 02 页 `FAL_REAL` 池。
          · 冒烟 `smoke_gov_local.js` 11/0、`smoke_gov_online.js`（对 gh.io 真实地址）11/0。
-         · `名录库_预览.html` 在 PRECACHE 内 → 升 CACHE 版本，确保老访客拿到新页。 */
+         · `名录库_预览.html` 在 PRECACHE 内 → 升 CACHE 版本，确保老访客拿到新页。
 
-const CACHE = 'falcora-v73';
+   v74（2026-11-02）：名单资料补齐（官网 / 职能邮箱 / 对接部门 / 电话）+ L3 个人邮箱合规终检。
+         · 政府采购 1,763 家：机构邮箱 204 → **451**、电话 449 → **529**、
+           新增「对接部门」**103** 条（TED 公告 contact-point 原文，每条带公告 URL 可复核）、
+           三项齐全 151 → **363**。
+         · 协会会员 3,775 家：邮箱 3,003 → **3,154**（其中 **151 条带出处页 `es` + 职能分类 `rl`**）、
+           电话 3,712 → **3,732**、官网 3,667 不变。
+         · 名录 L2 398 家：邮箱 70 → **82**、电话 180 → **200**、地址 60。
+         · ⚠️ **合规终检（本轮最重要）**：新增 `scripts/drop_personal_emails.py`，剔除 **353 条个人邮箱**。
+           政府数据原本混着 `horia.nicolae@andnet.ro`、`k.nijboer.02@mindef.nl` 这类
+           「名.姓」「首字母.姓.编号」个人信箱，原样落库直接违反「L3 平台不采集」。
+           判据：职能词子串放行 + 公司法律形式（gmbh/ag/srl…）按整词放行 + 纯数字工号信箱放行。
+           误杀复核：协会侧 16 条「疑似个人」实为 `abg-personal@volvo.com`（德语 personal＝人事部）、
+           `otis.germany@`、`nederman.gmbh@`，全部放行，**协会最终剔除 0 条**。
+         · 新增 `scripts/enrich_lists.js --resume`（断点续跑，中断后不再重抓已完成的 560 家）；
+           `scripts/apply_enrich.py --refresh-dept`（部门名可重派生）+ 名称归一化兜底匹配。
+         · 修 `scripts/ted_dept.py` 地址碎片：`38, Biuro Finansów KGP` → `Biuro Finansów KGP`；
+           `…ul. Smoluchowskiego 19, 50-370 Wrocław` 截断到街道词前。156 条部门名保留、30 条修复。
+         · `名录库_预览.html` 协会页签提示行新增**现算覆盖数**（官网 / 职能邮箱 / 电话 / 邮箱带出处），
+           不再只显示总数。
+         · 全站写死的 `3,746` → `3,775`：`app-nav.js`（2 处）、`行业覆盖清单.html`、`名录库_预览.html` 默认值。
+           ⚠️ 该替换**字符数相同**，用「本地 wc -c vs 线上 size_download」查不出来，必须 md5 比对。
+         · 冒烟：本地 gov **11/11**、assoc **7/0**、L2 **15/0**；
+           线上 gov **11/11**、assoc **7/0**、展会页 **75,180 家 / 4.3ms / 零 JS 异常**。
+         · 静态文件有改动 → 升 CACHE 版本，确保老访客拿到新页面。 */
+
+const CACHE = 'falcora-v74';
 const PRECACHE = [
   './',
   './app-design.css?v=3',
