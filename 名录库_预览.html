@@ -144,7 +144,7 @@ a:hover{text-decoration:underline}
     · 来源：<b>TED 欧盟招标开放接口</b>（api.ted.europa.eu/v3/notices/search，无需 key），
       取 <b>buyer-name / buyer-internet-address / buyer-email / organisation-tel-buyer</b> 四个字段，<b>全部取自招标公告正文</b>。<br>
     · 规模：<b>1,763 家</b>采购单位（政府 / 军警 / 国防采购机构），覆盖 3,913 条公告；国家前五 PL 381 / DE 187 / RO 146 / FR 144 / ES 96。<br>
-    · ⚠️ <b>官网链接未做可达性实测</b>（表格里标「未实测」）——点开可能打不开，这是数据源限制，不是已核实。<br>
+    · <b>官网可达性已实测</b>（2026-11-03，1,220 个唯一域名 / 1,506 家）：✓ 可达 841 · ⚠ 有应答但拦截或异常 168（403/429 反爬照收）· ✗ 无响应 495 —— 无响应 = 可能失效，也可能是反爬拦截，不排除误判；另有 2 家命中本机过滤页劫持，无法验证。55 家仅 http 可打开（已存实测 URL）。逐条以实测标注为准；网络环境不同结果可能不同。<br>
     · ⚠️ <b>不含个人联系方式</b>：公告里的 buyer-contact-point 常为个人姓名（如 Catalin IONESCU），已整段丢弃；
       邮箱按「多段全字母 = 个人」剔除 <b>303 条</b>个人邮箱，只保留机构/职能邮箱（属 L2）。<br>
     · ⚠️ TED 全文检索为<b>模糊匹配</b>，含少量非采购类机构（市政 / 教育，约 38 家），每条可点「招标数」列的公告链接核实。<br>
@@ -533,8 +533,8 @@ a:hover{text-decoration:underline}
   // ---------- 政府采购单位（TED 欧盟招标 · 懒加载）----------
   /* 与展会/协会的根本区别：这批是**采购方**（政府/军警），不是供货方。
      数据来自 TED 开放接口的招标公告正文，每条带公告号可复核。
-     ⚠️ 官网链接**未做可达性实测**（reachTested:false），表格里必须显示「未实测」，
-        不能让用户以为点开一定通 —— 这是本产品最容易失信的地方。 */
+     官网可达性已实测（2026-11-03，scripts/gov_reach_test.py），表格按 wr 显示实测状态；
+     无响应 ≠ 站点不存在（可能是反爬拦截），过滤页劫持单列「本机拦截」。 */
   var GOV = null, GOV_META = null;
   function loadGov(cb){
     if (GOV) return cb();
@@ -575,7 +575,12 @@ a:hover{text-decoration:underline}
       + " 条 · 查询 " + ms + " ms · 全库 " + GOV.length.toLocaleString()
       + " 家（官网 " + (M.withWeb || 0).toLocaleString() + " / 机构邮箱 " + (M.withMail || 0).toLocaleString()
       + " / 电话 " + (M.withTel || 0).toLocaleString()
-      + " / 对接部门 " + (M.withDept || 0).toLocaleString() + "）· 来源 TED 欧盟招标公告";
+      + " / 对接部门 " + (M.withDept || 0).toLocaleString() + "）· 来源 TED 欧盟招标公告"
+      + (M.reachTested
+          ? " · 官网实测（" + M.reachAt + "）：可达 " + (M.reachOk || 0).toLocaleString()
+            + " / 有应答 " + (M.reachBlocked || 0).toLocaleString()
+            + " / 无响应 " + (M.reachDead || 0).toLocaleString()
+          : " · 官网未实测");
     if (!out.length) { list.innerHTML = '<div class="empty">没有匹配。试试 shooting / hunting / firearms / optical，或输入国家码如 DE、PL。</div>'; return; }
     var h = '<table><thead><tr><th style="width:31%">采购单位</th><th style="width:9%">国家</th>'
           + '<th style="width:19%">官网</th><th style="width:18%">机构邮箱</th><th style="width:12%">电话</th>'
@@ -587,9 +592,22 @@ a:hover{text-decoration:underline}
         ev: "TED 招标", bo: "", evk: "gov",
         chan: "政府采购名录", src: "名录库·政府采购"
       });
+      /* v77：官网可达性已实测（scripts/gov_reach_test.py）。wr：1=可达 2=有应答但拦截/异常
+         （403/429 反爬照收，铁律 9）3=本机过滤页劫持（无法验证，不代表站点不存在）
+         0=无响应（可能失效，也可能是反爬拦截，不排除误判）。
+         wt = 实测能打开的那条 URL（协议头实测不拼，铁律 8）。 */
+      var REACH = {
+        1: ["✓ 可达", "#E5F3EB", "#0E7A4E", "实测可打开" + (M.reachAt ? "（" + M.reachAt + "）" : "")],
+        2: ["⚠ 有应答", "#FBF3DC", "#8A6D1A", "服务器有应答但拒绝/异常（403/429 反爬照收）—— 站点存在"],
+        3: ["⚠ 本机拦截", "#FBF3DC", "#8A6D1A", "本机网络过滤页劫持，无法验证 —— 不代表站点不存在"],
+        0: ["✗ 无响应", "#F9E7E7", "#8A2F2F", "DNS 失败 / 连接拒绝 / 超时 —— 可能失效，也可能是反爬拦截，不排除误判"]
+      };
+      var rc = REACH[r.wr] || null;
       var webCell = r.w
-        ? '<a href="' + esc(webUrl(r.w)) + '" target="_blank" rel="noopener">' + esc(r.d || r.w) + ' ↗</a>'
-          + '<br><span class="tag" title="未做可达性实测，点开可能打不开">未实测</span>'
+        ? '<a href="' + esc(r.wt || webUrl(r.w)) + '" target="_blank" rel="noopener">' + esc(r.d || r.w) + ' ↗</a>'
+          + (rc
+              ? '<br><span class="tag" style="background:' + rc[1] + ';color:' + rc[2] + '" title="' + esc(rc[3]) + '">' + rc[0] + '</span>'
+              : '<br><span class="tag" title="未做可达性实测，点开可能打不开">未实测</span>')
         : '<span class="mut">无官网</span>';
       var mailCell = (r.m && r.m.length)
         ? '<a href="mailto:' + esc(r.m[0]) + '">' + esc(r.m[0]) + '</a>'
