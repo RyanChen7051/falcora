@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FALCORA Sample Intel Pack — Festo</title>
+<style>
+  :root{
+    --ink:#0f1b2d; --mut:#5b6b80; --line:#e3e8f0; --bg:#f5f7fb;
+    --brand:#0b5fff; --brand2:#00b3a4; --ok:#0a8f4d; --warn:#c8821a; --bad:#c0392b;
+    --card:#fff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+    color:var(--ink);background:var(--bg);line-height:1.55;font-size:15px}
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px 60px}
+  header.bar{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;background:var(--ink);color:#fff;
+    position:sticky;top:0;z-index:2}
+  header.bar .logo{font-weight:800;letter-spacing:.5px;font-size:18px}
+  header.bar .logo small{font-weight:500;opacity:.75;font-size:12px;margin-left:8px}
+  header.bar .sample-tag{background:#ffd23f;color:#1a1a1a;font-weight:800;font-size:12px;padding:4px 10px;border-radius:20px;letter-spacing:.5px}
+  .banner{margin:18px 0;background:#fff7e0;border:1px solid #f0d28a;color:#7a5a10;
+    padding:12px 16px;border-radius:10px;font-size:13.5px}
+  h1{font-size:24px;margin:6px 0 2px}
+  .sub{color:var(--mut);font-size:14px}
+  .subject{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 6px}
+  .subject .chip{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;flex:1;min-width:160px}
+  .subject .chip .k{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px}
+  .subject .chip .v{font-weight:700;font-size:16px;margin-top:2px}
+  section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:18px 0;
+    box-shadow:0 1px 2px rgba(16,27,45,.04)}
+  section h2{font-size:17px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  section .h2sub{color:var(--mut);font-size:12.5px;margin-bottom:12px}
+  .badge{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;vertical-align:middle}
+  .b-ok{background:#e6f6ee;color:var(--ok)}
+  .b-warn{background:#fdf1dc;color:var(--warn)}
+  .b-info{background:#e8f0ff;color:var(--brand)}
+  table{width:100%;border-collapse:collapse;margin-top:4px}
+  td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+  td.k{color:var(--mut);width:34%;font-size:13.5px}
+  td.v{font-weight:600}
+  .row{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0}
+  .contact{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;flex:1;min-width:240px}
+  .contact .ttl{font-weight:700;margin-bottom:6px}
+  .contact .meta{font-size:12.5px;color:var(--mut)}
+  .contact a{color:var(--brand);text-decoration:none;word-break:break-all}
+  .contact a:hover{text-decoration:underline}
+  .xref-card{border:1px solid var(--line);border-left:4px solid var(--brand2);border-radius:10px;padding:12px 14px;margin:10px 0;background:#fafdfc}
+  .xref-card .h{font-weight:700;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .xref-card .src{font-size:12.5px;color:var(--mut);margin-top:4px}
+  .xref-card a{color:var(--brand);text-decoration:none}
+  .xref-card a:hover{text-decoration:underline}
+  .note{font-size:12.5px;color:var(--mut);font-style:italic}
+  .boundary{font-size:13px;color:#33425a}
+  .boundary li{margin:5px 0}
+  footer{margin-top:30px;color:var(--mut);font-size:12.5px;text-align:center;border-top:1px solid var(--line);padding-top:18px}
+  .flag{font-size:22px;vertical-align:middle;margin-right:4px}
+  @media print{body{background:#fff}header.bar{position:static}section{box-shadow:none}}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="logo">FALCORA<small>获客通AI · 全球客户情报与交易前尽调</small></div>
+  <div class="sample-tag">SAMPLE · 样品演示</div>
+</header>
+
+<div class="wrap">
+  <div class="banner">
+    <b>本样品使用真实公开企业信息演示产品形态</b>，并非针对该企业的尽调结论。所有来源链接均可点开复核。
+    个人联系方式（L3）按产品铁律 <b>绝不采集、不展示</b>。替换为您的目标客户即可生成正式交付物。
+  </div>
+
+  <h1>客户核验情报包 · Supplier &amp; Buyer Verification Intel Pack</h1>
+  <div class="sub">先查清楚，再去谈 — every conclusion is source-traceable.</div>
+
+  <div class="subject">
+    <div class="chip"><div class="k">公司 Company</div><div class="v"><span class="flag">🇩🇪</span>Festo</div></div>
+    <div class="chip"><div class="k">域名 Domain</div><div class="v">festo.com</div></div>
+    <div class="chip"><div class="k">地区 Region</div><div class="v">欧盟 / 德国</div></div>
+    <div class="chip"><div class="k">行业 Industry</div><div class="v">工业设备</div></div>
+  </div>
+
+  <!-- 一、基本信息 L1 -->
+  <section>
+    <h2>一、基本信息 <span class="badge b-info">L1 · 公开信息</span></h2>
+    <div class="h2sub">来自公开企业信息，平台不补全、不推断。</div>
+    <table>
+      <tr><td class="k">公司名称</td><td class="v">Festo</td></tr>
+      <tr><td class="k">官网</td><td class="v"><a href="https://festo.com/" target="_blank" rel="noopener">https://festo.com/ ↗</a></td></tr>
+      <tr><td class="k">国家 / 地区</td><td class="v">德国 (DE) · 欧盟</td></tr>
+      <tr><td class="k">行业分类</td><td class="v">工业设备 · 自动化 / 气动 / 传动</td></tr>
+      <tr><td class="k">企业类型（推断）</td><td class="v">品牌商</td></tr>
+      <tr><td class="k">采购意向（推断）</td><td class="v">机械配件 / 传动件采购</td></tr>
+    </table>
+  </section>
+
+  <!-- 二、L2 已核验 -->
+  <section>
+    <h2>二、企业职能联系方式 <span class="badge b-ok">L2 · 已核验</span></h2>
+    <div class="h2sub">逐条带来源链接与检索日期；平台绝不填示例值。空 = 公开渠道未检索到，非"无此信息"。</div>
+
+    <div class="row">
+      <div class="contact">
+        <div class="ttl">📞 电话 / 总机</div>
+        <div class="v" style="font-weight:700">+49 711 347</div>
+        <div class="v" style="font-weight:700">+49 711 347 2144</div>
+        <div class="meta">来源：<a href="https://corp.festo.com/en/imprint/index.html" target="_blank" rel="noopener">corp.festo.com imprint ↗</a> · 检索 2026-11-02</div>
+      </div>
+      <div class="contact">
+        <div class="ttl">✉️ 职能邮箱</div>
+        <div class="v" style="font-weight:700"><a href="mailto:info@festo.com">info@festo.com</a></div>
+        <div class="meta">来源：<a href="https://sps.mesago.com" target="_blank" rel="noopener">SPS 展会官网（参展商名录）↗</a> · 检索 2026-10-31</div>
+      </div>
+    </div>
+    <div class="note">核验备注：已自动读取官网 4 个页面，未检索到公开职能联系方式；电话与邮箱来自企业公开 imprint 与展会参展商名录，逐条可复核。</div>
+  </section>
+
+  <!-- 三、名录交叉验证 -->
+  <section>
+    <h2>三、名录交叉验证 <span class="badge b-info">供货方证据 · 不作采购意向解读</span></h2>
+    <div class="h2sub">按域名反查三份公开名录。参展 / 会员 = 企业真实在经营的证据；未命中 ≠ 企业不存在。</div>
+
+    <div class="xref-card">
+      <div class="h"><span>🏢 展会参展记录 · 企业真实性证据</span><span class="badge b-ok">命中 1</span></div>
+      <div><b>SPS — Smart Production Solutions 2026</b>（智能生产解决方案展）</div>
+      <div class="src">官方来源：<a href="https://sps.mesago.com" target="_blank" rel="noopener">sps.mesago.com ↗</a> · 参展商名录收录</div>
+    </div>
+
+    <div class="xref-card">
+      <div class="h"><span>🤝 协会公开会员 · 企业真实性证据</span><span class="badge b-ok">命中 2</span></div>
+      <div><b>Festo SE &amp; Co. KG</b> — VDMA 德国机械设备制造业联合会 · 公开会员名录</div>
+      <div><b>Festo Vertrieb GmbH &amp; Co. KG</b> — VDMA 德国机械设备制造业联合会 · 公开会员名录</div>
+      <div class="src">官方来源：<a href="https://www.vdma.eu/de/mitglieder" target="_blank" rel="noopener">vdma.eu/de/mitglieder ↗</a> · 检索 2026-10-31</div>
+    </div>
+
+    <div class="note">政府招标单位（TED 欧盟）：本域名未命中公开招标记录 —— 仅说明不在该名录内，不构成任何风险判定。</div>
+  </section>
+
+  <!-- 四、数据边界 -->
+  <section>
+    <h2>四、数据边界与声明</h2>
+    <ul class="boundary">
+      <li><b>三态输出</b>：查到 / 查到但无值 / 查不到。平台<b>绝不输出「无风险」</b>。</li>
+      <li><b>L1</b> = 公开企业信息；<b>L2</b> = 企业职能联系方式（逐条带来源与检索日期）；<b>L3</b> = 个人联系方式，仅使用者自备。</li>
+      <li><b>个人联系方式（L3）按产品铁律绝不采集、不推断、不展示</b> —— 本样品不含任何个人数据。</li>
+      <li>名录交叉验证用于证明企业真实经营，<b>不构成采购意向或信用评级结论</b>。</li>
+      <li>本报告所有结论均来自公开来源或使用者录入，<b>可逐条点开复核</b>。</li>
+    </ul>
+  </section>
+
+  <footer>
+    FALCORA · 获客通AI — 先查清楚，再去谈。<br>
+    本样品由产品形态演示生成 · 数据来自公开渠道 · 生成时间 2026-11-03（样例）。<br>
+    正式报告针对您的目标客户生成，含可复核来源链接与三态输出。
+  </footer>
+</div>
+</body>
+</html>
