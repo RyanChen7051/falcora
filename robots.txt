@@ -1,2 +1,19 @@
+# FALCORA — https://ryanchen7051.github.io/falcora/
+# Public marketing pages are meant to be indexed.
+# Internal product screens (01_..08_, index.html) are app UI, not marketing pages.
+
 User-agent: *
-Disallow: /
+Allow: /
+
+# Internal app screens and directory browser — keep them out of search results.
+Disallow: /index.html
+Disallow: /01_
+Disallow: /02_
+Disallow: /03_
+Disallow: /04_
+Disallow: /05_
+Disallow: /06_
+Disallow: /07_
+Disallow: /08_
+
+Sitemap: https://ryanchen7051.github.io/falcora/sitemap.xml
