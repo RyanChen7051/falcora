@@ -3,7 +3,7 @@
   "short_name": "获客通AI",
   "description": "AI 获客情报与客户尽调平台 —— 先查清楚，再去谈",
   "lang": "zh-CN",
-  "start_url": "./index.html",
+  "start_url": "./app.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",

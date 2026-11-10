@@ -1,7 +1,7 @@
 /* FALCORA 获客通AI — 全局「上一页」+「首页」按钮
    在所有分页顶栏 .top-right 注入两个按钮（顺序：上一页 → 首页）：
-     · 「← 上一页」：回到浏览器上一页；若无历史可退（如直接打开本页/新标签），则回 index.html
-     · 「⌂ 首页」：一键回到 index.html（增长总司令驾驶舱）
+     · 「← 上一页」：回到浏览器上一页；若无历史可退（如直接打开本页/新标签），则回 app.html
+     · 「⌂ 首页」：一键回到 app.html（增长总司令驾驶舱 · 内部样机）
    · 必须在 app-update.js 之后、app-i18n.js 之前加载：
      本脚本插到 #updateBtn 之前 → 最终顺序 = 上一页 → 首页 → 语言 → 更新 → 版本 → 通知 → 设置。
    · 按钮文案「上一页 / 返回上一页 / 首页 / 返回首页」走 app-i18n.js 反查字典，切换语言时一起翻译。
@@ -51,7 +51,7 @@
       + '<span>上一页</span>';
     b.addEventListener('click', function () {
       if (window.history && window.history.length > 1) window.history.back();
-      else window.location.href = 'index.html';
+      else window.location.href = 'app.html';
     });
     tr.insertBefore(b, tr.firstChild);
   }
@@ -62,7 +62,7 @@
     if (!tr || document.querySelector('.home-btn')) return;
     var a = document.createElement('a');
     a.className = 'home-btn';
-    a.href = 'index.html';
+    a.href = 'app.html';
     a.title = '返回首页';
     a.setAttribute('aria-label', '返回首页');
     a.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '

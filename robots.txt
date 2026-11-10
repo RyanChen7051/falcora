@@ -1,12 +1,12 @@
 # FALCORA — https://ryanchen7051.github.io/falcora/
-# Public marketing pages are meant to be indexed.
-# Internal product screens (01_..08_, index.html) are app UI, not marketing pages.
+# Root index.html is now the PUBLIC landing page (keep it indexable).
+# The internal product mockup lives at app.html; 01_..08_ are app UI, not marketing pages.
 
 User-agent: *
 Allow: /
 
 # Internal app screens and directory browser — keep them out of search results.
-Disallow: /index.html
+Disallow: /app.html
 Disallow: /01_
 Disallow: /02_
 Disallow: /03_

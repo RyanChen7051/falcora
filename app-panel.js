@@ -52,7 +52,7 @@
   var PAGE_DUE = "03_客户尽调与风险核查.html";
   var PAGE_OUTREACH = "04_获客执行与内容.html";
   var PAGE_ACCOUNT = "07_账号与成员管理.html";
-  var PAGE_HOME = "index.html";
+  var PAGE_HOME = "app.html";
 
   var DEFAULT_NOTIFY = { risk: true, lead: true, touch: true, source: false, quota: true };
 

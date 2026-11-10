@@ -1117,13 +1117,26 @@
            数据边界声明），每条结论可点开来源复核；示例客户仍导出 TXT。
            原导出**不含 L2 的 src** —— 商业化最后一公里，情报包就是按次卖的交付物。
          · 补 i18n：新增 35 个字典键（9 语种 × 35，2722 → 2757）。
+         · 静态文件有改动 → 升 CACHE 版本。
+
+   v78（2026-11-10）：根路径语义纠正 —— 外人/AI 打开域名根目录，看到的必须是真实对外定位。
+         · 起因：Google AI 模式读到 /falcora/ 根（原驾驶舱 index.html），把样机里的虚构设定
+           （¥999/¥2,999 订阅、海关提单反查、股权穿透、对标 Sayari/World-Check）当成对外事实公开广播。
+           noindex 只挡搜索索引，挡不住「有人把 URL 直接贴给 AI」——能被公开打开 = 已对外发布。
+         · 结构改动：驾驶舱 index.html → **app.html**（保留 noindex + 内部样机声明）；
+           根路径 index.html 改为**对外落地页**（中英 hreflang、canonical、OG、JSON-LD 齐全，含「进入应用 → app.html」）。
+         · 全站指针：8 屏侧栏 / 行业覆盖清单 / app-nav.js 的「首页」与「无历史回退」/ manifest start_url
+           全部由 index.html → app.html，避免「点首页跑到营销页」。
+         · falcora-landing.html 保留但 canonical 指向根 /，避免与 index.html 重复内容；robots.txt 的
+           Disallow: /index.html 改为 /app.html（原规则会把新的对外落地页误禁抓）；sitemap 主 URL 改根 /。
+         · SW：PRECACHE 与离线导航回落由 ./index.html → ./app.html（预缓存的应是 PWA 主体，不是营销页）。
          · 静态文件有改动 → 升 CACHE 版本。 */
 
-const CACHE = 'falcora-v77';
+const CACHE = 'falcora-v78';
 const PRECACHE = [
   './',
   './app-design.css?v=3',
-  './index.html',
+  './app.html',
   './01_战略_企业战略档案.html',
   './02_全球线索获取.html',
   './03_客户尽调与风险核查.html',
@@ -1204,7 +1217,7 @@ self.addEventListener('fetch', (e) => {
           caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
           return resp;
         })
-        .catch(() => caches.match(req).then((r) => r || caches.match('./index.html')))
+        .catch(() => caches.match(req).then((r) => r || caches.match('./app.html')))
     );
     return;
   }

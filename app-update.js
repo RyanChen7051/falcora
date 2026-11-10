@@ -98,7 +98,7 @@
             }
           }, 6000);
           try {
-            fetch('./index.html?__probe=' + Date.now(), { cache: 'no-store', signal: ctl ? ctl.signal : undefined })
+            fetch('./app.html?__probe=' + Date.now(), { cache: 'no-store', signal: ctl ? ctl.signal : undefined })
               .then(function (r) {
                 if (!done) { done = true; clearTimeout(t); res(!!r && r.ok); }
               })
