@@ -42,4 +42,25 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ryanchen7051.github.io/falcora/sample-intel-pack-festo-en.html"/>
   </url>
 
+  <url>
+    <loc>https://ryanchen7051.github.io/falcora/how-to-verify-overseas-buyer.html</loc>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://ryanchen7051.github.io/falcora/pre-deal-due-diligence-checklist.html</loc>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://ryanchen7051.github.io/falcora/verify-company-with-public-sources.html</loc>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
 </urlset>
