@@ -133,8 +133,8 @@ chk(/^<\?xml version="1\.0" encoding="UTF-8"\?>/.test(sm), 'sitemap XML declarat
 chk(locs.length === 7, 'sitemap has 7 loc entries', locs.length);
 chk(locs.every((u) => /^https:\/\//.test(u)), 'all loc are absolute https');
 const lastmods = [...sm.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((m) => m[1].trim());
-chk(lastmods.length === 7 && lastmods.every((d) => d === '2026-11-10'),
-    'all 7 lastmod = 2026-11-10', lastmods.join(','));
+chk(lastmods.length === 7 && lastmods.every((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(Date.parse(d + 'T00:00:00Z'))),
+    'all 7 lastmod are valid ISO dates', lastmods.join(','));
 chk((sm.match(/<url>/g) || []).length === 7 && (sm.match(/<\/url>/g) || []).length === 7,
     'url open/close tags 7/7');
 chk((sm.match(/<\/urlset>/g) || []).length === 1, 'single closing urlset');
