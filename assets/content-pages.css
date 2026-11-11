@@ -93,8 +93,10 @@ td code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-si
   padding:11px 22px;border-radius:24px;font-size:14px;margin:0 10px 8px 0}
 .cta-band .btn.ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5)}
 .cta-band .btn:hover{text-decoration:none}
-.contactline{font-size:13px;opacity:.85;margin-top:14px}
+.contactline{font-size:13px;opacity:.9;margin-top:14px;line-height:1.9}
 .contactline b{color:#ffd23f}
+.contactline a{color:#ffd23f;text-decoration:underline;text-underline-offset:2px}
+.contactline a:hover{color:#fff}
 
 .boundary{font-size:13px;color:var(--mut);background:var(--bg);border:1px solid var(--line);
   border-radius:12px;padding:18px 22px;margin:26px 0 0}

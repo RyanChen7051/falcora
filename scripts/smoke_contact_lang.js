@@ -16,7 +16,7 @@ const LONGTAIL = [
   'verify-company-with-public-sources.html'
 ];
 const OTHERS = ['sample-intel-pack-festo.html', 'sample-intel-pack-festo-en.html'];
-const ALL = PAGES.concat(LONGTAIL, OTHERS, ['sitemap.xml']);
+const ALL = PAGES.concat(LONGTAIL, OTHERS, ['sitemap.xml', 'assets/content-pages.css']);
 
 const P = [];
 function chk(ok, name, extra) {
@@ -108,18 +108,38 @@ function ldBlocks(s) {
 
   for (const f of LONGTAIL.concat(OTHERS)) {
     const s = doc[f].body;
-    chk(!/noindex/i.test(s), '[' + f + '] untouched: still indexable');
-    chk(s.length > 5000, '[' + f + '] untouched: full content', s.length + 'B');
+    const tag = '[' + f + ']';
+    chk(!/noindex/i.test(s), tag + ' still indexable');
+    chk(s.length > 5000, tag + ' full content', s.length + 'B');
+    chk(s.indexOf('https://wa.me/886982310045') >= 0, tag + ' WhatsApp deeplink');
+    chk(/\+886 982310045/.test(s) && /Ryan Chen/.test(s), tag + ' WhatsApp number + name');
+    chk(/mailto:3531885069@qq\.com/.test(s) && /mailto:pccnsysu@gmail\.com/.test(s), tag + ' both mailto emails');
+    chk(s.indexOf('3531885069@qq.com') >= 0 && s.indexOf('pccnsysu@gmail.com') >= 0, tag + ' both emails visible as text');
+    chk(s.indexOf('pccnsysu') >= 0 && s.indexOf('Ryanpcc') >= 0, tag + ' original LINE / WeChat kept');
+    if (f.indexOf('sample-intel-pack') === 0) {
+      chk(/class="owner-contact"/.test(s) && /own contact channels|我方联系方式/.test(s),
+          tag + ' own channels explicitly separated from report contacts');
+    }
   }
 
+  // Semantic assertions only: NEVER hard-code a date or a page count-per-date.
+  // A later round may bump one page, all pages, or a different date -> must not false-fail.
   const sm = doc['sitemap.xml'].body;
-  chk((sm.match(/<loc>/g) || []).length === 7, '[sitemap] 7 loc', (sm.match(/<loc>/g) || []).length);
-  const rootBlock = sm.indexOf('<loc>https://ryanchen7051.github.io/falcora/</loc>');
-  const enBlock = sm.indexOf('<loc>https://ryanchen7051.github.io/falcora/falcora-landing-en.html</loc>');
-  chk(rootBlock >= 0 && sm.slice(rootBlock, rootBlock + 140).indexOf('<lastmod>2026-11-11</lastmod>') >= 0, '[sitemap] root lastmod = 11-11');
-  chk(enBlock >= 0 && sm.slice(enBlock, enBlock + 180).indexOf('<lastmod>2026-11-11</lastmod>') >= 0, '[sitemap] EN landing lastmod = 11-11');
-  chk((sm.match(/<lastmod>2026-11-11<\/lastmod>/g) || []).length === 2, '[sitemap] exactly 2 pages bumped', (sm.match(/<lastmod>2026-11-11<\/lastmod>/g) || []).length);
-  chk((sm.match(/<lastmod>2026-11-10<\/lastmod>/g) || []).length === 5, '[sitemap] other 5 unchanged');
+  const blocks = [...sm.matchAll(/<url>([\s\S]*?)<\/url>/g)].map((m) => m[1]);
+  const locs = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].trim());
+  const mods = [...sm.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((m) => m[1].trim());
+  chk(locs.length === 7, '[sitemap] 7 loc', locs.length);
+  chk(mods.length === 7, '[sitemap] 7 lastmod', mods.length);
+  chk(blocks.length === 7 && blocks.every((b) => /<loc>/.test(b) && /<lastmod>/.test(b)),
+      '[sitemap] every url block has loc + lastmod', blocks.length);
+  chk(locs.every((u) => /^https:\/\/ryanchen7051\.github\.io\/falcora\//.test(u)),
+      '[sitemap] all loc are absolute https under /falcora/');
+  chk(mods.every((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(Date.parse(d + 'T00:00:00Z')) && d >= '2026-11-10'),
+      '[sitemap] no stale lastmod (valid ISO, on/after content launch)', mods.join(','));
+
+  const css = doc['assets/content-pages.css'].body;
+  chk(/\.contactline a\{[^}]*color:/.test(css), '[shared CSS] contactline links have readable color on dark CTA band');
+  chk(/\.contactline\{[^}]*line-height/.test(css), '[shared CSS] contactline has multi-line spacing');
 
   const pass = P.filter(Boolean).length;
   console.log('\n' + pass + ' / ' + P.length + (pass === P.length ? '  ALL GREEN' : '  *** FAILED ***'));
