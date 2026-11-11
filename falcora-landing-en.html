@@ -100,17 +100,29 @@
   .guides h3{font-size:15.5px;margin:16px 0 6px}
   .guides h3:first-child{margin-top:0}
   .guides p{font-size:13.5px;color:var(--mut);margin:0}
-  .lang{position:absolute;right:22px;top:22px;font-size:13px}
-  .lang a{color:#cfd9e8;border:1px solid rgba(255,255,255,.35);border-radius:20px;padding:5px 12px}
-  .lang a:hover{background:rgba(255,255,255,.12)}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .lang{display:inline-flex;align-items:center;gap:8px;font-size:13px;white-space:nowrap}
+  .lang .lang-lb{opacity:.75;font-size:12px}
+  .lang .lang-cur,.lang a{padding:7px 15px;border-radius:20px;font-weight:700;font-size:13px}
+  .lang .lang-cur{background:#fff;color:#0f1b2d;border:1px solid #fff}
+  .lang a{color:#fff;border:1px solid rgba(255,255,255,.6)}
+  .lang a:hover{background:rgba(255,255,255,.18)}
+  .cbox .ic-txt{font-size:20px;font-weight:800;letter-spacing:.5px;line-height:1.35}
+  .cbox p a{word-break:break-all}
 </style>
 </head>
 <body>
 
 <header class="hero" style="position:relative">
-  <div class="lang"><a href="./" hreflang="zh-Hans" lang="zh-Hans">中文</a></div>
   <div class="wrap">
-    <div class="logo">FALCORA <small>Global B2B intelligence &amp; pre-deal due diligence</small></div>
+    <div class="topbar">
+      <div class="logo">FALCORA <small>Global B2B intelligence &amp; pre-deal due diligence</small></div>
+      <nav class="lang" aria-label="Language">
+        <span class="lang-lb">Language</span>
+        <a href="./" hreflang="zh-Hans" lang="zh-Hans">中文</a>
+        <span class="lang-cur" aria-current="true">English</span>
+      </nav>
+    </div>
     <h1>Know who you're dealing with — worldwide.</h1>
     <div class="en">How to check if a foreign buyer is legitimate — before the deposit.</div>
     <p class="lead">How do you verify an overseas buyer before the deposit leaves your account? FALCORA helps sales and BD teams confirm, before signing or wiring a deposit,
@@ -226,6 +238,8 @@
     <div class="contact">
       <div class="cbox"><div class="ic">💬</div><h3>LINE</h3><p>Search or scan to add: <b>pccnsysu</b></p></div>
       <div class="cbox"><div class="ic">🟢</div><h3>WeChat</h3><p>Search: <b>Ryanpcc</b></p></div>
+      <div class="cbox"><div class="ic ic-txt">WA</div><h3>WhatsApp</h3><p><a href="https://wa.me/886982310045" target="_blank" rel="noopener">+886 982310045</a> · Ryan Chen</p></div>
+      <div class="cbox"><div class="ic ic-txt">@</div><h3>Email</h3><p><a href="mailto:3531885069@qq.com">3531885069@qq.com</a><br><a href="mailto:pccnsysu@gmail.com">pccnsysu@gmail.com</a></p></div>
     </div>
   </section>
 

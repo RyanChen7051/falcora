@@ -96,17 +96,29 @@
   .faq h3{font-size:15.5px;margin:16px 0 6px}
   .faq h3:first-child{margin-top:0}
   .faq p{font-size:13.5px;color:var(--mut);margin:0}
-  .lang{position:absolute;right:22px;top:22px;font-size:13px}
-  .lang a{color:#cfd9e8;border:1px solid rgba(255,255,255,.35);border-radius:20px;padding:5px 12px}
-  .lang a:hover{background:rgba(255,255,255,.12)}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .lang{display:inline-flex;align-items:center;gap:8px;font-size:13px;white-space:nowrap}
+  .lang .lang-lb{opacity:.75;font-size:12px}
+  .lang .lang-cur,.lang a{padding:7px 15px;border-radius:20px;font-weight:700;font-size:13px}
+  .lang .lang-cur{background:#fff;color:#0f1b2d;border:1px solid #fff}
+  .lang a{color:#fff;border:1px solid rgba(255,255,255,.6)}
+  .lang a:hover{background:rgba(255,255,255,.18)}
+  .cbox .ic-txt{font-size:20px;font-weight:800;letter-spacing:.5px;line-height:1.35}
+  .cbox p a{word-break:break-all}
 </style>
 </head>
 <body>
 
 <header class="hero" style="position:relative">
-  <div class="lang"><a href="falcora-landing-en.html" hreflang="en" lang="en">EN</a></div>
   <div class="wrap">
-    <div class="logo">FALCORA <small>获客通AI · 全球 B2B 客户情报与交易前尽调</small></div>
+    <div class="topbar">
+      <div class="logo">FALCORA <small>获客通AI · 全球 B2B 客户情报与交易前尽调</small></div>
+      <nav class="lang" aria-label="语言 / Language">
+        <span class="lang-lb">语言</span>
+        <span class="lang-cur" aria-current="true">中文</span>
+        <a href="falcora-landing-en.html" hreflang="en" lang="en">English</a>
+      </nav>
+    </div>
     <h1>先查清楚，再去谈</h1>
     <div class="en">Know who you're dealing with — worldwide.</div>
     <p class="lead">海外客户怎么核实？在付订金、签合同前确认对方真实存在、仍在经营，并留下可复核的证据链。
@@ -210,6 +222,8 @@
     <div class="contact">
       <div class="cbox"><div class="ic">💬</div><h3>LINE</h3><p>搜索或扫码添加：<b>pccnsysu</b></p></div>
       <div class="cbox"><div class="ic">🟢</div><h3>WeChat 微信</h3><p>搜索：<b>Ryanpcc</b></p></div>
+      <div class="cbox"><div class="ic ic-txt">WA</div><h3>WhatsApp</h3><p><a href="https://wa.me/886982310045" target="_blank" rel="noopener">+886 982310045</a> · Ryan Chen</p></div>
+      <div class="cbox"><div class="ic ic-txt">@</div><h3>Email 邮箱</h3><p><a href="mailto:3531885069@qq.com">3531885069@qq.com</a><br><a href="mailto:pccnsysu@gmail.com">pccnsysu@gmail.com</a></p></div>
     </div>
   </section>
 
