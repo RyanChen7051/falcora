@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* smoke_v78_local.js —— 根路径语义纠正冒烟（2026-11-10）
    验收：任何人/AI 打开域名根目录，看到的必须是真实对外定位，而不是内部样机。
-   ① 根 / 渲染为对外落地页（主张 + 进入应用 → app.html），且不含驾驶舱能力/套餐面板
+   ① 根 / 渲染为对外落地页（主张 + 进入应用 → try.html 公开体验版），且不含驾驶舱能力/套餐面板
    ② /app.html 渲染为内部驾驶舱（保留 noindex + 内部样机声明）
    ③ 8 屏侧栏「首页」、行业清单、名录库预览 全部指向 app.html
    ④ 静态指针：manifest start_url / sw.js PRECACHE+fallback / robots / sitemap / hreflang
@@ -58,7 +58,7 @@ function startServer() {
   ok(/FALCORA/.test(rootTitle) && !/内部样机|驾驶舱|增长总司令/.test(rootTitle), "A1 根 title 为对外定位（非内部样机）");
   ok(/海外客户怎么核实|Verify an Overseas Buyer/.test(rootTitle), "A1b 根 title 含客户会搜的问句");
   ok(!/noindex/.test(rootHtml), "A2 根落地页无 noindex（可索引）");
-  ok(/href="app\.html">进入应用/.test(rootHtml), "A3 根落地页含「进入应用 → app.html」");
+  ok(/href="try\.html">进入应用/.test(rootHtml), "A3 根落地页含「进入应用 → try.html 公开体验版」");
   ok(/rel="canonical" href="https:\/\/ryanchen7051\.github\.io\/falcora\/"/.test(rootHtml), "A4 根 canonical 指向根 /");
   ok(/name="robots" content="noindex,nofollow"/.test(appHtml), "A5 app.html 保留 noindex");
   ok(/内部样机 · 演示数据/.test(appHtml), "A6 app.html 保留内部样机声明");
@@ -114,7 +114,7 @@ function startServer() {
   ok(/FALCORA/.test(rootInfo.title || "") && !/内部样机|驾驶舱/.test(rootInfo.title || ""), "B2 渲染 title = 对外定位（非内部样机）");
   ok(rootInfo.faq === 5, "B7 渲染后 FAQ 五问可见");
   ok(/先查清楚，再去谈/.test(rootInfo.text || "") && /Know who you're dealing with/.test(rootInfo.text || ""), "B3 渲染含中英主张");
-  ok((rootInfo.links || []).indexOf("app.html") >= 0, "B4 渲染后「进入应用」链接指向 app.html");
+  ok((rootInfo.links || []).indexOf("try.html") >= 0, "B4 渲染后「进入应用」链接指向 try.html 公开体验版");
   ok(!rootInfo.hasPlans && !rootInfo.hasCaps, "B5 根页面不含样机「套餐与价格 / 平台能力覆盖」面板");
   ok(errs.length === 0, "B6 根页面零 JS 异常", errs.join(" | "));
 
