@@ -16,7 +16,7 @@ const LONGTAIL = [
   'verify-company-with-public-sources.html'
 ];
 const OTHERS = ['sample-intel-pack-festo.html', 'sample-intel-pack-festo-en.html'];
-const ALL = PAGES.concat(LONGTAIL, OTHERS, ['try.html', 'sitemap.xml', 'assets/content-pages.css']);
+const ALL = PAGES.concat(LONGTAIL, OTHERS, ['try.html', 'free-preview-faq.html', 'sitemap.xml', 'assets/content-pages.css']);
 
 const P = [];
 function chk(ok, name, extra) {
@@ -128,9 +128,9 @@ function ldBlocks(s) {
   const blocks = [...sm.matchAll(/<url>([\s\S]*?)<\/url>/g)].map((m) => m[1]);
   const locs = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].trim());
   const mods = [...sm.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((m) => m[1].trim());
-  chk(locs.length === 8, '[sitemap] 8 loc', locs.length);
-  chk(mods.length === 8, '[sitemap] 8 lastmod', mods.length);
-  chk(blocks.length === 8 && blocks.every((b) => /<loc>/.test(b) && /<lastmod>/.test(b)),
+  chk(locs.length === 9, '[sitemap] 9 loc', locs.length);
+  chk(mods.length === 9, '[sitemap] 9 lastmod', mods.length);
+  chk(blocks.length === 9 && blocks.every((b) => /<loc>/.test(b) && /<lastmod>/.test(b)),
       '[sitemap] every url block has loc + lastmod', blocks.length);
   chk(locs.every((u) => /^https:\/\/ryanchen7051\.github\.io\/falcora\//.test(u)),
       '[sitemap] all loc are absolute https under /falcora/');

@@ -10,7 +10,7 @@ const R = path.resolve(__dirname, '..');
 const MODE = (process.argv[2] || 'local').toLowerCase();
 const BASE = 'https://ryanchen7051.github.io/falcora/';
 const LANDINGS = ['index.html', 'falcora-landing.html', 'falcora-landing-en.html'];
-const ALL = ['try.html'].concat(LANDINGS, ['sitemap.xml', 'app.html', 'robots.txt', 'sw.js', 'data-real-companies.js']);
+const ALL = ['try.html', 'free-preview-faq.html'].concat(LANDINGS, ['sitemap.xml', 'app.html', 'robots.txt', 'sw.js', 'data-real-companies.js']);
 
 const P = [];
 function chk(ok, name, extra) {
@@ -126,18 +126,21 @@ function ldBlocks(s) {
   console.log('\n=== C. site-wide integrity ===');
   const sm = doc['sitemap.xml'].body;
   const locs = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].trim());
-  chk(locs.length === 8, 'C1 sitemap has 8 loc', locs.length);
+  chk(locs.length === 9, 'C1 sitemap has 9 loc', locs.length);
   chk(locs.indexOf(BASE + 'try.html') >= 0, 'C2 try.html is in sitemap');
   chk(locs.every((u) => /^https:\/\/ryanchen7051\.github\.io\/falcora\//.test(u)), 'C3 all loc absolute https under /falcora/');
   const mods = [...sm.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((m) => m[1].trim());
-  chk(mods.length === 8 && mods.every((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(Date.parse(d + 'T00:00:00Z'))),
-      'C4 8 valid ISO lastmod', mods.join(','));
+  chk(mods.length === 9 && mods.every((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(Date.parse(d + 'T00:00:00Z'))),
+      'C4 9 valid ISO lastmod', mods.join(','));
   chk(!/Disallow: \/try\.html/.test(doc['robots.txt'].body), 'C5 robots does not block try.html');
   const app = doc['app.html'].body;
   chk(/name="robots" content="noindex,nofollow"/.test(app), 'C6 app.html STILL noindex (v78 defence intact)');
   chk(/内部样机 · 演示数据/.test(app), 'C7 app.html STILL labelled internal prototype');
   chk(/falcora-v78/.test(doc['sw.js'].body), 'C8 sw.js untouched (still falcora-v78)');
   chk(/window\.FAL_REAL/.test(doc['data-real-companies.js'].body), 'C9 real L1 directory file present');
+  chk(locs.indexOf(BASE + 'free-preview-faq.html') >= 0, 'C10 FAQ page is in sitemap');
+  chk(!/noindex/i.test(doc['free-preview-faq.html'].body) && /rel="canonical"/.test(doc['free-preview-faq.html'].body),
+      'C11 FAQ page is indexable with a canonical');
 
   const pass = P.filter(Boolean).length;
   console.log('\n' + pass + ' / ' + P.length + (pass === P.length ? '  ALL GREEN' : '  *** FAILED ***'));

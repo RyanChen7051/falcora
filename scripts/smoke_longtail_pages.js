@@ -130,13 +130,13 @@ console.log('\n=== sitemap.xml ===');
 const sm = read('sitemap.xml');
 const locs = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].trim());
 chk(/^<\?xml version="1\.0" encoding="UTF-8"\?>/.test(sm), 'sitemap XML declaration');
-chk(locs.length === 8, 'sitemap has 8 loc entries', locs.length);
+chk(locs.length === 9, 'sitemap has 9 loc entries', locs.length);
 chk(locs.every((u) => /^https:\/\//.test(u)), 'all loc are absolute https');
 const lastmods = [...sm.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((m) => m[1].trim());
-chk(lastmods.length === 8 && lastmods.every((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(Date.parse(d + 'T00:00:00Z'))),
-    'all 8 lastmod are valid ISO dates', lastmods.join(','));
-chk((sm.match(/<url>/g) || []).length === 8 && (sm.match(/<\/url>/g) || []).length === 8,
-    'url open/close tags 8/8');
+chk(lastmods.length === 9 && lastmods.every((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(Date.parse(d + 'T00:00:00Z'))),
+    'all 9 lastmod are valid ISO dates', lastmods.join(','));
+chk((sm.match(/<url>/g) || []).length === 9 && (sm.match(/<\/url>/g) || []).length === 9,
+    'url open/close tags 9/9');
 chk((sm.match(/<\/urlset>/g) || []).length === 1, 'single closing urlset');
 const smBroken = locs.filter((u) => {
   const rel = u.replace(BASE, '').split('?')[0];

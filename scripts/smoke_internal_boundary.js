@@ -22,7 +22,8 @@ const PUBLIC = LANDINGS.concat([
   'verify-company-with-public-sources.html',
   'sample-intel-pack-festo.html',
   'sample-intel-pack-festo-en.html',
-  'try.html'
+  'try.html',
+  'free-preview-faq.html'
 ]);
 const INTERNAL = '名录库_预览.html';
 const ALL = [INTERNAL].concat(PUBLIC, ['app.html', 'sitemap.xml', 'robots.txt']);
@@ -91,11 +92,14 @@ function fetchOnline(f) {
   const linked = PUBLIC.filter((f) => /名录库_预览\.html/.test(doc[f].body));
   chk(linked.length === 0, 'C3 no public page links to the internal preview', linked.join(',') || 'none');
   const locs = (sm.match(/<loc>/g) || []).length;
-  chk(locs === 8, 'C4 sitemap still has 8 loc', locs);
+  chk(locs === 9, 'C4 sitemap still has 9 loc', locs);
   chk(/falcora\/try\.html/.test(sm), 'C5 try.html still in sitemap');
   chk(/noindex,nofollow/.test(doc['app.html'].body), 'C6 app.html STILL noindex');
   chk(/内部样机 \u00b7 演示数据/.test(doc['app.html'].body), 'C7 app.html STILL labelled internal prototype');
   chk(!/noindex/i.test(doc['try.html'].body), 'C8 try.html STILL indexable');
+  chk(/falcora\/free-preview-faq\.html/.test(sm), 'C9 FAQ page is in sitemap');
+  chk(!/noindex/i.test(doc['free-preview-faq.html'].body), 'C10 FAQ page is indexable');
+  chk(!/free-preview-faq\.html/.test(doc['app.html'].body), 'C11 internal prototype does not link to the FAQ page');
 
   const pass = P.filter(Boolean).length;
   console.log('\n' + pass + ' / ' + P.length + (pass === P.length ? '  ALL GREEN' : '  FAILED'));
